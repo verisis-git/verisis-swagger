@@ -2,28 +2,260 @@
 <html lang="hu">
 <head>
   <meta charset="utf-8" />
-  <title>API Dokumentáció</title>
+  <title>API Katalógus</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
   <style>
-    body { margin:0; }
+    :root { --sidebar-w: 320px; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .app { display: flex; height: 100%; }
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: 240px;
+      max-width: 480px;
+      border-right: 1px solid #e5e7eb;
+      padding: 12px;
+      overflow: auto;
+    }
+    .sidebar h1 { font-size: 16px; margin: 6px 0 12px; }
+    .search { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 10px; }
+    .tree { list-style: none; padding-left: 0; margin: 0; }
+    .tree li { margin: 4px 0; }
+    .sys { font-weight: 600; margin-top: 8px; }
+    .api { margin-left: 12px; font-weight: 500; }
+    .vers { margin-left: 24px; display: flex; gap: 6px; align-items: center; }
+    .link { cursor: pointer; text-decoration: none; color: #111827; padding: 2px 4px; border-radius: 4px; }
+    .link.active { background: #e5f0ff; }
+    .badge { font-size: 11px; padding: 1px 6px; border: 1px solid #d1d5db; border-radius: 999px; color: #374151; }
+    .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      padding: 8px 12px; border-bottom: 1px solid #e5e7eb; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .topbar select { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+    #swagger-ui { flex: 1; min-height: 0; overflow: auto; }
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+    }
   </style>
 </head>
 <body>
-  <div id="swagger-ui"></div>
+  <div class="app">
+    <aside class="sidebar">
+      <h1>API Katalógus</h1>
+      <input id="q" class="search" placeholder="Keresés (rendszer, API, verzió)..." />
+      <ul id="tree" class="tree"></ul>
+      <p style="margin-top:12px;color:#6b7280;font-size:12px;">Permalink: a kiválasztás az URL-ben van, pl. <code>#/LIGW/2.1.0</code> vagy <code>#/xtvgw/userapi/2.0.0</code></p>
+    </aside>
 
-  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
-  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+    <main class="content">
+      <div class="topbar">
+        <label>Rendszer:
+          <select id="sel-system"></select>
+        </label>
+        <label>API:
+          <select id="sel-api"></select>
+        </label>
+        <label>Verzió:
+          <select id="sel-version"></select>
+        </label>
+        <span id="status" class="badge" title="Betöltési állapot">init</span>
+      </div>
+      <div id="swagger-ui"></div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js" crossorigin></script>
   <script>
-    window.onload = () => {
-      window.ui = SwaggerUIBundle({
-        url: 'LIGW/ligw_2.1.0.yaml',              // <--- a repo-ban levő YAML relatív útvonala
-        dom_id: '#swagger-ui',
-        deepLinking: true,
-        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-        layout: "BaseLayout"
-      })
+    // ------- Helper: routing és állapot -------
+    const $ = (q) => document.querySelector(q);
+    let MANIFEST = null;
+    let UI = null;
+
+    function parseHash() {
+      // formátum: #/system[/api]/version
+      const raw = (location.hash || '').replace(/^#\/?/, '');
+      if (!raw) return null;
+      const parts = raw.split('/').filter(Boolean);
+      if (parts.length === 2) { // /system/version (default API)
+        return { system: parts[0], api: 'default', version: parts[1] };
+      }
+      if (parts.length === 3) { // /system/api/version
+        return { system: parts[0], api: parts[1], version: parts[2] };
+      }
+      return null;
     }
+
+    function toHash(system, api, version) {
+      if (api && api !== 'default') return `#/${system}/${api}/${version}`;
+      return `#/${system}/${version}`;
+    }
+
+    function findEntry(systemKey, apiKey, versionStr) {
+      const sys = MANIFEST.systems.find(s => s.key === systemKey);
+      if (!sys) return null;
+      const api = sys.apis.find(a => a.key === apiKey || (apiKey === 'default' && a.key === 'default'));
+      if (!api) return null;
+      const ver = api.versions.find(v => v.v === versionStr);
+      if (!ver) return null;
+      return { sys, api, ver };
+    }
+
+    function setStatus(txt) { $('#status').textContent = txt; }
+
+    // ------- UI render: bal oldali fa -------
+    function renderTree(filter = '') {
+      const T = $('#tree'); T.innerHTML = '';
+      const f = filter.trim().toLowerCase();
+      for (const sys of MANIFEST.systems) {
+        const sysMatch = sys.display.toLowerCase().includes(f) || sys.key.toLowerCase().includes(f);
+        const liSys = document.createElement('li');
+        const sysSpan = document.createElement('div');
+        sysSpan.className = 'sys';
+        sysSpan.textContent = sys.display;
+        liSys.appendChild(sysSpan);
+
+        for (const api of sys.apis) {
+          const apiLabel = api.display || api.key;
+          const apiMatch = apiLabel.toLowerCase().includes(f) || api.key.toLowerCase().includes(f);
+          const liApi = document.createElement('li'); liApi.className = 'api';
+          liApi.textContent = (api.key === 'default') ? 'API' : apiLabel;
+
+          const ulVers = document.createElement('ul'); ulVers.className = 'tree';
+          for (const v of api.versions) {
+            const versionMatch = v.v.toLowerCase().includes(f);
+            if (f && !(sysMatch || apiMatch || versionMatch)) continue;
+            const liV = document.createElement('li'); liV.className = 'vers';
+            const a = document.createElement('a');
+            a.className = 'link';
+            a.textContent = v.v;
+            a.href = toHash(sys.key, api.key, v.v);
+            ulVers.appendChild(liV); liV.appendChild(a);
+          }
+          if (ulVers.children.length) {
+            liSys.appendChild(liApi);
+            liSys.appendChild(ulVers);
+          }
+        }
+        if (liSys.children.length > 1 || sysMatch || f === '') {
+          T.appendChild(liSys);
+        }
+      }
+      // Aktív link jelölés
+      const sel = parseHash();
+      if (sel) {
+        const selHash = toHash(sel.system, sel.api, sel.version);
+        T.querySelectorAll('a.link').forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === selHash);
+        });
+      }
+    }
+
+    // ------- Topbar dropdownok -------
+    function fillDropdowns(sel) {
+      const sysSel = $('#sel-system'), apiSel = $('#sel-api'), verSel = $('#sel-version');
+      sysSel.innerHTML = MANIFEST.systems.map(s => `<option value="${s.key}">${s.display}</option>`).join('');
+      sysSel.value = sel?.system || MANIFEST.systems[0].key;
+
+      const sys = MANIFEST.systems.find(s => s.key === sysSel.value);
+      apiSel.innerHTML = sys.apis.map(a => `<option value="${a.key}">${a.key === 'default' ? 'API' : (a.display || a.key)}</option>`).join('');
+      apiSel.value = sel?.api && sys.apis.some(a => a.key === sel.api) ? sel.api : sys.apis[0].key;
+
+      const api = sys.apis.find(a => a.key === apiSel.value);
+      verSel.innerHTML = api.versions.map(v => `<option value="${v.v}">${v.v}</option>`).join('');
+      verSel.value = sel?.version && api.versions.some(v => v.v === sel.version) ? sel.version : api.versions[0].v;
+    }
+
+    function bindDropdowns() {
+      $('#sel-system').addEventListener('change', () => {
+        const system = $('#sel-system').value;
+        const sys = MANIFEST.systems.find(s => s.key === system);
+        const api = sys.apis[0].key;
+        const version = sys.apis[0].versions[0].v;
+        location.hash = toHash(system, api, version);
+      });
+      $('#sel-api').addEventListener('change', () => {
+        const system = $('#sel-system').value;
+        const api = $('#sel-api').value;
+        const sys = MANIFEST.systems.find(s => s.key === system);
+        const ver = (sys.apis.find(a => a.key === api).versions[0].v);
+        location.hash = toHash(system, api, ver);
+      });
+      $('#sel-version').addEventListener('change', () => {
+        const system = $('#sel-system').value;
+        const api = $('#sel-api').value;
+        const version = $('#sel-version').value;
+        location.hash = toHash(system, api, version);
+      });
+      $('#q').addEventListener('input', (e) => renderTree(e.target.value));
+    }
+
+    // ------- Swagger UI betöltése -------
+    function loadSwagger(path) {
+      setStatus('betöltés…');
+      try {
+        if (UI && UI.getSystem) {
+          // nincs hivatalos dispose, de újrainicializálás rendben van
+        }
+        UI = SwaggerUIBundle({
+          url: path,
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+          layout: 'BaseLayout'
+        });
+        // Gyors ping a státuszhoz
+        fetch(path, { cache: 'no-store' })
+          .then(r => setStatus(r.ok ? `OK ${r.status}` : `Hiba ${r.status}`))
+          .catch(() => setStatus('Fetch hiba'));
+      } catch (e) {
+        console.error(e);
+        setStatus('Inicializációs hiba');
+      }
+    }
+
+    // ------- Route változás kezelése -------
+    function applyRoute() {
+      const sel = parseHash();
+      if (!sel) {
+        // alapértelmezett: első elem
+        const s = MANIFEST.systems[0], a = s.apis[0], v = a.versions[0];
+        location.hash = toHash(s.key, a.key, v.v);
+        return;
+      }
+      const entry = findEntry(sel.system, sel.api, sel.version);
+      if (!entry) {
+        setStatus('Nincs találat (manifest?)');
+        return;
+      }
+      fillDropdowns(sel);
+      renderTree($('#q').value || '');
+      loadSwagger(entry.ver.path);
+      // Mentés localStorage-ba (utolsó választás)
+      try { localStorage.setItem('lastSel', JSON.stringify(sel)); } catch {}
+    }
+
+    // ------- Init -------
+    (async function init() {
+      try {
+        const res = await fetch('./specs.json', { cache: 'no-store' });
+        MANIFEST = await res.json();
+      } catch (e) {
+        alert('Nem sikerült betölteni a specs.json-t. Ellenőrizd az elérési utat és a JSON szintaxist.');
+        return;
+      }
+      bindDropdowns();
+      renderTree();
+      // Induljunk a hash-ből vagy az utolsó választásból
+      if (!location.hash) {
+        try {
+          const last = JSON.parse(localStorage.getItem('lastSel') || 'null');
+          if (last) location.hash = toHash(last.system, last.api, last.version);
+        } catch {}
+      }
+      applyRoute();
+      window.addEventListener('hashchange', applyRoute);
+    })();
   </script>
 </body>
 </html>

@@ -1,0 +1,225 @@
+openapi: 3.0.0
+servers:
+  - description: Test environment
+    url: https://172.27.12.18:8448
+info:
+  description: Emergency calls api for Yettel Location Info Gateway system.
+    If an emergency call is received by Yettel, SNOB has to send a POST reqest to LIGW which will be processed and it will send an EtsiMessage to ESR servers
+  version: "1.1.0"
+  title: Emergency calls api
+  contact:
+    email: aweimann@verisis.hu
+tags:
+  - name: callReceive
+    description: Emergency calls
+security:
+  - basicAuth: []
+paths:
+  /LIGW/rest/tasks:
+    post:
+      tags:
+        - callReceive_legacy
+      summary: notify about an emergency call event, create a new task in Location Info Gateway system
+      operationId: receivedEvent_legacy
+      description: Create a new emergency task
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: Task Created
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        '401':
+          description: Authentication Failed
+        '500':
+          description: Internal Error - retriable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+        description: Emergency task to create
+        
+  /ligw/emergency/v1/tasks:
+    post:
+      tags:
+        - callReceive
+      summary: notify about an emergency call event, create a new task in Location Info Gateway system
+      operationId: receivedEvent
+      description: Create a new emergency task
+      responses:
+        '200':
+          description: Task Created
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+        '401':
+          description: Authentication Failed
+        '500':
+          description: Internal Error - retriable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+        description: Emergency task to create
+components:
+  schemas:
+    Event:
+      type: object
+      required:
+        - callingNumberFmt
+        - callingNumber
+        - calledNumber
+        - timestamp
+        - providerNw
+      properties:
+        callingNumberFmt:
+          type: number
+          enum: [73,85]
+          description: |
+            Format of calling number
+            
+            73 - 'I' international (Calling Number is an MSISDN)
+            
+            85 - 'U' unknown (Calling Number is a generated id)
+          example: 73
+        callingNumber:
+          type: string
+          pattern: "[0-9]{3,31}"
+          description: Calling Number
+          example: "36201234567"
+        callingNw:
+          type: string
+          pattern: "[0-9]{3}"
+          description: Calling Party's Network Code
+          example: "123"
+        IMSI:
+          type: string
+          pattern: "[0-9]{1,15}"
+          description: Calling Party's International Mobile Subscriber Identity
+          example: "123456789"
+        IMEI:
+          type: string
+          pattern: "[0-9]{1,14}"
+          description: Calling Party's International Mobile Station Equipment Identity
+          example: "123456789"
+        calledNumber:
+          type: string
+          pattern: "[0-9]{3,31}"
+          description: Called Number (112|104|105|107|391120000|36391120000)
+          example: "112"
+        timestamp:
+          type: number
+          description: Call Initiation Timestamp in epoch
+          example: 1547630847
+        mcc:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: Mobile Country Code
+          example: 216
+        mnc:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: Mobile Network Code
+          example: 1
+        at:
+          type: integer
+          description: |
+            Access Technology
+            
+            <i>defines whether Area Code is part of the universal identifier or not.</i>
+            
+            0: unknown
+            
+            1: UMTS (UTRAN)
+            
+            2: GSM (GERAN)
+            
+            6: LTE (eUTRAN)
+          example: 1
+        ac:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          description: |
+            Area Code (0 in case of eUTRAN)
+            
+            <i>corresponding to LAC. Access Technology defines whether Area Code is part of the universal identifier or not.
+            
+            TAC in LTE will not be part of the universal identifier (in compliance with the LTE standards)</i>
+          example: 4212
+        ciSacEci:
+          type: integer
+          minimum: 0
+          maximum: 268435455
+          description: |
+            Cell ID / Service Area Code / eUTRAN Cell Identifier
+            
+            <i>Cell ID of extended length to accommodate native eUTRAN (LTE) cell identifier, too</i>
+          example: 10001
+        ucsaid:
+          type: string
+          pattern: "[0-9]{5} [0-9]([0-9]|[A-F]|[a-f]){12}"
+          description: |
+            Universal Cell / Service Area Identification
+            
+            <i>if provided, location parameters above (mcc, mnc, at, ac and ci_sac_eci) are going to be ignored</i>
+          example: "21601 11A0F0000C9FC"
+        providerNw:
+          type: string
+          pattern: "[0-9]{3}"
+          description: Data Provider's Network Code
+          example: "123"
+    ResultCode:
+      description: Result code
+      type: object
+      properties:
+        resultCode:
+          description: |
+            Result code
+            
+            100 - Parameter error
+            
+            200 - Database error
+            
+            300 - Internal server error
+            
+            400 - General error
+          type: integer
+          example: 100
+    ResultDesc:
+      description: Result description
+      type: object
+      properties:
+        resultDesc:
+          description: Result description
+          type: string
+          example: ac parameter is greater than 65535
+    Result:
+      description: Basic result object
+      allOf:
+        - $ref: '#/components/schemas/ResultCode'
+        - $ref: '#/components/schemas/ResultDesc'
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
