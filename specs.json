@@ -22,7 +22,7 @@
           "key": "default",
           "display": "Telekom_Mobilvasarlas",
           "versions": [
-            { "v": "2.2.0", "path": "MVapp/mvapp_2.2.0.yaml" }
+            { "v": "2.2.0", "path": "Telekom_Mobilvasarlas/2.2.0.yaml" }
           ]
         }
       ]

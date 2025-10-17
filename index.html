@@ -17,26 +17,98 @@
       border-right: 1px solid #e5e7eb;
       padding: 12px;
       overflow: auto;
+      background: #ffffff;
     }
-    .sidebar h1 { font-size: 16px; margin: 6px 0 12px; }
-    .search { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 10px; }
+    .sidebar h1 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 6px 0 16px;
+    }
+    .search {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
     .tree { list-style: none; padding-left: 0; margin: 0; }
     .tree li { margin: 4px 0; }
-    .sys { font-weight: 600; margin-top: 8px; }
-    .api { margin-left: 12px; font-weight: 500; }
-    .vers { margin-left: 24px; display: flex; gap: 6px; align-items: center; }
-    .link { cursor: pointer; text-decoration: none; color: #111827; padding: 2px 4px; border-radius: 4px; }
-    .link.active { background: #e5f0ff; }
-    .badge { font-size: 11px; padding: 1px 6px; border: 1px solid #d1d5db; border-radius: 999px; color: #374151; }
+
+    /* System row (collapsible) */
+    .tree .sys {
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+      color: #111827;
+    }
+    .tree .sys:hover { background: #f3f4f6; }
+    .tree .sys::after {
+      content: "▾";
+      font-size: 12px;
+      transition: transform 0.2s;
+      color: #6b7280;
+    }
+    .tree .sys.collapsed::after { transform: rotate(-90deg); }
+
+    /* API block groups API label + its versions together */
+    .api-block {
+      margin-left: 12px;
+      margin-top: 6px;
+      padding-left: 8px;
+      border-left: 2px solid #f3f4f6;
+    }
+    .api {
+      font-weight: 600;
+      color: #374151;
+      margin: 2px 0 4px;
+    }
+
+    /* Versions as badges in a wrap row */
+    .vers-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-left: 4px;
+      margin-top: 4px;
+    }
+    .vers-list .link {
+      font-size: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      padding: 3px 10px;
+      text-decoration: none;
+      color: #111827;
+      display: inline-block;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .vers-list .link:hover { background: #eef2ff; border-color: #c7d2fe; }
+    .vers-list .link.active {
+      background: #e0e7ff;
+      border-color: #6366f1;
+      color: #1e3a8a;
+    }
+
+    .badge {
+      font-size: 11px; padding: 2px 8px;
+      border: 1px solid #d1d5db; border-radius: 999px; color: #374151;
+      background: #f9fafb;
+    }
     .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .topbar {
       padding: 8px 12px; border-bottom: 1px solid #e5e7eb; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      background: #fff;
     }
     .topbar select { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; }
     #swagger-ui { flex: 1; min-height: 0; overflow: auto; }
-    @media (max-width: 900px) {
-      .sidebar { display: none; }
-    }
+    @media (max-width: 900px) { .sidebar { display: none; } }
   </style>
 </head>
 <body>
@@ -107,40 +179,60 @@
     function renderTree(filter = '') {
       const T = $('#tree'); T.innerHTML = '';
       const f = filter.trim().toLowerCase();
+
       for (const sys of MANIFEST.systems) {
         const sysMatch = sys.display.toLowerCase().includes(f) || sys.key.toLowerCase().includes(f);
+
         const liSys = document.createElement('li');
+
+        // System header (collapsible)
         const sysSpan = document.createElement('div');
         sysSpan.className = 'sys';
         sysSpan.textContent = sys.display;
+        sysSpan.addEventListener('click', toggleCollapse);
         liSys.appendChild(sysSpan);
 
+        // Build API blocks under this system
+        let anyApiShown = false;
         for (const api of sys.apis) {
-          const apiLabel = api.display || api.key;
+          const apiLabel = api.key === 'default' ? 'API' : (api.display || api.key);
           const apiMatch = apiLabel.toLowerCase().includes(f) || api.key.toLowerCase().includes(f);
-          const liApi = document.createElement('li'); liApi.className = 'api';
-          liApi.textContent = (api.key === 'default') ? 'API' : apiLabel;
 
-          const ulVers = document.createElement('ul'); ulVers.className = 'tree';
+          // Build version badges
+          const versDiv = document.createElement('div');
+          versDiv.className = 'vers-list';
           for (const v of api.versions) {
             const versionMatch = v.v.toLowerCase().includes(f);
             if (f && !(sysMatch || apiMatch || versionMatch)) continue;
-            const liV = document.createElement('li'); liV.className = 'vers';
+
             const a = document.createElement('a');
             a.className = 'link';
             a.textContent = v.v;
             a.href = toHash(sys.key, api.key, v.v);
-            ulVers.appendChild(liV); liV.appendChild(a);
+            versDiv.appendChild(a);
           }
-          if (ulVers.children.length) {
-            liSys.appendChild(liApi);
-            liSys.appendChild(ulVers);
+
+          if (versDiv.children.length) {
+            const apiBlock = document.createElement('div');
+            apiBlock.className = 'api-block';
+
+            const apiLabelEl = document.createElement('div');
+            apiLabelEl.className = 'api';
+            apiLabelEl.textContent = apiLabel;
+
+            apiBlock.appendChild(apiLabelEl);
+            apiBlock.appendChild(versDiv);
+            liSys.appendChild(apiBlock);
+            anyApiShown = true;
           }
         }
-        if (liSys.children.length > 1 || sysMatch || f === '') {
+
+        // Only append systems that have content or match filter
+        if (anyApiShown || sysMatch || f === '') {
           T.appendChild(liSys);
         }
       }
+
       // Aktív link jelölés
       const sel = parseHash();
       if (sel) {
@@ -256,6 +348,16 @@
       applyRoute();
       window.addEventListener('hashchange', applyRoute);
     })();
+
+    // Collapsing a system hides its API blocks only
+    function toggleCollapse(e) {
+      const sysEl = e.currentTarget;
+      const parent = sysEl.parentNode;
+      sysEl.classList.toggle('collapsed');
+      parent.querySelectorAll('.api-block').forEach(block => {
+        block.style.display = sysEl.classList.contains('collapsed') ? 'none' : '';
+      });
+    }
   </script>
 </body>
 </html>

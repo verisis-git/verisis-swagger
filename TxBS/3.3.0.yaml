@@ -2,7 +2,7 @@ openapi: 3.0.0
 servers:
   - url: 'http://10.229.240.161:7450'
 info:
-  version: 2.2.2
+  version: 3.3.0
   title: Sesame.BusinessService
 # Release notes:
 # v2
@@ -18,10 +18,23 @@ info:
 #
 # v2.2.2
 #   add operator-id and displayOptions parameters
+#
+# v3.0.0
+#   POST service list orderServiceType constraint
+#
+# v3.0.1
+#   POST service list orderServiceType MGP enlargement
+#
+# v3.2.0
+#   add socDescription parameter to the getCurrentService endpoints
+#
+# v3.3.0
+#   add date parameter to the getAvailable endpoints
+
 security:
   - basicAuth: []
 paths:
-  '/serviceman/v2/subscriptions/{subscriptionId}/services':
+  '/serviceman/v3/subscriptions/{subscriptionId}/services':
     get:
       tags:
         - Query
@@ -102,8 +115,6 @@ paths:
         - $ref: '#/components/parameters/salesmanCode'
         - $ref: '#/components/parameters/saleslog'
         - $ref: '#/components/parameters/userId'
-        - $ref: '#/components/parameters/mpgCode'
-        - $ref: '#/components/parameters/mpgIdx'
         - $ref: '#/components/parameters/voucherSerialNo'
       requestBody:
         $ref: '#/components/requestBodies/SOCManipulationBody'
@@ -137,7 +148,7 @@ paths:
         '503':
           $ref: '#/components/responses/503'
           
-  '/serviceman/v2/bans/{ban-id}/services':
+  '/serviceman/v3/bans/{ban-id}/services':
     post:
       tags:
         - Manipulation
@@ -161,8 +172,6 @@ paths:
         - $ref: '#/components/parameters/salesmanCode'
         - $ref: '#/components/parameters/userId'
         - $ref: '#/components/parameters/saleslog'
-        - $ref: '#/components/parameters/mpgCode'
-        - $ref: '#/components/parameters/mpgIdx'
       requestBody:
         $ref: '#/components/requestBodies/SOCManipulationBody'
       responses:
@@ -195,7 +204,7 @@ paths:
         '503':
           $ref: '#/components/responses/503'
           
-  '/serviceman/v2/bans/{ban-id}/ctns/{ctn}/services':
+  '/serviceman/v3/bans/{ban-id}/ctns/{ctn}/services':
     post:
       tags:
         - Manipulation
@@ -219,8 +228,6 @@ paths:
         - $ref: '#/components/parameters/salesmanCode'
         - $ref: '#/components/parameters/userId'
         - $ref: '#/components/parameters/saleslog'
-        - $ref: '#/components/parameters/mpgCode'
-        - $ref: '#/components/parameters/mpgIdx'
         - $ref: '#/components/parameters/voucherSerialNo'
       requestBody:
         $ref: '#/components/requestBodies/SOCManipulationBody'
@@ -254,7 +261,7 @@ paths:
         '503':
           $ref: '#/components/responses/503'
 
-  '/serviceman/v2/subscriptions/{subscriptionId}/services/current':
+  '/serviceman/v3/subscriptions/{subscriptionId}/services/current':
     get:
       tags:
         - Query
@@ -298,8 +305,54 @@ paths:
           $ref: '#/components/responses/501'
         '503':
           $ref: '#/components/responses/503'
+          
+  '/serviceman/v3/subscriptions/{subscriptionId}/services/{serviceId}':
+    get:
+      tags:
+        - Query
+      summary: Get SOC details by ctn
+      description: Returns the SOC details
+      operationId: GetSocDetailsCtn
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/subscriptionId'
+        - $ref: '#/components/parameters/serviceId'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray'
+        - $ref: '#/components/parameters/displayOptionArray'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Service'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
   
-  '/serviceman/v2/bans/{ban-id}/services/current':
+  '/serviceman/v3/bans/{ban-id}/services/current':
     get:
       tags:
         - Query
@@ -344,8 +397,55 @@ paths:
           $ref: '#/components/responses/501'
         '503':
           $ref: '#/components/responses/503'
+          
+  '/serviceman/v3/bans/{ban-id}/services/{serviceId}':
+    get:
+      tags:
+        - Query
+      summary: Get SOC details by ban
+      description: Returns SOC details
+      operationId: GetSocDetailsBan
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/serviceId'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/productCode'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray'
+        - $ref: '#/components/parameters/displayOptionArray'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Service'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
   
-  '/serviceman/v2/bans/{ban-id}/ctns/{ctn}/services/current':
+  '/serviceman/v3/bans/{ban-id}/ctns/{ctn}/services/current':
     get:
       tags:
         - Query
@@ -391,120 +491,24 @@ paths:
         '503':
           $ref: '#/components/responses/503'
           
-  '/serviceman/v2/subscriptions/{subscriptionId}/services/available':
+  '/serviceman/v3/bans/{ban-id}/ctns/{ctn}/services/{serviceId}':
     get:
       tags:
         - Query
-      summary: Get available service(s)
-      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
-      operationId: GetAvailableServices
-      parameters:
-        - $ref: '#/components/parameters/clientId'
-        - $ref: '#/components/parameters/sessionId'
-        - $ref: '#/components/parameters/requestId'
-        - $ref: '#/components/parameters/subscriptionId'
-        - $ref: '#/components/parameters/operatorId'
-        - $ref: '#/components/parameters/validity'
-        - $ref: '#/components/parameters/customerType'
-        - $ref: '#/components/parameters/serviceClassArray' 
-        - $ref: '#/components/parameters/voucherSerialNo'
-        - $ref: '#/components/parameters/voucherCategory'
-        - $ref: '#/components/parameters/displayOptionArray'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Services'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Services'
-            text/xml:
-              schema:
-                $ref: '#/components/schemas/Services'
-        '400':
-          $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
-        '404':
-          $ref: '#/components/responses/404'
-        '500':
-          $ref: '#/components/responses/500'
-        '501':
-          $ref: '#/components/responses/501'
-        '503':
-          $ref: '#/components/responses/503'
-  
-  '/serviceman/v2/bans/{ban-id}/services/available':
-    get:
-      tags:
-        - Query
-      summary: Get available service(s) by ban
-      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
-      operationId: GetAvailableServicesBan
+      summary: Get SOC details ban+ctn
+      description: Returns SOC details
+      operationId: GetSocDetailsBanCtn
       parameters:
         - $ref: '#/components/parameters/clientId'
         - $ref: '#/components/parameters/sessionId'
         - $ref: '#/components/parameters/requestId'
         - $ref: '#/components/parameters/ban'
-        - $ref: '#/components/parameters/operatorId'
-        - $ref: '#/components/parameters/productCode'
-        - $ref: '#/components/parameters/validity'
-        - $ref: '#/components/parameters/customerType'
-        - $ref: '#/components/parameters/serviceClassArray' 
-        - $ref: '#/components/parameters/voucherSerialNo'
-        - $ref: '#/components/parameters/voucherCategory'
-        - $ref: '#/components/parameters/displayOptionArray'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Services'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Services'
-            text/xml:
-              schema:
-                $ref: '#/components/schemas/Services'
-        '400':
-          $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
-        '404':
-          $ref: '#/components/responses/404'
-        '500':
-          $ref: '#/components/responses/500'
-        '501':
-          $ref: '#/components/responses/501'
-        '503':
-          $ref: '#/components/responses/503'
-  
-  '/serviceman/v2/bans/{ban-id}/ctns/{ctn}/services/available':
-    get:
-      tags:
-        - Query
-      summary: Get available service(s) by ban+ctn
-      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
-      operationId: GetAvailableServicesBanCtn
-      parameters:
-        - $ref: '#/components/parameters/clientId'
-        - $ref: '#/components/parameters/sessionId'
-        - $ref: '#/components/parameters/requestId'
         - $ref: '#/components/parameters/ctn'
-        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/serviceId'
         - $ref: '#/components/parameters/operatorId'
         - $ref: '#/components/parameters/validity'
         - $ref: '#/components/parameters/customerType'
-        - $ref: '#/components/parameters/serviceClassArray' 
-        - $ref: '#/components/parameters/voucherSerialNo'
-        - $ref: '#/components/parameters/voucherCategory'
+        - $ref: '#/components/parameters/serviceClassArray'
         - $ref: '#/components/parameters/displayOptionArray'
       responses:
         '200':
@@ -534,7 +538,153 @@ paths:
         '503':
           $ref: '#/components/responses/503'
           
-  '/serviceman/v2/subscriptions/{subscriptionId}/transactions/{trxId}':
+  '/serviceman/v3/subscriptions/{subscriptionId}/services/available':
+    get:
+      tags:
+        - Query
+      summary: Get available service(s)
+      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
+      operationId: GetAvailableServices
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/subscriptionId'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray' 
+        - $ref: '#/components/parameters/voucherSerialNo'
+        - $ref: '#/components/parameters/voucherCategory'
+        - $ref: '#/components/parameters/displayOptionArray'
+        - $ref: '#/components/parameters/futureDate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  '/serviceman/v3/bans/{ban-id}/services/available':
+    get:
+      tags:
+        - Query
+      summary: Get available service(s) by ban
+      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
+      operationId: GetAvailableServicesBan
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/productCode'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray' 
+        - $ref: '#/components/parameters/voucherSerialNo'
+        - $ref: '#/components/parameters/voucherCategory'
+        - $ref: '#/components/parameters/displayOptionArray'
+        - $ref: '#/components/parameters/futureDate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  '/serviceman/v3/bans/{ban-id}/ctns/{ctn}/services/available':
+    get:
+      tags:
+        - Query
+      summary: Get available service(s) by ban+ctn
+      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
+      operationId: GetAvailableServicesBanCtn
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ctn'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray' 
+        - $ref: '#/components/parameters/voucherSerialNo'
+        - $ref: '#/components/parameters/voucherCategory'
+        - $ref: '#/components/parameters/displayOptionArray'
+        - $ref: '#/components/parameters/futureDate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+          
+  '/serviceman/v3/subscriptions/{subscriptionId}/transactions/{trxId}':
     get:
       tags:
         - Query
@@ -742,7 +892,7 @@ components:
       schema:
         type: array
         items:
-          $ref: '#/components/parameters/serviceClass'
+          $ref: '#/components/schemas/serviceClass'
     displayOptionArray:
       name: displayOptions
       in: query
@@ -751,7 +901,7 @@ components:
       schema:
         type: array
         items:
-          $ref: '#/components/parameters/displayOption'
+          $ref: '#/components/schemas/displayOption'
     serviceId:
       name: serviceId
       in: path
@@ -773,20 +923,6 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/voucherCategory'
-    mpgCode:
-      name: mpgCode
-      in: query
-      description: Multi product group code
-      required: false
-      schema:
-        $ref: '#/components/schemas/mpgCode'
-    mpgIdx:
-      name: mpgIdx
-      in: query
-      description: Multi product group index
-      required: false
-      schema:
-        $ref: '#/components/schemas/mpgIdx'
     mpg:
       name: mpgIdx
       in: query
@@ -885,33 +1021,6 @@ components:
       schema:
         type: boolean
         example: true
-    expDate:
-      name: expDate
-      in: query
-      description: Service expiration date
-      required: false
-      schema:
-        type: string
-        format: date
-        example: '2018-10-15'
-    serviceClass:
-      name: serviceClass
-      in: query
-      description: Class of service
-      required: false
-      schema:
-        type: string
-        enum: [AIS, DSC, EQP, NON, PP, SOC]
-        maxLength: 5
-        example: 'SOC'
-    displayOption:
-      name: displayOption
-      in: query
-      description: DisplayOption
-      required: false
-      schema:
-        type: string
-        example: '1'
     customerType:
       name: customerType
       in: query
@@ -920,7 +1029,6 @@ components:
       schema:
         type: string
         enum: [PREP, POST, HYBR]
-        maxLength: 5
         example: 'POST'
     transactionIdPath:
       name: trxId
@@ -929,6 +1037,16 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/trxId'
+    futureDate:
+      name: date
+      in: query
+      description: |
+        date on which the query will run (null is default, it means the actual date) - format : YYYYMMDD
+      required: false
+      schema:
+        type: string
+        pattern: "\\d{4}\\d{2}\\d{2}"
+        example: '20181130'
   schemas:
     msisdn:
       description: User MSISDN
@@ -950,9 +1068,11 @@ components:
       example: CAT
     mpgCode:
       type: string
+      description: Name of multi product group
       example: MPG01
     mpgIdx:
       type: integer
+      description: Index of multi product group
       example: 1
     productCode:
       type: string
@@ -982,9 +1102,30 @@ components:
       example: 1
     type:  
       type: string
-      description: Name of the operation. ADD means add service (order), DELETE means delete service (cancellation), SETPP means set/change priceplan, UPDATE means update service
-      enum: [ADD,DELETE,SETPP,UPDATE]
+      description: Name of the operation. ADD means add service (order), DELETE means delete service (cancellation), SETPP means set/change priceplan, UPDATE means update service, MPG means add Multi Product Group
+      enum: [ADD,DELETE,SETPP,UPDATE,MPG]
       example: ADD
+    effectiveDate:
+      description: Effective Date
+      type: string
+      format: date
+      example: '2018-03-27'
+    expirationDate:
+      description: "Expiration Date (format: \"YYYYMMDD\"). It has to be null if operation type is UPDATE, and it is optional in case of DELETE operation type" 
+      type: string
+      pattern: "\\d{4}\\d{2}\\d{2}"
+      example: '20181130'
+    serviceClass:
+      type: string
+      enum: [AIS, DSC, EQP, NON, PP, SOC]
+      description: SOC's service class
+      maxLength: 3
+      example: 'SOC'
+    displayOption:
+      description: Display option
+      type: integer
+      maxLength: 1
+      example: 2
     SOCManipulation:
       type: object
       allOf:
@@ -995,7 +1136,8 @@ components:
           type:
             $ref: '#/components/schemas/type'
       - oneOf:
-        - $ref: '#/components/schemas/PricePlanMan'
+        - $ref: '#/components/schemas/MPGManObj'
+        - $ref: '#/components/schemas/PricePlanManObj'
         - $ref: '#/components/schemas/ServiceManObj'
     ConfSchema:
       type: object
@@ -1044,12 +1186,11 @@ components:
             requestSendingTs:
               description: Start time of transaction
               type: string
-              maxLength: 1
+              format: date-time
               example: '2018-10-24T13:38:30.672'
             serviceManType:
               description: Order, delete or mass manipulation
               type: string
-              maxLength: 9
               example: 'ORDER_SERVICE'
     Services:
       description: Current and/or available services of subscription
@@ -1087,7 +1228,7 @@ components:
           description: Add Enable Indicator
           type: string
           maxLength: 1
-          example: 'Y'
+          example: 'N'
         balCheckInd:
           description: Balance Check Indicator
           type: string
@@ -1096,7 +1237,7 @@ components:
         buySoc:
           description: relevant BUY soc for TRY socs
           type: string
-          maxLength: 9
+          maxLength: 6
           example: 'SZMESE'
         changeInd:
           description: Change Indicator
@@ -1112,7 +1253,7 @@ components:
           description: Delete Enable Indikator
           type: string
           maxLength: 1
-          example: 'Y'
+          example: 'N'
         disablePeriod:
           description: Disable period
           type: integer
@@ -1124,10 +1265,7 @@ components:
           maxLength: 1
           example: 2
         effectiveDate:
-          description: Effective Date
-          type: string
-          format: date
-          example: '2018-03-27'
+          $ref: '#/components/schemas/effectiveDate'
         effectiveOnCycleStart:
           description: Effective On Cycle Start
           type: string
@@ -1139,10 +1277,7 @@ components:
           maxLength: 4
           example: 0
         expirationDate:
-          description: Expiration Date
-          type: string
-          format: date
-          example: '2018-11-30'
+          $ref: '#/components/schemas/expirationDate'
         expireOnCycleEnd:
           description: Expire Adjust to cycle end
           type: string
@@ -1159,12 +1294,14 @@ components:
           format: double
           maxLength: 11
           multipleOf: 0.01
-          example: 0.0
+          example: 123.89
         modEnableInd:
           description: Modificate Enable Indicator
-          type: string
-          maxLength: 1
-          example: 'I'
+          type: number
+          format: double
+          maxLength: 11
+          multipleOf: 0.01
+          example: 123.89
         infoUrl:
           description: Info URL
           type: string
@@ -1228,6 +1365,11 @@ components:
           type: string
           maxLength: 9
           example: 'APNONLINE'
+        socDescription:
+          description: SOC Description
+          type: string
+          maxLength: 30
+          example: 'description'
         socEffectiveDate:
           description: SOC Effective Date
           type: string
@@ -1472,6 +1614,72 @@ components:
         valueDesc:
           description: Description of parameter value
           type: string
+    MPGManObj:
+      type: object
+      required: [mpgMan]
+      properties:
+        mpgMan:
+          $ref: '#/components/schemas/MPGMan'
+    MPGMan:
+      description: Set MPG
+      type: object
+      required: [multiProductGroup, multiProductGroupIndex,leadkeyId, offerCategory]
+      properties:
+        multiProductGroup:
+          $ref: '#/components/schemas/mpgCode'
+        multiProductGroupIndex:
+          $ref: '#/components/schemas/mpgIdx'
+        leadkeyId:
+          description: lead key Id
+          type: string
+        offerCategory:
+          description: Waive Reason Code
+          type: string
+        effectiveDate:
+          description: The function will be called with this effective date
+          type: string
+          format: date
+          example: '2018-03-27'
+        expirationDate:
+          description: "The function will be called with this expiration date (format: \"YYYYMMDD\"). It has to be null if operation type is UPDATE, and it is optional in case of other case"
+          type: string
+          pattern: "\\d{4}\\d{2}\\d{2}"
+          example: '20181130'
+        offline:
+          description: If true, then SOC will be added offline
+          type: boolean
+          example: false
+        memoUserTxt :
+          description: User text of memo for Price Plan
+          type: string
+        ppEffInd:
+          description: PricePlan Effective Indicator (I-immediate, E-End of cycle or null)
+          type: string
+          enum: [I,E]
+          example: 'I'
+        reasonCode:
+          description: Reason code (mandatory for price plan)
+          type: string
+          example: 'CPTC'
+        waiveReasonCode:
+          description: Waive Reason Code
+          type: string
+        withCommitment:
+          description: If true, then SOC will be added with commitment
+          type: boolean
+          example: false
+        headId:
+          description: External transaction IDs' headId part
+          type: string
+        itemId:
+          description: External transaction IDs' itemId part
+          type: string
+    PricePlanManObj:
+      type: object
+      required: [pricePlanMan]
+      properties:
+        pricePlanMan:
+          $ref: '#/components/schemas/PricePlanMan'
     PricePlanMan:
       description: Set price plan for new activation or change old
       type: object
@@ -1508,8 +1716,8 @@ components:
         effectiveDate:
           description: Effective Date
           type: string
-          format: date
-          example: '2018-03-27'
+          pattern: "\\d{4}\\d{2}\\d{2}"
+          example: '20181130'
         expirationDate:
           description: "Expiration Date (format: \"YYYYMMDD\"). It has to be null if operation type is UPDATE, and it is optional in case of DELETE operation type" 
           type: string
