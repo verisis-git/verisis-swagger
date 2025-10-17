@@ -1,0 +1,511 @@
+swagger: '2.0'
+info:
+  description: This is a simple API
+  version: '1.3'
+  title: Reconciliation API
+  contact:
+    email: aweimann@verisis.hu
+host: virtserver.swaggerhub.com
+basePath: /ReconLC/1.0.0
+schemes:
+  - https
+  - http
+  
+tags:
+  - name: lifecycle
+    description: lifecycle events
+  - name: list
+    description: get lifecycle(s)
+
+paths:
+  /reconlcs/{id}:
+    get:
+      tags:
+        - list
+      summary: get details of a particular lifecycle selected by id
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle to be retrieved
+          required: true
+          type: number
+      responses:
+        '200':
+          description: details of a particular lifecycle
+          schema:
+            $ref: '#/definitions/lifecycleItem'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+          
+    put:
+      tags:
+        - lifecycle
+      summary: reset a particular lifecycle selected by id
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle to be reset
+          required: true
+          type: number
+        - in: body
+          name: resetRequest
+          description: request body of lifecycle reset
+          required: true
+          schema:
+            $ref: '#/definitions/lifecycleResetBody'
+      responses:
+        '200':
+          description: lifecycle reset
+          schema:
+            $ref: '#/definitions/lifecycleItem'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '405':
+          description: Method Not Allowed
+        '500':
+          description: Internal server error
+    patch:
+      tags:
+        - lifecycle
+      summary: change ctn of a particular lifecycle selected by id
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle to be changed
+          required: true
+          type: number
+        - in: body
+          name: chageCtnRequest
+          description: request body of ctn change
+          required: true
+          schema:
+            $ref: '#/definitions/lifecycleChangeBody'
+      responses:
+        '200':
+          description: lifecycle changed
+          schema:
+            $ref: '#/definitions/lifecycleItem'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - lifecycle
+      summary: terminate a particular lifecycle selected by id
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle to be terminated
+          required: true
+          type: number
+      responses:
+        '200':
+          description: lifecycle terminated
+          schema:
+            $ref: '#/definitions/lifecycleTerminateResp'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+  /reconlcs:
+    get:
+      tags:
+        - list
+      summary: get details of lifecycles selected by ctns
+      produces:
+        - application/json
+      parameters:
+        - name: ctn
+          in: query
+          description: 'ctn of the lifecycle - example: 36201234567,36207654321'
+          required: true
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          maxItems: 50
+      responses:
+        '200':
+          description: details of selected lifecycles
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/lifecycleItem'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - lifecycle
+      summary: create a lifecycle for ctn
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: createRequest
+          description: request body of lifecycle creation
+          required: true
+          schema:
+            $ref: '#/definitions/lifecycleCreateBody'
+      responses:
+        '200':
+          description: lifecycle created
+          schema:
+            $ref: '#/definitions/lifecycleItem'
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+  /reconlcs/reconPeriod:
+    get:
+      tags:
+        - list
+      summary: get reconciliation periods of lifecycles selected by ctns
+      produces:
+        - application/json
+      parameters:
+        - name: ctn
+          in: query
+          description: 'ctn of the lifecycle - example: 36201234567,36207654321'
+          required: true
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          maxItems: 50
+      responses:
+        '200':
+          description: reconciliation periods of selected lifecycles
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/reconPeriodResp'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+  /reconlcs/{id}/reconPeriod:
+    get:
+      tags:
+        - list
+      summary: get reconciliation period of a particular lifecycle selected by id
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle
+          required: true
+          type: number
+      responses:
+        '200':
+          description: reconciliation period of a particular lifecycle
+          schema:
+            $ref: '#/definitions/reconPeriodResp'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+definitions:
+  notifAttrType:
+    type: object
+    required:
+      - initDateTime
+    properties:
+      initDateTime:
+        type: string
+        format: date-time
+        example: '2017-11-29 12:25:35'
+        description: timestamp of notif event
+  notifItem:
+    type: "object"
+    required:
+      - notifAttr
+      - notifId
+      - notifType
+    properties:
+      notifId:
+        type: number
+        description: id of notification in the lifecycle
+      notifType:
+        type: string
+        enum:
+          - notifSMS
+          - notifIVR
+          - notifEMAIL
+          - notifMAIL
+      notifAttr:
+        $ref: '#/definitions/notifAttrType'
+    discriminator: notifType
+  notifSMS:
+    allOf:
+      - $ref: '#/definitions/notifAttrType'
+      - type: object
+        properties:
+          deliveryDateTime:
+            type: string
+            format: date-time
+            example: '2017-11-29 12:27:35'
+            description: timestamp of receiving Delivery Report from SMSC
+          result:
+            type: string
+            example: sent
+            description: result of notif event
+            enum:
+              - sent
+              - failed
+              - delivered
+  notifIVR:
+    allOf:
+      - $ref: '#/definitions/notifAttrType'
+      - type: object
+        properties:
+          calloutDateTime:
+            type: string
+            format: date-time
+            example: '2017-11-29 12:27:35'
+            description: timestamp of the last call out
+          calloutAttempt:
+            type: number
+            example: 3
+            description: number of the call out attempts
+          callDuration:
+            type: number
+            example: 45
+            description: duration of the last call out (in sec) - if established
+          result:
+            type: string
+            example: established
+            description: result of notif event
+  notifMAIL:
+    allOf:
+      - $ref: '#/definitions/notifAttrType'
+      - type: object
+        properties:
+          result:
+            type: string
+            example: sent
+            description: result of notif event
+            enum:
+              - sent
+              - failed
+  notifEMAIL:
+    allOf:
+      - $ref: '#/definitions/notifAttrType'
+      - type: object
+        properties:
+          result:
+            type: string
+            example: sent
+            description: result of notif event
+            enum:
+              - sent
+              - failed
+              - delivered
+  lifecycleItem:
+    type: object
+    required:
+      - beginningDate
+      - ctn
+      - dueDate
+      - endDate
+      - id
+      - productCode
+      - startDate
+    properties:
+      id:
+        type: number
+        example: 4294967295
+        description: id of reconciliation lifecycle
+      ctn:
+        type: string
+        example: '36201234567'
+        description: Customer Telephone Number in international format
+        pattern: 36\d{9}
+      productCode:
+        type: string
+        example: YOLO
+        enum:
+          - PREP
+          - YOLO
+      startDate:
+        type: string
+        format: date
+        example: '2017-10-07'
+        description: date of starting the lifecycle
+      beginningDate:
+        type: string
+        format: date
+        example: '2017-11-02'
+        description: beginning of the reconciliation period
+      dueDate:
+        type: string
+        format: date
+        example: '2017-12-02'
+        description: due date of the reconciliation
+      endDate:
+        type: string
+        format: date
+        example: '2017-12-07'
+        description: deadline of the reconciliation to be done
+      terminationDate:
+        type: string
+        format: date
+        example: '2017-12-07'
+        description: the termination date of the reconciliation lifecycle due to missing reconciliation
+      channelId:
+        type: string
+        example: '1234'
+        description: channel identifier of the reconciliation
+        minLength: 1
+        maxLength: 20
+      reactivationCode:
+        type: number
+        example: 123123
+        description: reactivation code for supporting easy renewal of cancelled subscription
+      notifications:
+        type: array
+        items:
+          $ref: '#/definitions/notifItem'
+  lifecycleResetBody:
+    type: object
+    required:
+      - ctn
+      - productCode
+    properties:
+      ctn:
+        type: string
+        example: '36201234567'
+        description: Customer Telephone Number in international format
+        pattern: 36\d{9}
+      channelId:
+        type: string
+        example: '1234'
+        description: channel identifier of the reconciliation
+        minLength: 1
+        maxLength: 20
+      startDate:
+        type: string
+        format: date
+        example: '2017-09-29'
+        description: date of starting the lifecycle
+      productCode:
+        type: string
+        example: YOLO
+        enum:
+          - PREP
+          - YOLO
+  lifecycleChangeBody:
+    type: object
+    required:
+      - ctn
+    properties:
+      ctn:
+        type: string
+        example: '36201234567'
+        description: Customer Telephone Number in international format
+        pattern: 36\d{9}
+  lifecycleCreateBody:
+    type: object
+    required:
+      - ctn
+      - productCode
+    properties:
+      ctn:
+        type: string
+        example: '36201234567'
+        description: Customer Telephone Number in international format
+        pattern: 36\d{9}
+      startDate:
+        type: string
+        format: date
+        example: '2017-09-29'
+        description: date of starting the lifecycle
+      productCode:
+        type: string
+        example: YOLO
+        enum:
+          - PREP
+          - YOLO
+  reconPeriodResp:
+    type: object
+    required:
+      - beginningDate
+      - ctn
+      - dueDate
+      - endDate
+      - id
+      - productCode
+    properties:
+      id:
+        type: number
+        example: 4294967295
+        description: id of reconciliation lifecycle
+      ctn:
+        type: string
+        example: '36201234567'
+        description: Customer Telephone Number in international format
+        pattern: 36\d{9}
+      productCode:
+        type: string
+        example: YOLO
+        enum:
+          - PREP
+          - YOLO
+      beginningDate:
+        type: string
+        format: date
+        example: '2017-11-02'
+        description: beginning of the reconciliation period
+      dueDate:
+        type: string
+        format: date
+        example: '2017-12-02'
+        description: due date of the reconciliation
+      endDate:
+        type: string
+        format: date
+        example: '2017-12-07'
+        description: deadline of the reconciliation to be done
+  lifecycleTerminateResp:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        type: number
+        description: id of terminated reconciliation lifecycle

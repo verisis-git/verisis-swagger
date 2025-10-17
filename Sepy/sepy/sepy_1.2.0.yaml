@@ -1,0 +1,2477 @@
+openapi: 3.0.0
+info:
+  version: '1.2.0'
+  title: Sesame Payment Manager (SEPY)
+  description: |
+    SEsame PaYment manager (SEPY) interface specification for clients
+
+    Release notes:
+    *v1.2.0*
+      - add BillingSpecificInformation to create transaction request
+      - add email and type to CustomerSpecificInformation object
+      - add new PurposeOfTransaction (31,32) and NatureOfTransaction (123) values
+      - add new STEX-related workflow step to WorkflowHistory
+      - add new request examples
+
+    *v1.1.0*
+      - add PaymentProcessId, PaymentId, POSTransactionId to the error object
+      
+    *v1.0.0*
+      - add RecurrenceType parameter to create transaction request It can be sent in case of the next purposes: OneTimePayment (30), ManualRecurringPayment (41) and ReactivationPayment (42)
+    
+    *v0.10.0*
+      - Total is not mandatory (in case of starting a transaction with TwoStepTokenRegistration purpose)
+      
+    *v0.9.1*
+      - add new enum values Other and Barion to BankCardType object
+      - add new parameter called BankCardTypeNum to FundingInformation.BankCard
+      - Total parameters must be integer and can be zero
+    
+    *v0.9*
+      - add RefundPayment(50), TwoStepCommit(60), TwoStepTokenCommit(61), TwoStepRelease(70), TwoStepTokenRelease(71) and TwoStepTokenRegistration(12) purposes to PurposeOfTransaction parameter as placeholder
+      - add Refund(170) value to NatureOfTransaction parameter as placeholder
+    
+    *v0.8* 
+      - PaymentTransaction.comment minLength=1
+      - TransactionToRefund.comment minLength=1
+      - OrderId maxLength=36
+      - BillingAddress.Fullname deleted
+      - Currency can be only HUF
+    
+    *v0.7*
+      - add "Released" value to ResponseCategory
+    
+    *v0.6*
+      - add example requests and responses
+      - delete PaymentId parameter and OneTimeComplete Nature option from create transaction request
+      - delete RecurrenceId from create transaction response
+
+    *v0.5*
+      - modify commit and release requests parameters
+      - merge complete and commit endpoints, remove complete operation
+      - change TransactionToFinish parameter to optional in commit request because of OneTimeComplete case
+      - rename release to cancel
+      - add WorkflowHistory parameters to query transaction response
+      - add includeHistory query parameter to query transaction
+      - exclude zero value in Total parameter of TransactionToFinish object
+      - add NatureOfTransaction to responses
+      - add CallbackUrl to RefundRequest
+      - add DelayedCaptureInitWithTokenRegistration, OneTimeComplete and MerchantInitiatedPayment natures
+      - rename BarionRedirectUrl to ProviderRedirectUrl
+      - add CustomerSpecificInformation to Commit
+      - change CallerNode to optional in commit request
+      - change Total to optional in commit request
+      - add TraceId, FundingInformation to commit response
+      - rename ErrorCategory to ResponseCategory and change the possible values
+      - remove Data field from Error object (Barion errors are hidden by OPE)
+      - add CardHolderEmailHint to PaymentParameters
+      - rename ResultCode and ResultDescription to ResponseCode and ResponseDescription
+      - add validation rules to parameters
+      - change type of Ban and Ben to integer
+
+    *v0.4*
+      - add ErrorCategory to responses
+      - add FundingSource to common payment response
+      
+    *v0.3*
+      - paymentmanager -> sepy
+      - modify Transaction type to array and its name to Transactions
+      - add RelatedId parameter to Transaction object
+      - add ReservationPeriod and DelayedCapturePeriod input parameters to create transaction request
+      - add OrderNumber, RedirectUrl, BarionRedirectUrl and ThreeDSAuthClientData output parameters to create transaction response
+      - remove AuthData and Endpoint parameters from BarionError object
+      - add ResultCode and ResultDescrition to responses as mandatory parameters
+      - change type of NatureOfTransaction and PurposeOfTransaction to string and add some new integer enum values as string
+      - add new "complete payment" endpoint
+      - clarify the parameters of Transactions for different types of operations
+      - introduce http status 504
+      - change commit response from array to object
+      - remove PaymentProcessId body parameter from requests
+      - add RecurrenceId to create payment, commit and release response
+
+    Host URL depends on the environment youe are connecting to.
+
+    General information:
+      - the MIME type of the request sent to the API is defined as application/json
+      - string type is a standard character string. The API uses UTF-8 encoding
+      - date-time values are represented in a string format of the ISO-8601 standard, for example: 2023-12-06T08:35:46.213+00:00
+      - time span is a time range value represented in a string format of the ISO-8601 standard, like this: 3.14:15:28 (three days, fourteen hours, fifteen minutes, twenty-eight seconds)
+      - all API call responses contain datetimes as strings
+      - for boolean type, please avoid integer or byte values. True or false is expected
+servers:
+  - url: https://{host_url}/paymentmanager/v1/services
+paths:
+  /transactions:
+    post:
+      summary: Create a new transaction
+      parameters:
+        # headers
+        - $ref: '#/components/parameters/Msg-Ctx-Src'
+        - $ref: '#/components/parameters/Msg-Ctx-Src-Module'
+        - $ref: '#/components/parameters/Msg-Ctx-Env'
+        - $ref: '#/components/parameters/Msg-Ctx-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Corr-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-User-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Build-Number'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreatePaymentRequest'
+            examples:
+              InitialPaymentWithTokenRegistration Example:
+                $ref: '#/components/examples/InitialPaymentWithTokenRegistrationReq'
+              TokenRegistration two step Example:
+                $ref: '#/components/examples/TokenRegistrationTwoReq'
+              TokenRegistration one step Example:
+                $ref: '#/components/examples/TokenRegistrationOneReq'
+              OneTimePayment Example:
+                $ref: '#/components/examples/OneTimePaymentReq'
+              RecurringPayment Example:
+                $ref: '#/components/examples/RecurringPaymentReq'
+              OneTimePayment with TokenRegistration Example:
+                $ref: '#/components/examples/OneTimeWithTokenRegReq'
+              OneTimePayment for bill Example:
+                $ref: '#/components/examples/OneTimePaymentForBillReq'
+              TokenRegistration without payment Example:
+                $ref: '#/components/examples/TokenRegWOPaymentReq'
+
+      responses:
+        '201':
+          description: The payment has been created successfully
+          headers:
+            Msg-Ctx-Rrid:
+              $ref: '#/components/headers/Msg-Ctx-Rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreatePaymentResponse'
+              examples:
+                InitialPaymentWithTokenRegistration Example:
+                  $ref: '#/components/examples/InitialPaymentWithTokenRegistrationRes'
+                TokenRegistration one step Example:
+                  $ref: '#/components/examples/TokenRegistrationOneRes'
+                TokenRegistration two step Example:
+                  $ref: '#/components/examples/TokenRegistrationTwoRes'
+                OneTimePayment Example:
+                  $ref: '#/components/examples/OneTimePaymentRes'
+                OneTimePayment3DS Example:
+                  $ref: '#/components/examples/OneTimePayment3DSRes'
+                RecurringPayment Example:
+                  $ref: '#/components/examples/RecurringPaymentRes'
+        '400':
+          description: Bad request, check the request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error, something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '504':
+          description: Gateway timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /transactions/{paymentProcessId}:
+    get:
+      summary: Query transaction
+      parameters:
+        # headers
+        - $ref: '#/components/parameters/Msg-Ctx-Src'
+        - $ref: '#/components/parameters/Msg-Ctx-Src-Module'
+        - $ref: '#/components/parameters/Msg-Ctx-Env'
+        - $ref: '#/components/parameters/Msg-Ctx-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Corr-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-User-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Build-Number'
+        # path
+        - $ref: '#/components/parameters/PaymentProcessId'
+        # query
+        - $ref: '#/components/parameters/IncludeHistory'
+
+      responses:
+        '200':
+          description: Payment state
+          headers:
+            Msg-Ctx-Rrid:
+              $ref: '#/components/headers/Msg-Ctx-Rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPaymentResponse'
+        '400':
+          description: Bad request, check the request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error, something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '504':
+          description: Gateway timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /transactions/{paymentProcessId}/commit:
+    post:
+      summary: Successful reservation/capture or complete a formerly prepared and 3DS authenticated payment
+      parameters:
+        # headers
+        - $ref: '#/components/parameters/Msg-Ctx-Src'
+        - $ref: '#/components/parameters/Msg-Ctx-Src-Module'
+        - $ref: '#/components/parameters/Msg-Ctx-Env'
+        - $ref: '#/components/parameters/Msg-Ctx-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Corr-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-User-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Build-Number'
+        # path
+        - $ref: '#/components/parameters/PaymentProcessId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitRequest'
+            examples:
+              Commit Example:
+                $ref: '#/components/examples/CommitReq'
+              Commit partial Example:
+                $ref: '#/components/examples/PartialCommitReq'
+              Complete OTP two step Example:
+                $ref: '#/components/examples/CompleteReq'
+
+      responses:
+        '200':
+          description: Successful commit
+          headers:
+            Msg-Ctx-Rrid:
+              $ref: '#/components/headers/Msg-Ctx-Rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TwoStepResponse'
+              examples:
+                Commit BankCard Example:
+                  $ref: '#/components/examples/CommitRes'
+                Commit partial BankCard Example:
+                  $ref: '#/components/examples/PartialCommitRes'
+                Commit Barion Balance Example:
+                  $ref: '#/components/examples/CommitBarionBalanceRes'
+                Commit partial Barion Balance Example:
+                  $ref: '#/components/examples/PartialCommitBarionBalanceRes'
+                Complete OTP two step Example:
+                  $ref: '#/components/examples/CompleteRes'
+        '400':
+          description: Bad request, check the request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error, something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '504':
+          description: Gateway timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /transactions/{paymentProcessId}/cancel:
+    post:
+      summary: Unsuccessful reservation/capture or cancel 3DS one-time payment transaction
+      parameters:
+        # headers
+        - $ref: '#/components/parameters/Msg-Ctx-Src'
+        - $ref: '#/components/parameters/Msg-Ctx-Src-Module'
+        - $ref: '#/components/parameters/Msg-Ctx-Env'
+        - $ref: '#/components/parameters/Msg-Ctx-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Corr-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-User-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Build-Number'
+        # path
+        - $ref: '#/components/parameters/PaymentProcessId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReleaseRequest'
+            examples:
+              Cancel Example:
+                $ref: '#/components/examples/CancelReq'
+
+      responses:
+        '200':
+          description: Successful cancel
+          headers:
+            Msg-Ctx-Rrid:
+              $ref: '#/components/headers/Msg-Ctx-Rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TwoStepResponse'
+              examples:
+                Cancel Example:
+                  $ref: '#/components/examples/CancelRes'
+        '400':
+          description: Bad request, check the request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error, something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '504':
+          description: Gateway timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /transactions/{paymentProcessId}/refund:
+    post:
+      summary: This endpoint is used to execute a refund of an existing, completed payment
+      parameters:
+        # headers
+        - $ref: '#/components/parameters/Msg-Ctx-Src'
+        - $ref: '#/components/parameters/Msg-Ctx-Src-Module'
+        - $ref: '#/components/parameters/Msg-Ctx-Env'
+        - $ref: '#/components/parameters/Msg-Ctx-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Corr-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-User-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Build-Number'
+        # path
+        - $ref: '#/components/parameters/PaymentProcessId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+            examples:
+              Refund Example:
+                $ref: '#/components/examples/RefundReq'
+              Partial refund Example:
+                $ref: '#/components/examples/PartialRefundReq'
+
+      responses:
+        '200':
+          description: Successful refund
+          headers:
+            Msg-Ctx-Rrid:
+              $ref: '#/components/headers/Msg-Ctx-Rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundResponse'
+              examples:
+                Refund Example:
+                  $ref: '#/components/examples/RefundRes'
+                Partial Refund Example:
+                  $ref: '#/components/examples/PartialRefundRes'
+        '400':
+          description: Bad request, check the request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error, something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '504':
+          description: Gateway timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  headers:
+    Msg-Ctx-Rrid:
+      description: In case of regular responses, this field must contain the ID of the message, which to it answers.
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+  parameters:
+    Msg-Ctx-Src:
+      name: Msg-Ctx-Src
+      in: header
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+        example: System
+    Msg-Ctx-Src-Module:
+      name: Msg-Ctx-Src-Module
+      in: header
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      required: false
+      schema:
+        type: string
+        maxLength: 128
+        example: SystemModule
+    Msg-Ctx-Env:
+      name: Msg-Ctx-Env
+      in: header
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2').
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+        example: DEV
+    Msg-Ctx-Id:
+      name: Msg-Ctx-Id
+      in: header
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+        example: 
+          53329a61-f5f5-4ad4-aec0-5a68d28b1350
+    Msg-Ctx-Corr-Id:
+      name: Msg-Ctx-Corr-Id
+      in: header
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow.
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+        example: 3385cbdb-8561-48f6-a671-5e271f486a41B
+    Msg-Ctx-User-Id:
+      name: Msg-Ctx-User-Id
+      in: header
+      description: Optional value of "Yettel login name” of the original user as shown in the global Active Directory. If the identification of the original user is not possible (eg. batch jobs) or the original user is not part of the global user directory (eg. a customer, who is using a frontend system), then a technical user name should be used upon previous agreement.
+      required: false
+      schema:
+        type: string
+        maxLength: 128
+        example: AUser
+    Msg-Ctx-Build-Number:
+      name: Msg-Ctx-Build-Number
+      in: header
+      description: It represents the sender application’s build version.
+      required: false
+      schema:
+        type: string
+        maxLength: 128
+    PaymentProcessId:
+      name: paymentProcessId
+      description: Unique identifier for the payment process in Payment Manager.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/PaymentProcessId'
+    IncludeHistory:
+      name: include-history
+      in: query
+      description: It can be true or false. If you want to get the workflow steps too you have to choose "true" value, because the default is false
+      schema:
+        type: boolean
+        example: true
+
+  schemas:
+    UuidString:
+      type: string
+      format: uuid
+    DateTimeString:
+      type: string
+      format: date-time
+      example: "2023-12-07T12:30:00.334+01:00"
+    Timespan:
+      type: string
+      format: TimeSpan
+      minLength: 10
+      maxLength: 12
+      pattern: "^\\d{1,3}\\.\\d{2}:\\d{2}:\\d{2}$"
+      example: "1.03:44:51"
+    
+    BaseRequest:
+      type: object
+      required:
+        - PaymentRequestId
+        - CreatedAt
+        - CallerSystem
+      properties:
+        PaymentRequestId:
+          $ref: '#/components/schemas/PaymentRequestId'
+        PaymentChannelId:
+          type: integer
+          description: Identifies the payment channel the current transaction belongs to (e.g., 10 means YOLO).
+          example: 10
+        CreatedAt:
+          $ref: '#/components/schemas/DateTimeString'
+          description: Payment request creation timestamp.
+        CallerSystem:
+          type: string
+          description: Identifies the application which initiates the payment request.
+          maxLength: 32
+          example:
+            "MyApp"
+        CallerNode:
+          type: string
+          description: Identifies the environment and instance by which the payment request was initiated (Device ID for app instance identification).
+          maxLength: 50
+          example:
+            "Device123"
+
+    CustomerSpecificInformation:
+      type: object
+      description: Information specific to the corresponding customer for customer information purposes.
+      properties:
+        CAID:
+          type: string
+          maxLength: 32
+          description: Obtained from PANDOCS.
+          example:
+            "1231"
+        Ban:
+          type: integer
+          minimum: 0
+          description: Obtained from PANDOCS.
+          example:
+            3215
+        Ben:
+          type: integer
+          minimum: 0
+          description: Obtained from PANDOCS.
+          example:
+            324789
+        Ctn:
+          type: string
+          description: Obtained from PANDOCS.
+          maxLength: 30
+          example:
+            "36202345678"
+        Initial:
+          type: string
+          description: Obtained from PANDOCS.
+          example:
+            "IJK"
+        FirstName:
+          type: string
+          description: Obtained from PANDOCS.
+          example:
+            "John"
+        LastName:
+          type: string
+          description: Obtained from PANDOCS.
+          example:
+            "Doe"
+        Zip:
+          type: string
+          description: Obtained from PANDOCS.
+          example:
+            "12345"
+        City:
+          type: string
+          description: Obtained from PANDOCS.
+          example:
+            "Cityville"
+        StreetName:
+          type: string
+          description: Obtained from PANDOCS.
+          example:
+            "Main Street"
+        Email:
+          type: string
+          format: email
+          description: Email address of the related party
+        Type:
+          type: string
+          enum:
+            - INDIVIDUAL
+            - ORGANIZATION
+
+    Money:
+      type: object
+      description: A base / value business entity used to represent money
+      properties:
+        unit:
+          type: string
+          description: Currency (ISO4217 norm uses 3 letters to define the currency)
+        value:
+          type: number
+          format: float
+          description: A positive floating point number
+
+    CustomerBill:
+      type: object
+      description: Entity reference schema to be use for all entityRef class.
+      required: [Id, Type]
+      properties:
+        Id:
+          type: string
+          description: The identifier of the referred entity.
+        Name:
+          type: string
+          description: Name of the referred entity.
+        Type:
+          type: string
+          description: The actual type of the target instance when needed for disambiguation.
+          enum:
+            - CustomerBill
+  
+    PaymentItem:
+      type: object
+      description: >-
+        The paymentItem is the result of lettering process. It enables to assign
+        automatically or manually part of incoming payment amount to a bill
+      required:
+        - Id
+        - Item
+        - TotalAmount
+      properties:
+        Id:
+          type: string
+          maxLength: 15
+          description: Unique identifier of the payment Item, must be unique per partner
+        Item:
+          $ref: '#/components/schemas/CustomerBill'
+        Comment:
+          type: string
+          description: Comment for the item
+        Amount:
+          $ref: '#/components/schemas/Money'
+        TaxAmount:
+          $ref: '#/components/schemas/Money'
+        TotalAmount:
+          $ref: '#/components/schemas/Money'
+
+    BillingSpecificInformation:
+      type: object
+      description: bill
+      properties:
+        TerminalId:
+          type: string
+          maxLength: 16
+          description: |
+            Terminal ID - required if invoice settlement is performed (i.e., when the PaymentItem structure is provided).
+        ChannelType:
+          type: string
+          maxLength: 1
+          description: |
+            Channel type (cashflag) - required if invoice settlement is performed (i.e., when the PaymentItem structure is provided).
+        OuterPandocsPaymentType:
+          type: string
+          enum:
+            - PostalOrderAut
+            - AutoPayment
+            - BankTransfer
+            - Application
+            - Cash
+            - CouponTransfer
+            - EpaCash
+            - OnlineKac
+            - DirectDebit
+            - PartnerPos
+            - AdvanceCard
+            - AdvanceCash
+            - EpaFirstInstallment
+            - OnlineFirstInstallment
+            - CardOnline
+            - Icheck
+            - Kuponportfolio
+            - BankCard
+            - Lapker
+            - ManualDirectDebit
+            - MovementDeposit
+            - Online
+            - PostalOrder
+            - Atm
+            - PinkCheck
+            - SmallAmount
+            - Sap2DP
+            - PpRemainderTopup
+            - Technical
+            - YettelTechnical
+            - RepoTransfer
+            - EpaInstallment
+            - WoTechnical
+          description: |
+            Pandocs payment type
+            - PostalOrderAut: AW, Postai csekkautomata bef white
+            - AutoPayment: BA, AUTO PAYMENT                  
+            - BankTransfer: BT, Banki átutalás                
+            - Application: CA, Yettel alkalmazás             
+            - Cash: CH, Készpénz                      
+            - CouponTransfer: CM, Coupon_transfer               
+            - EpaCash: CP, EPA befizetés kasszába        
+            - OnlineKac: CT, Yettel Online (KAC)           
+            - DirectDebit: DD, Direct Debit                  
+            - PartnerPos: DP, Shop Partner POS Terminal     
+            - AdvanceCard: EC, Hitelkártya-Előleg            
+            - AdvanceCash: EK, Készpénz-Előleg               
+            - EpaFirstInstallment: HA, EPA kezdő részlet befizetése  
+            - OnlineFirstInstallment: HG, Online Forgalmi Előleg        
+            - CardOnline: IB, Hitelkártya, Interneten       
+            - Icheck: IW, iCheck app befizetés white    
+            - Kuponportfolio: KP, KUPONPORTFOLIO                
+            - BankCard: LC, Hitelkártya                   
+            - Lapker: LP, LAPKER                        
+            - ManualDirectDebit: MD, Manual Direct Debit           
+            - MovementDeposit: MO, Movement DEPOSIT              
+            - Online: MT, Yettel Online                 
+            - PostalOrder: OW, Postahivatali befizetés white 
+            - Atm: PA, ATM-es számlabefizetés        
+            - PinkCheck: PP, Rózsaszín postautalvány       
+            - SmallAmount: SA, SMALL AMOUNT                  
+            - Sap2DP: ST, SAP2PD átadás                 
+            - PpRemainderTopup: TB, Postpaid maradék topup        
+            - Technical: TC, Technikai befizetés           
+            - YettelTechnical: TP, Yettel technical payment      
+            - RepoTransfer: VH, Végrehajtó utalása            
+            - EpaInstallment: WD, EPA törlesztő onl.befiz       
+            - WoTechnical: WO, WO technikai    
+        Name:
+          type: string
+          description: Screen name of the payment
+        Channel:
+          type: object
+          required: [Id]
+          properties:
+            Id:
+              type: string
+            Name:
+              type: string
+
+        paymentItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentItem'
+
+    CreatePaymentRequest:
+      type: object
+      required:
+        - PurposeOfTransaction
+        - CallbackURL
+        - PaymentParameters
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      properties:
+        OrderId:
+          type: string
+          description: Identifies the order belonging to the payment transaction.
+          maxLength: 36
+          example:
+            "Order456"
+        PurposeOfTransaction:
+          type: string
+          description: |
+            Specifies the business purpose of the transaction.
+            
+            Allowed values:
+            
+            - **10** – `InitialPaymentWithTokenRegistration`: Interactive payment transaction for new bank card registration and initial fee  
+            - **11** – `TokenRegistration`: Interactive payment transaction for new bank card registration only (no initial fee)
+            - **12** – `TwoStepTokenRegistration`: Registration of a card using two-step flow 
+            - **20** – `InitialPaymentWithToken`: Initial payment using an already registered card/token  
+            - **30** – `OneTimePayment`: Occasional payment using a saved token
+            - **31** – `OneTimePaymentWithTokenRegistration`: One-time payment with simultaneous card registration
+            - **32** – `OneTimePaymentForBill`: One-time bill payment, without registrating the card
+            - **40** – `RecurringPayment`: Automatic recurring payment (e.g. monthly subscription)  
+            - **41** – `ManualRecurringPayment`: Manually initiated recurring payment  
+            - **42** – `ReactivationPayment`: Payment to reactivate a previously suspended subscription  
+            - **50** – `RefundPayment`: Reversal/refund of a previous transaction 
+            - **60** – `TwoStepCommit`: Finalizing a two-step payment by capturing a previously authorized amount (unused)
+            - **61** – `TwoStepTokenCommit`: Capture of a previously authorized amount using a tokenized card (unused)
+            - **70** – `TwoStepRelease`: Cancel/release of a previously authorized amount (no capture) (unused)
+            - **71** – `TwoStepTokenRelease`: Release of a pre-authorized amount using a tokenized card (unused)
+          enum:
+            - "10"
+            - InitialPaymentWithTokenRegistration
+            - "11"
+            - TokenRegistration
+            - "12"
+            - TwoStepTokenRegistration
+            - "20"
+            - InitialPaymentWithToken
+            - "30"
+            - OneTimePayment
+            - "31"
+            - OneTimePaymentWithTokenRegistration
+            - "32"
+            - OneTimePaymentForBill
+            - "40"
+            - RecurringPayment
+            - "41"
+            - ManualRecurringPayment
+            - "42"
+            - ReactivationPayment
+            - "50"
+            - RefundPayment
+            - "60"
+            - TwoStepCommit
+            - "61"
+            - TwoStepTokenCommit
+            - "70"
+            - TwoStepRelease
+            - "71"
+            - TwoStepTokenRelease
+        NatureOfTransaction:
+          type: string
+          description: |
+            Specifies the nature of the transaction.  
+            Recommended to keep it empty if the Payment Manager is expected to infer it automatically.
+            
+            Allowed values:
+            
+            - **110** – `PaymentWithoutTokenRegistration`: One-step payment with an unregistered card (interactive)  
+            - **120** – `PaymentWithTokenRegistration`: One-step payment combined with token registration (interactive)  
+            - **121** – `ReservationPaymentInitWithTokenRegistration`: Two-step payment with token registration (authorization + capture), used for onboarding or card replacement  
+            - **122** – `DelayedCaptureInitWithTokenRegistration`: Two-step delayed capture payment with token registration – typically used in onboarding flow  
+            - **123** – `TokenRegistrationWithReservation`: Two-step **token (card) registration flow**, where the card is registered via an initial reservation (pre-authorization) that is later released or captured to complete the registration  
+            - **130** – `PaymentWithExistingToken`: One-click payment using a previously registered token  
+            - **140** – `ReservationPaymentInitWithExistingToken`: Two-step payment (authorization) using an existing token  
+            - **150** – `DelayedCaptureInit`: Two-step delayed capture with unregistered card (e.g. netshop)  
+            - **160** – `DelayedCaptureInitWithExistingToken`: Two-step delayed capture using a registered card/token  
+            - **170** – `Refund`: Refund transaction back to cardholder  
+            - **230** – `MerchantInitiatedPayment`: One-step merchant-initiated payment using a previously saved token (MIT)
+          enum:
+            - "110"
+            - PaymentWithoutTokenRegistration
+            - "120"
+            - PaymentWithTokenRegistration
+            - "121"
+            - ReservationPaymentInitWithTokenRegistration
+            - "122"
+            - DelayedCaptureInitWithTokenRegistration
+            - "123"
+            - TokenRegistrationWithReservation            
+            - "130"
+            - PaymentWithExistingToken
+            - "140"
+            - ReservationPaymentInitWithExistingToken
+            - "150"
+            - DelayedCaptureInit
+            - "160"
+            - DelayedCaptureInitWithExistingToken
+            - "230"
+            - MerchantInitiatedPayment
+            - "170"
+            - Refund
+        PaymentDescription:
+          type: string
+          description: Describes the nature of the payment (free text).
+          maxLength: 200
+          example:
+            "Payment for services"
+        CustomerSpecificInformation:
+          $ref: '#/components/schemas/CustomerSpecificInformation'
+        CallbackURL:
+          type: string
+          description: The URL where the Sepy system sends a request whenever there is a change in the state of the payment.
+          maxLength: 1000
+          example:
+            "https://example.com/callback"
+        PaymentParameters:
+          $ref: '#/components/schemas/PaymentParameters'
+        BillingSpecificInformation:
+          $ref: '#/components/schemas/BillingSpecificInformation'
+    
+    RefundRequest:
+      type: object
+      required:
+        - RefundTransaction
+        - CallbackURL
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      properties:
+        CallbackURL:
+          type: string
+          description: The URL where the Sepy system sends a request whenever there is a change in the state of the payment.
+          maxLength: 1000
+          example:
+            "https://example.com/callback"
+        RefundTransaction:
+          $ref: "#/components/schemas/TransactionToRefund"
+
+    ReleaseRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      properties:
+        NatureOfTransaction:
+          type: string
+          description: |
+            - 190 and ReservationPaymentRelease: Release of funds for a previous 2-step reservation payment (0 HUF Commit). This is the default value in case of release request.
+            - 210 and DelayedCaptureRelease: Release of funds for a previous 2-step delayed capture payment (0 HUF Commit, Non-YOLO netshop purchase)
+          enum:
+            - "190"
+            - ReservationPaymentRelease
+            - "210"
+            - DelayedCaptureRelease
+    
+    CommitRequest:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      properties:
+        NatureOfTransaction:
+          type: string
+          description: |
+            - 180 and ReservationPaymentCommit: Partial or full realization of a previous 2-step reservation payment. This is the default value in case of commit request.
+            - 200 and DelayedCaptureCommit: Partial or full realization of a previous 2-step delayed capture payment (Non-YOLO netshop purchase)
+            - 220 and OneTimeComplete: 2-step payment with registered card (one-click with 3DS authentication)
+          enum:
+            - "180"
+            - ReservationPaymentCommit
+            - "200"
+            - DelayedCaptureCommit
+            - "220"
+            - OneTimeComplete
+        CustomerSpecificInformation:
+          $ref: '#/components/schemas/CustomerSpecificInformation'
+        TransactionToFinish:
+          type: object
+          description: The payment transaction that the shop would like to finish. If TransactionToFinish is null then the original amount is committed in case of OneTimePayment purpose.
+          properties:
+            Total:
+              type: integer
+              minimum: 0
+              description: |
+                Total amount of the transaction. This is the amount that is charged towards the payer when completing the payment.
+
+                The allowed number of decimal digits depends on the currency of the payment containing this transaction:
+                - HUF: zero digits
+              example: 10
+            Comment:
+              type: string
+              description: A comment associated with the transaction. This is NOT shown to the payer. Description of the transaction, this will overwrite the original description.
+              maxLength: 200
+              example:
+                "Completion of payment"
+
+    Currency:
+      type: string
+      description: |
+        Currency of the payment. Must be supplied in ISO 4217 format.
+      
+        Accepted values:
+        - CZK (czech crown)
+        - EUR (Euro)
+        - HUF (Hungarian forint)
+        - USD (U.S. dollar)
+      minLength: 3
+      maxLength: 3
+      example:
+        "HUF"
+
+    RecurrenceId:
+      type: string
+      description: String used to identify a given token payment. Its purpose is determined by the value of the InitiateRecurrence property.Required when executing token payments
+      maxLength: 100
+      example:
+        "Recurrence123"
+
+    PaymentParameters:
+      type: object
+      description: The corresponding Payment details data structure
+      properties:
+        ReservationPeriod:
+          description: Only makes sense at reservation payments. This is the time window that allows the shop to finish (finalize) the payment. If this does not happen within the time window, the system refunds the payment amount to the payer.
+          $ref: "#/components/schemas/Timespan"
+        DelayedCapturePeriod:
+          description: This is the time window that allows the shop to complete (finalize) the payment. If this does not happen within the time window, the system releases the payment amount.
+          $ref: "#/components/schemas/Timespan"
+        RecurrenceId:
+          $ref: "#/components/schemas/RecurrenceId"
+        RecurrenceType:
+          $ref: "#/components/schemas/RecurrenceType"
+        CardHolderEmailHint:
+          type: string
+          description: The shop can supply an e-mail address as a hint on who should complete the payment. This can be used if the shop is certain about that the payer has an active Barion wallet or the shop would like to help the guest payer with filling in the email field for her/him. If provided, the Barion Smart Gateway automatically fills out the e-mail address field in the Barion wallet login form and the guest payer form, speeding up the payment process.
+          format: email
+          maxLength: 256
+          example:
+            "user@user.hu"
+        CardHolderNameHint:
+          type: string
+          description: Hint for the customer's name on the card to speed up the payment flow. Recommended for 3DS
+          minLength: 0
+          maxLength: 45
+          example:
+            "John Doe"
+        TraceId:
+          description: Identifies the nature of the token payment. Required for token payments
+          $ref: '#/components/schemas/TraceId'
+        RedirectUrl:
+          type: string
+          description: URL where the payer should be redirected after the payment is completed or canceled.
+          maxLength: 2000
+          example:
+            "https://webshop.example.com/Redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933"
+        PaymentTransaction:
+          $ref: "#/components/schemas/PaymentTransaction"
+        ShippingAddress:
+          $ref: "#/components/schemas/ShippingAddress"
+          description: Shipping address associated with the payment.
+        Locale:
+          type: string
+          description: |
+            Indicates in which language the Barion Smart Gateway should display for the payer upon redirect.
+
+            Accepted values:
+            "cs-CZ" (Czech)
+            "de-DE" (German)
+            "en-US" (English)
+            "es-ES" (Spanish)
+            "fr-FR" (French)
+            "hu-HU" (Hungarian)
+            "sk-SK" (Slovak)
+            "sl-SI" (Slovenian)
+          maxLength: 10
+          example:
+            "en-US"
+        Currency:
+          $ref: '#/components/schemas/Currency'
+        PayerPhoneNumber:
+          type: string
+          description: Phone number of the payer. Must be sent in the expected format, without + sign or leading zero(s).
+          maxLength: 30
+          example:
+            "36201234567"
+        PayerWorkPhoneNumber:
+          type: string
+          description: Work phone of the payer. Must be sent in the expected format, without + sign or leading zero(s).
+          maxLength: 30
+          example:
+            "987654321"
+        PayerHomeNumber:
+          type: string
+          description: Home phone number of the payer. Must be sent in the expected format, without + sign or leading zero(s).
+          maxLength: 30
+          example:
+            "111223344"
+        BillingAddress:
+          $ref: "#/components/schemas/Address"
+          description: Billing address associated with the payment.
+        PayerAccountInformation:
+          $ref: "#/components/schemas/PayerAccountInformation"
+          description: Information about the account of the payer in the merchant's system.
+        ChallengePreference:
+          type: string
+          description: |
+            This enum indicates the merchant's 3DS authentication preference
+
+            - NoPreference: The merchant does not have any preference about how the 3DS authentication should be used for this payment. Liability is on the card issuer. In this case Barion decides about the usage of 3DS authentication
+            - ChallengeRequired: The customer should be challenged during the payment process for additional security. Liability is on the card issuer. In this case 3DS authentication will be performed even if the transaction would be eligible for frictionless flow.
+            - NoChallengeNeeded: Transaction Risk Analysis (TRA) will be performed on this payment (for more information see Barion Fraud Buster), if it is enabled. If the score is below 30, an exemption will be sent to the payment processor, indicating that the payment underwent TRA, and no 3DS authentication should be performed. Payment with a fraud score over 30 will be sent requesting 3DS Challenge. The advantage of applying this option is higher conversion (since no additional user interaction is needed when all prerequisites are met), however the liability is on the merchant.
+
+          enum:
+            - NoPreference
+            - ChallengeRequired
+            - NoChallengeNeeded
+
+    TotalPrice:
+      type: integer
+      minimum: 0
+      description: |
+        Total amount of the transaction. This is the amount that is charged towards the payer when completing the payment.
+
+        The allowed number of decimal digits depends on the currency of the payment containing this transaction:
+        - HUF: zero digits
+      example: 1000
+
+    PaymentTransaction:
+      type: object
+      description: One payment transaction
+      required: 
+        - Comment
+      properties:
+        Total:
+          $ref: '#/components/schemas/TotalPrice'
+        Comment:
+          type: string
+          description: A comment associated with the transaction. This is NOT shown to the payer.
+          minLength: 1
+          maxLength: 200
+          example:
+            "Transaction comment"
+
+    TransactionToRefund:
+      type: object
+      description: This structure represents a payment transaction that is to be refunded completely or partially. Such transactions must be associated with a completed payment.
+      required: 
+        - AmountToRefund
+        - Comment
+      properties:
+        AmountToRefund:
+          type: integer
+          minimum: 0
+          description: "The amount to refund from the given transaction. Must be greater than zero. Maximum value: remaining value of the transaction after previous refunds."
+          example: 5
+        Comment:
+          type: string
+          description: A comment associated with the refund. This is shown to the original payer.
+          minLength: 1
+          maxLength: 200
+          example:
+            "Refund for item"
+
+    Address:
+      type: object
+      required:
+        - Country
+      properties:
+        Country:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: The payer's country code in ISO-3166-1 format. E.g., HU or DE. If you cannot provide the shipping address, send ZZ as the country code.
+          example: HU
+        City:
+          type: string
+          maxLength: 50
+          description: The complete name of the city of the recipient address.
+          example: Budapest
+        Region:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: |
+            The country subdivision code (state or county) of the recipient address in ISO-3166-2 format. For example, in case of Hungary, use the Wikipedia example after the HU-.
+
+            **Note**: if this does not apply to the given country, send a null value or do not send this property at all.
+          example: BU
+        Zip:
+          type: string
+          maxLength: 16
+          description: The zip code of the recipient address.
+          example: 1011
+        Street:
+          type: string
+          maxLength: 50
+          description: The shipping street address with house number and other details.
+          example:
+            "Csontváry Kosztka Tivadar utca 125. 10. emelet 101"
+        Street2:
+          type: string
+          maxLength: 50
+          description: The address, continued.
+          example:
+            ". ajtó"
+        Street3:
+          type: string
+          maxLength: 50
+          description: The address, continued.
+          example: null
+        
+    ShippingAddress:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Address'
+      properties:
+        FullName:
+          type: string
+          maxLength: 45
+          description: The name of the customer on the shipping address.
+          example: "Gipsz Jakab"
+    
+
+    PayerAccountInformation:
+      type: object
+      properties:
+        AccountId:
+          type: string
+          maxLength: 64
+          description: A unique ID of the payer's account in the merchant's system.
+          example: CA98734
+        AccountCreated:
+          $ref: '#/components/schemas/DateTimeString'
+          description: "The timestamp when the payer created its account in the merchant's shop. In UTC, expected format: '2019-06-27T07:15:51'.327."
+        AccountCreationIndicator:
+          type: string
+          description: |
+            How long ago did the payer create or change its account in the merchant's shop.
+
+            - NoAccount: No account was created, it is a guest payment.
+            - CreatedDuringThisTransaction: The account was created during this payment.
+            - LessThan30Days: The account was created less than 30 days ago.
+            - Between30And60Days: The account was created between 30 and 60 days ago.
+            - MoreThan60Days: The account was created more than 60 days ago.
+          enum:
+            - NoAccount
+            - CreatedDuringThisTransaction
+            - LessThan30Days
+            - Between30And60Days
+            - MoreThan60Days
+        AccountLastChanged:
+          $ref: '#/components/schemas/DateTimeString'
+          description: "The timestamp when the payer last changed its account in the merchant's shop. In UTC, expected format: '2019-06-27T07:15:51.327'."
+        AccountChangeIndicator:
+          type: string
+          description: |
+            How long ago did the payer change its account in the merchant's shop.
+            - ChangedDuringThisTransaction: The account was changed during this payment.
+            - LessThan30Days: The account was changed less than 30 days ago.
+            - Between30And60Days: The account was changed between 30 and 60 days ago.
+            - MoreThan60Days: The account was changed more than 60 days ago.
+          enum:
+            - ChangedDuringThisTransaction
+            - LessThan30Days
+            - Between30And60Days
+            - MoreThan60Days
+        PasswordLastChanged:
+          $ref: '#/components/schemas/DateTimeString'
+          description: "The timestamp when the payer last changed its password in the merchant's shop. In UTC, expected format: '2019-06-27T07:15:51.327'."
+        PasswordChangeIndicator:
+          type: string
+          description: |
+            How long ago did the payer change its password in the merchant's shop.
+            - NoChange: The password was not yet changed.
+            - ChangedDuringThisTransaction: The password was changed during this payment.
+            - LessThan30Days: The password was changed less than 30 days ago.
+            - Between30And60Days: The password was changed between 30 and 60 days ago.
+            - MoreThan60Days: The password was changed more than 60 days ago.
+          enum:
+            - NoChange
+            - ChangedDuringThisTransaction
+            - LessThan30Days
+            - Between30And60Days
+            - MoreThan60Days
+        PurchasesInTheLast6Months:
+          type: integer
+          minimum: 0
+          maximum: 9999
+          description: The number of successful purchases of the payer in the merchant's shop in the last 6 months.
+          example: 88
+        ShippingAddressAdded:
+          $ref: '#/components/schemas/DateTimeString'
+          description: "The timestamp when the shipping address used for this payment was added to the payer's account. In UTC, expected format: '2019-06-27T07:15:51.327'."
+        ShippingAddressUsageIndicator:
+          type: string
+          description: |
+            How long ago was the shipping address added to the payer's account.
+            - ThisTransaction: The shipping address was added during this payment.
+            - LessThan30Days: The shipping address was added less than 30 days ago.
+            - Between30And60Days:The shipping address was added between 30 and 60 days ago.
+            - MoreThan60Days: The shipping address was added more than 60 days ago.
+          enum:
+            - ThisTransaction
+            - LessThan30Days
+            - Between30And60Days
+            - MoreThan60Days
+        ProvisionAttempts:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: How many times did the customer try to add a card to its account during the last 24 hours.
+          example: 3
+        TransactionalActivityPerDay:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: The number of purchases attached to this payer in the last 24 hours.
+          example: 7
+        TransactionalActivityPerYear:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: The number of purchases attached to this payer in the last 365 days.
+          example: 114
+        PaymentMethodAdded:
+          $ref: '#/components/schemas/DateTimeString'
+          description: "When has this card been added to the payer's account. In UTC, expected format: '2019-06-27T07:15:51.327'."
+        SuspiciousActivityIndicator:
+          type: string
+          description: |
+            Was there any suspicious activity regarding this payer.
+            - NoSuspiciousActivityObserved: There was nothing suspicious.
+            - SuspiciousActivityObserved: There was suspicious activity.
+          enum:
+            - NoSuspiciousActivityObserved
+            - SuspiciousActivityObserved
+
+    PaymentId:
+      type: string
+      format: guid
+      description: The identifier of the payment in the Barion system.
+      example:
+        "31dfdaff269e4aa0b7a12e1c0cc2f933"
+
+    PaymentRequestId:
+      type: string
+      description: The identifier of the payment in the shop's system.
+      maxLength: 50
+      example:
+        "12345"
+
+    PaymentProcessId:
+      type: string
+      description: Unique identifier for the payment process in Payment Manager.
+      maxLength: 50
+      example: 2138791529
+
+    Status:
+      type: string
+      enum:
+        - Prepared
+        - Started
+        - InProgress
+        - Waiting
+        - Reserved
+        - Authorized
+        - Canceled
+        - Succeeded
+        - Failed
+        - PartiallySucceeded
+        - Expired
+      description: The status of the payment.
+
+    TraceId:
+      type: string
+      description: The Trace Id that identifies the recurring scenario.
+      maxLength: 100
+      example:
+        "Trace123"
+
+    FraudRiskScore:
+      type: integer
+      description: A risk score computed by the anti-fraud analysis, between a range of 0 (completely legit) to 100 (certain fraud). Transactions under 10 are usually safe. Transactions with 10 an more, but less than 30 are risky, caution is advised. Transactions with 30 and over are blocked automatically for being almost certainly fraudulent.
+      example: 5
+
+    
+    BaseResponse:
+      type: object
+      required:
+        - PaymentRequestId
+        - PaymentProcessId
+        - ResponseCode
+        - ResponseDescription
+        - ResponseCategory
+      properties:
+        PaymentId:
+          $ref: '#/components/schemas/PaymentId'
+        PaymentRequestId:
+          $ref: '#/components/schemas/PaymentRequestId'
+        PaymentProcessId:
+          $ref: '#/components/schemas/PaymentProcessId'
+        Status:
+          $ref: '#/components/schemas/Status'
+        ResponseCode:
+          type: integer
+          description: |
+            Success or Error code
+            
+            0 - Success
+            1 - Success partial commit
+            2 - Success cancel
+            3 - Success but callback failed
+          minimum: -9999999
+          maximum: 9999999
+        ResponseDescription:
+          type: string
+          description: Short description of the problem
+          maxLength: 256
+        ResponseCategory:
+          $ref: '#/components/schemas/ResponseCategory'
+
+    CommonPaymentResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      properties:
+        NatureOfTransaction:
+          type: string
+          description: |
+            Specifies the nature of the transaction.
+            - 110 and PaymentWithoutTokenRegistration: 1-step payment with unregistered card (interactive)
+            - 120 and PaymentWithTokenRegistration: Interactive token registration with 1-step payment
+            - 121 and ReservationPaymentInitWithTokenRegistration: Interactive token registration with 2-step payment (Onboarding and bank card replacement)
+            - 122 and DelayedCaptureInitWithTokenRegistration: Interactive token registration with 2-step delayed capture payment (Onboarding)
+            - 130 and PaymentWithExistingToken: 1-step payment with registered card (one-click payment)
+            - 140 and ReservationPaymentInitWithExistingToken: 2-step payment start with already registered token - reservation
+            - 150 and DelayedCaptureInit: 2-step delayed capture payment with unregistered card (Non-YOLO netshop purchase)
+            - 160 and DelayedCaptureInitWithExistingToken: 2-step delayed capture payment with registered card (one-click or MIT payment)
+            - 230 and MerchantInitiatedPayment: 1-step payment with registered card (MIT payment)
+          enum:
+            - "110"
+            - PaymentWithoutTokenRegistration
+            - "120"
+            - PaymentWithTokenRegistration
+            - "121"
+            - ReservationPaymentInitWithTokenRegistration
+            - "122"
+            - DelayedCaptureInitWithTokenRegistration
+            - "130"
+            - PaymentWithExistingToken
+            - "140"
+            - ReservationPaymentInitWithExistingToken
+            - "150"
+            - DelayedCaptureInit
+            - "160"
+            - DelayedCaptureInitWithExistingToken
+            - "230"
+            - MerchantInitiatedPayment
+        OrderNumber:
+          type: string
+          description: Identifies the order belonging to the payment transaction.
+          maxLength: 100
+          example:
+            "Rendelésszám: Order456, Hivatkozási szám: 2138791529"
+        FundingSource:
+          $ref: '#/components/schemas/FundingSource'
+        FundingInformation:
+          $ref: '#/components/schemas/FundingInformation'
+        RecurrenceType:
+          $ref: "#/components/schemas/RecurrenceType"
+        TraceId:
+          description: Identifies the nature of the token payment. Required for token payments
+          $ref: '#/components/schemas/TraceId'
+        CreatedAt:
+          $ref: "#/components/schemas/DateTimeString"
+          description: The timestamp showing when the payment was created.
+        CompletedAt:
+          $ref: "#/components/schemas/DateTimeString"
+          description: The timestamp showing when the payment was completed. If the payment is not yet completed, this is empty.
+        Total:
+          $ref: "#/components/schemas/TotalPrice"
+          description: The total amount of the payment at the time of the request. If a reservation was finished with a lower amount, or a previously completed payment was refunded, this can be less than at the time of creation.
+        Currency:
+          $ref: "#/components/schemas/Currency"
+        FraudRiskScore:
+          $ref: '#/components/schemas/FraudRiskScore'
+        RedirectUrl:
+          type: string
+          description: The URL (including the payment identifier) where the payer gets (or already got) redirected to after the payment is or was completed or cancelled.
+          maxLength: 1000
+          example:
+            "https://webshop.example.com/Redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933"
+        Transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentResponseTransaction"
+
+    CreatePaymentResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CommonPaymentResponse'
+      properties:
+        ThreeDSAuthClientData:
+          type: string
+          description: Encrypted client authentication data required for 3D Secure processing. This value can be used when the webshop first tried to complete the payment without user interaction, but the charge failed due to a 3D Secure challenge being mandatory.
+          maxLength: 1024
+          example:
+            "eyJDYXJkUHVibGljSWQiOiI0NTAzOWQwMDZjZDQ0YmRhOGM3Y2EwNWIyNTE3YzlhZiIsIlBheW1lbnRJZCI6ImQ1YWNkNGRkMWZhZWVlMTE4YmZmMDAxZGQ4YjcxY2M0IiwiT25lQ2xpY2tDb250ZW50VXJsIjoiaHR0cHM6Ly9zZWN1cmUudGVzdC5iYXJpb24uY29tL3RocmVlZHMvT2Zmc2l0ZUF1dGhlbnRpY2F0aW9uIiwiQUNTU3RhcnRQcm90b2NvbFZlcnNpb24iOiIyLjEuMCIsIkFDU0VuZFByb3RvY29sVmVyc2lvbiI6IjIuMi4wIiwiRFNTdGFydFByb3RvY29sVmVyc2lvbiI6IjIuMS4wIiwiRFNFbmRQcm90b2NvbFZlcnNpb24iOiIyLjIuMCIsIlRocmVlRFNTZXJ2ZXJUcmFuc0lEIjpudWxsLCJUaHJlZURTTWV0aG9kVVJMIjpudWxsLCJUaHJlZURTTWV0aG9kRGF0YUZvcm0iOm51bGwsIkVycm9yRGV0YWlscyI6bnVsbCwiVmVyc2lvbiI6IjIuMi4wIn0="
+        ProviderRedirectUrl:
+          type: string
+          description: URL where the payers should be redirected after the payment is created to register their card
+          maxLength: 1000
+          example:
+            "https://secure.barion.com/Pay?Id=06dc7f8ce3abee118bff001dd8b71cc4"
+
+    TwoStepResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      properties:
+        RecurrenceId:
+          $ref: "#/components/schemas/RecurrenceId"
+        TraceId:
+          $ref: "#/components/schemas/TraceId"
+        FundingInformation:
+          $ref: "#/components/schemas/FundingInformation"
+        Transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TwoStepResponseTransaction"
+
+    RefundResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      properties:
+        Transaction:
+          $ref: "#/components/schemas/RefundedResponseTransaction"
+
+    GetPaymentResponse:
+      type: object
+      required:
+        - PaymentRequestId
+        - PaymentProcessId
+      oneOf:
+        - allOf:
+            - $ref: '#/components/schemas/CommonPaymentResponse'
+          properties:
+            ValidUntil:
+              $ref: "#/components/schemas/DateTimeString"
+              description: Timestamp showing the expiration time of the payment time window. The payment must be completed before this elapses.
+            ReservedUntil:
+              $ref: "#/components/schemas/DateTimeString"
+              description: Timestamp showing the expiration time of the reservation time window. The reserved payment must be finished before this elapses. If the payment type is not reservation, this is empty.
+            DelayedCaptureUntil:
+              $ref: "#/components/schemas/DateTimeString"
+              description: Timestamp showing the expiration time of the authorization time window. The authorized payment must be finished before this elapses. If the payment type is not DelayedCapture, this is empty.
+            WorkflowHistory:
+              type: array
+              items:
+                properties:
+                  StepType:
+                    type: string
+                    maxLength: 32
+                    description: |
+                      General steps: Card registration, In waiting queue, Out waiting queue, Receive commit, Receive cancel, Closed trx, Create refund trx, Refund, Closed refund trx
+                      
+                      OPE steps: OPE start workflow, OPE close workflow, OPE complete workflow, OPE start workflow refund
+                      
+                      STEX steps: STEX create payment
+                      
+                      Callback steps: Send unsuccess callback, Send success callback, Send unsuccess refund callback, Send success refund callback
+                      
+                  Timestamp:
+                    $ref: '#/components/schemas/DateTimeString'
+                  Result:
+                    type: string
+                    description: Result of the communication (Succes, Failed)
+                    enum:
+                      - Success
+                      - Failed
+                    example: Success
+              example:
+                - [{"StepType":"Receive request","Timestamp":"2024-01-23 17:09:04.001+01:00","Result":"Success"},{"StepType":"Create transaction","Timestamp":"2024-01-23 17:09:04.111+01:00","Result":"Success"},{"StepType":"Start payment","Timestamp":"2024-01-23 17:09:05.001+01:00","Result":"Success"},{"StepType":"Receive callback","Timestamp":"2024-01-23 17:11:54.001+01:00","Result":"Success"},{"StepType":"Send callback","Timestamp":"2024-01-23 17:11:55.001+01:00","Result":"Success"},{"StepType":"Receive commit","Timestamp":"2024-02-03 10:09:11.001+01:00","Result":"Success"},{"StepType":"Send commit","Timestamp":"2024-02-03 10:09:13.001+01:00","Result":"Failed"},{"StepType":"Send commit","Timestamp":"2024-02-03 10:09:15.001+01:00","Result":"Success"},{"StepType":"Send Kafka notification","Timestamp":"2024-02-03 10:09:15.901+01:00","Result":"Success"},{"StepType":"Close transaction","Timestamp":"2024-02-03 10:09:16.001+01:00","Result":"Success"}]
+
+    FundingSource:
+      type: string
+      description: The funding source that was used to complete the payment. If the payment is not yet completed, this is empty. Can be *Balance*,*BankCard* or *BankTransfer*.
+      example: BankCard
+    FundingInformation:
+      type: object
+      properties:
+        BankCard:
+          $ref: '#/components/schemas/BankCard'
+        AuthorizationCode:
+          type: string
+          description: The authorization code received by the card processing system when executing the payment.
+          maxLength: 64
+          example: 1ew075
+        ProcessResult:
+          type: string
+          description: |
+            The result of the last card payment attempt.
+            - Successful: The card transaction was successful.
+            - ProblemWithCard: The card transaction was unsuccessful due to incorrect card number, CVC, or expiry date. The card may be stolen, deleted, disabled, or disabled for online transactions.
+            - LowFunds: The card transaction was unsuccessful due to insufficient funds or reaching limits.
+            - LostOrStolenCard: The credit card has been reported lost or stolen.
+            - Declined: The payment card was declined by the acquirer.
+            - FraudulentTransaction: Potentially fraudulent transaction; the monitoring system declined the transaction.
+            - CardSystemError: The card transaction failed due to a card system error.
+            - ScaSoftDeclined: The payment card did not support SCA at the time of the transaction.
+            - FailedDuringAuthentication: There was an error during the SCA process, and authentication failed. This may not be returned if ChallengePreference was set to "NoChallengeNeeded."
+            - CardNotSupported: The payment card is not supported at the time of the transaction.
+            - Unknown: The bank system did not provide information about the operation, and the result of the process could not be determined.
+          enum:
+            - Successful
+            - ProblemWithCard
+            - LowFunds
+            - LostOrStolenCard
+            - Declined
+            - FraudulentTransaction
+            - CardSystemError
+            - ScaSoftDeclined
+            - FailedDuringAuthentication
+            - CardNotSupported
+            - Unknown
+    BankCard:
+      type: object
+      properties:
+        MaskedPan:
+          type: string
+          maxLength: 4
+          description: The last four digits of the card number.
+        BankCardType:
+          type: string
+          enum:
+            - Unknown
+            - MasterCard
+            - Visa
+            - AmericanExpress
+            - Electron
+            - Maestro
+            - DinersClub
+            - Discover
+            - Other
+            - Barion
+          description: The type of the bank card (may be empty).
+        BankCardTypeNum:
+          type: number
+          enum:
+            - 0
+            - 10
+            - 20
+            - 30
+            - 40
+            - 50
+            - 60
+            - 70
+            - 80
+            - 100
+            - 999
+          description: The type of the bank card (may be empty).
+        ValidThruYear:
+          type: string
+          maxLength: 4
+          description: The 4-digit year part of the card validity date.
+          example: 2025
+        ValidThruMonth:
+          type: string
+          maxLength: 2
+          description: The 2-digit month part of the card validity date.
+          example: 09
+    RecurrenceType:
+      type: string
+      enum:
+        - OneClickPayment
+        - MerchantInitiatedPayment
+        - RecurringPayment
+      description: The RecurrenceType that defines the type of recurring scenario.
+
+    TransactionStatus:
+      type: string
+      enum:
+        - Prepared
+        - Started
+        - Succeeded
+        - Timeout
+        - ShopIsDeleted
+        - ShopIsClosed
+        - Rejected
+        - RejectedByShop
+        - Storno
+        - Reserved
+        - Deleted
+        - Expired
+        - Authorized
+        - Reversed
+        - InvalidPaymentRecord
+        - PaymentTimeOut
+        - InvalidPaymentStatus
+        - PaymentSenderOrRecipientIsInvalid
+        - Unknown
+      description: Enumeration of transaction statuses.
+
+    BaseResponseTransaction:
+      type: object
+      properties:
+        TransactionId: 
+          $ref: '#/components/schemas/UuidString'
+          description: The unique identifier of the transaction in the Barion system.
+        POSTransactionId: 
+          type: string
+          maxLength: 36
+          description: The unique identifier of the transaction at the shop that started the payment.
+          example:
+            "03e5afa5-42f0-440f-84c4-efa380fa75e4"
+        Status:
+          $ref: '#/components/schemas/TransactionStatus'
+          description: The current status of the transaction.
+
+    PaymentResponseTransaction:
+      type: object
+      required:
+        - TransactionId
+        - TransactionTime
+        - Currency
+        - Status
+      allOf:
+        - $ref: '#/components/schemas/BaseResponseTransaction'
+        - $ref: '#/components/schemas/TwoStepResponseTransaction'
+        - $ref: '#/components/schemas/RefundedResponseTransaction'
+      properties:
+        Payer:
+          $ref: '#/components/schemas/UserInformation'
+          description: The user that paid the transaction.
+        TransactionType:
+          type: string
+          description: The type of the transaction.
+          enum:
+            - Shop
+            - TransferToExistingUser
+            - TransferToTechnicalAccount
+            - Reserve
+            - StornoReserve
+            - CardProcessingFee
+            - GatewayFee
+            - CardProcessingFeeStorno
+            - Unspecified
+            - CardPayment
+            - Refund
+            - RefundToBankCard
+            - StornoUnSuccessfulRefundToBankCard
+            - UnderReview
+            - ReleaseReview
+            - BankTransferPayment
+            - RefundToBankAccount
+            - StornoUnSuccessfulRefundToBankAccount
+            - BankTransferPaymentFee
+            - BarionBalanceProcessingFee
+
+    UserInformation:
+      type: object
+      required:
+        - Email
+      properties:
+        Name:
+          $ref: '#/components/schemas/NameInformation'
+          description: Structure representing the name of the user.
+        Email:
+          type: string
+          format: email
+          maxLength: 256
+          description: The e-mail address of the user.
+          example:
+            "user@example.com"
+
+    NameInformation:
+      type: object
+      properties:
+        LoginName:
+          type: string
+          maxLength: 256
+          description: The login name of the user. At the moment, this is their e-mail address.
+          example:
+            "user@example.com"
+        FirstName:
+          type: string
+          maxLength: 64
+          description: The first name of the user, if applicable.
+          example:
+            "Jakab"
+        LastName:
+          type: string
+          maxLength: 64
+          description: The last name of the user, if applicable.
+          example:
+            "Gipsz"
+        OrganizationName:
+          type: string
+          maxLength: 64
+          description: The organization name of the user, if applicable.
+          example:
+            "Example org"
+
+    TwoStepResponseTransaction:
+      type: object
+      description: It represents a committed transaction associated with a payment.
+      allOf:
+        - $ref: '#/components/schemas/BaseResponseTransaction'
+      properties:
+        TransactionTime: 
+          $ref: '#/components/schemas/DateTimeString'
+          description: The timestamp of the transaction.
+        Currency:
+          $ref: '#/components/schemas/Currency'
+          description: The 3 character ISO 4217 currency code of the transaction.
+        RelatedId:
+          description: The identifier of the related transaction, if it exists. It is used in case of refund(s) and has the same value as the original payment transaction
+          $ref: '#/components/schemas/UuidString'
+
+    RefundedResponseTransaction:
+      type: object
+      description: It represents a payment transaction that is refunded completely or partially. Such transactions are always associated with a completed payment
+      required:
+        - TransactionId
+        - POSTransactionId
+        - Total
+        - Status
+      allOf:
+        - $ref: '#/components/schemas/BaseResponseTransaction'
+      properties:
+        Total:
+          type: integer
+          minimum: 0
+          description: The original amount of the transaction.
+          example: 100
+        Comment:
+          type: string
+          description: The comment of the transaction set by the shop when the payment was created.
+          maxLength: 200
+          example:
+            "Payment transaction comment"
+
+    ResponseCategory:
+      type: string
+      description: |
+        The category of the response
+        - CardError - card error
+        - SystemError - system error
+        - DataError - data error
+        - Success - success transaction
+        - Released - released transaction with cancel operation
+      enum: 
+        - CardError
+        - SystemError
+        - DataError
+        - Success
+        - Released
+      example: Success
+
+    Error:
+      required:
+        - Title
+        - Status
+        - Detail
+        - Code
+      properties:
+        PaymentProcessId:
+          $ref: '#/components/schemas/PaymentProcessId'
+        PaymentId:
+          $ref: '#/components/schemas/PaymentId'
+        POSTransactionId:
+          type: string
+          maxLength: 36
+          description: The unique identifier of the transaction at the shop that started the payment.
+          example:
+            "03e5afa5-42f0-440f-84c4-efa380fa75e4"
+        Title:
+          type: string
+          maxLength: 64
+          description: 'A short, human-readable summary of the problem type. It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization.'
+        Status:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: 'The HTTP status code, generated by the origin server for this occurrence of the problem.'
+        Detail:
+          type: string
+          maxLength: 128
+          description: 'Short description of the problem. Always respond with generic error messages to avoid revealing details of the failure unnecessarily.'
+        Code:
+          type: integer
+          minimum: -9999999
+          maximum: 9999999
+          description: 'Only for internal problem code.'
+        ResponseCategory:
+          $ref: '#/components/schemas/ResponseCategory'
+          
+  examples:
+    InitialPaymentWithTokenRegistrationReq:
+      value:
+      - PaymentRequestId: '12345'
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        OrderId: Order456
+        PurposeOfTransaction: '10'
+        NatureOfTransaction: '121'
+        PaymentDescription: Onboarding
+        CallbackURL: https://pandocs.callback.service.yettel.hu/callback
+        PaymentParameters:
+          CardHolderEmailHint: kalmankelemen332@email.hu
+          CardHolderNameHint: Kelemen Kálmán
+          RedirectUrl: https://webshop.yettel.hu/redirect
+          PaymentTransaction:
+            Total: 12000
+            Comment: Transaction comment
+          PayerPhoneNumber: '36201234567'
+    
+    TokenRegistrationTwoReq:
+      value:
+      - PaymentRequestId: '332338'
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        PurposeOfTransaction: '11'
+        PaymentDescription: Kártyacsere
+        CustomerSpecificInformation:
+          CAID: '1231'
+          Ban: 3215
+          Ben: 12313
+          Ctn: '36202345678'
+          FirstName: János
+          LastName: Balogh
+          Zip: '1011'
+          City: Budapest
+          StreetName: Csontváry Kosztka Tivadar utca
+        CallbackURL: https://pandocs.callback.service.yettel.hu/callback
+        PaymentParameters:
+          CardHolderEmailHint: baloghjanika@email.hu
+          CardHolderNameHint: Balogh János
+          RedirectUrl: https://webshop.yettel.hu/redirect?iscardchanged=true
+          PaymentTransaction:
+            Total: 100
+            Comment: Kártyacsere
+          PayerPhoneNumber: '36202345678'
+          PayerAccountInformation:
+            AccountId: '1231'
+            
+    TokenRegistrationOneReq:
+      value:
+      - PaymentRequestId: '332338'
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        PurposeOfTransaction: '11'
+        NatureOfTransaction: '120'
+        PaymentDescription: Kártyacsere
+        CustomerSpecificInformation:
+          CAID: '1231'
+          Ban: 3215
+          Ben: 12313
+          Ctn: '36202345678'
+          FirstName: János
+          LastName: Balogh
+          Zip: '1011'
+          City: Budapest
+          StreetName: Csontváry Kosztka Tivadar utca
+        CallbackURL: https://pandocs.callback.service.yettel.hu/callback
+        PaymentParameters:
+          CardHolderEmailHint: baloghjanika@email.hu
+          CardHolderNameHint: Balogh János
+          RedirectUrl: https://webshop.yettel.hu/redirect?iscardchanged=true
+          PaymentTransaction:
+            Total: 100
+            Comment: Kártyacsere
+          PayerPhoneNumber: '36202345678'
+          PayerAccountInformation:
+            AccountId: '1231'
+      
+    OneTimePaymentReq:
+      value:
+      - PaymentRequestId: '332338'
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        OrderId: Order456
+        PurposeOfTransaction: '30'
+        PaymentDescription: Addon order
+        CustomerSpecificInformation:
+          CAID: '1231'
+          Ban: 3215
+          Ben: 12313
+          Ctn: '36202345678'
+          FirstName: János
+          LastName: Balogh
+          Zip: '1011'
+          City: Budapest
+          StreetName: Csontváry Kosztka Tivadar utca
+        CallbackURL: https://pandocs.callback.service.yettel.hu/callback
+        PaymentParameters:
+            RecurrenceId: 3F2504E0-4F89-11D3-9A0C-0305E82C3301
+            CardHolderEmailHint: baloghjanika@email.hu
+            CardHolderNameHint: Balogh János
+            TraceId: trid-7e7c07e74faa4bfdbd69805c6d04387d
+            RedirectUrl: https://webshop.yettel.hu/redirect?iscardchanged=true
+            PaymentTransaction:
+              Total: 990
+              Comment: SMS basic
+            PayerPhoneNumber: '36202345678'
+            PayerAccountInformation:
+              AccountId: '1231'
+
+    RecurringPaymentReq:
+      value:
+      - PaymentRequestId: 3323RE
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        CallerSystem: Pandocs
+        CallerNode: Node1
+        PurposeOfTransaction: '40'
+        PaymentDescription: Recurring payment
+        CustomerSpecificInformation:
+          CAID: '1231'
+          Ban: 3215
+          Ben: 12313
+          Ctn: '36202345678'
+          FirstName: János
+          LastName: Balogh
+          Zip: '1011'
+          City: Budapest
+          StreetName: Csontváry Kosztka Tivadar utca
+        CallbackURL: https://pandocs.callback.service.yettel.hu/callback
+        PaymentParameters:
+          RecurrenceId: 3F2504E0-4F89-11D3-9A0C-0305E82C3301
+          CardHolderEmailHint: baloghjanika@email.hu
+          CardHolderNameHint: Balogh János
+          TraceId: trid-7e7c07e74faa4bfdbd69805c6d04387d
+          RedirectUrl: https://webshop.yettel.hu/redirect?iscardchanged=true
+          PaymentTransaction:
+            Total: 12000
+            Comment: Havidíj
+          PayerPhoneNumber: '36202345678'
+          PayerAccountInformation:
+            AccountId: '1231'
+              
+    InitialPaymentWithTokenRegistrationRes:
+      value:
+      - PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        NatureOfTransaction: '121'
+        OrderNumber: 'Rendelésszám: Order456, Hivatkozási szám: 2138791529'
+        Total: 12000
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 03e5afa5-42f0-440f-84c4-efa380fa75e4
+        ProviderRedirectUrl: https://secure.barion.com/Pay?Id=31dfdaff269e4aa0b7a12e1c0cc2f933
+      
+
+    TokenRegistrationOneRes:
+      value:
+      - PaymentId: 40dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '332338'
+        PaymentProcessId: '2138791530'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        NatureOfTransaction: '120'
+        OrderNumber: 'Hivatkozási szám: 2138791530'
+        Total: 100
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=40dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 57805a56-42cb-4025-810c-f3c98b94d824
+        ProviderRedirectUrl: https://secure.barion.com/Pay?Id=40dfdaff269e4aa0b7a12e1c0cc2f933
+
+    TokenRegistrationTwoRes:
+      value:
+      - PaymentId: 71dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '332338'
+        PaymentProcessId: '2138791531'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        NatureOfTransaction: '121'
+        OrderNumber: 'Hivatkozási szám: 2138791531'
+        Total: 100
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=71dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 1ad08c66-96de-465a-a223-4008b4841c85
+        ProviderRedirectUrl: https://secure.barion.com/Pay?Id=71dfdaff269e4aa0b7a12e1c0cc2f933      
+
+    OneTimePaymentRes:
+      value:
+      - PaymentId: a0dfdaff269e4aa0b7a12e1c0cc2f9a0
+        PaymentRequestId: '332338'
+        PaymentProcessId: '2138791560'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        NatureOfTransaction: '130'
+        OrderNumber: 'Rendelésszám: Order456, Hivatkozási szám: 2138791560'
+        Total: 990
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=a0dfdaff269e4aa0b7a12e1c0cc2f9a0
+        Transactions:
+          - POSTransactionId: 7e4ec5d3-8b15-459b-9f2a-40572afbc165
+        ProviderRedirectUrl: https://secure.barion.com/Pay?Id=a0dfdaff269e4aa0b7a12e1c0cc2f9a0  
+
+    OneTimePayment3DSRes:
+      value:
+      - PaymentId: d2dfdaff269e4aa0b7a12e1c0cc2f9ad
+        PaymentRequestId: '332338'
+        PaymentProcessId: '2138791535'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        NatureOfTransaction: '130'
+        OrderNumber: 'Rendelésszám: Order456, Hivatkozási szám: 2138791535'
+        Total: 990
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=d2dfdaff269e4aa0b7a12e1c0cc2f9ad
+        ThreeDSAuthClientData: eyJDYXJkUHVibGljSWQiOiI0NTAzOWQwMDZjZDQ0YmRhOGM3Y2EwNWIyNTE3YzlhZiIsIlBheW1lbnRJZCI6ImQ1YWNkNGRkMWZhZWVlMTE4YmZmMDAxZGQ4YjcxY2M0IiwiT25lQ2xpY2tDb250ZW50VXJsIjoiaHR0cHM6Ly9zZWN1cmUudGVzdC5iYXJpb24uY29tL3RocmVlZHMvT2Zmc2l0ZUF1dGhlbnRpY2F0aW9uIiwiQUNTU3RhcnRQcm90b2NvbFZlcnNpb24iOiIyLjEuMCIsIkFDU0VuZFByb3RvY29sVmVyc2lvbiI6IjIuMi4wIiwiRFNTdGFydFByb3RvY29sVmVyc2lvbiI6IjIuMS4wIiwiRFNFbmRQcm90b2NvbFZlcnNpb24iOiIyLjIuMCIsIlRocmVlRFNTZXJ2ZXJUcmFuc0lEIjpudWxsLCJUaHJlZURTTWV0aG9kVVJMIjpudWxsLCJUaHJlZURTTWV0aG9kRGF0YUZvcm0iOm51bGwsIkVycm9yRGV0YWlscyI6bnVsbCwiVmVyc2lvbiI6IjIuMi4wIn0=
+        Transactions:
+          - POSTransactionId: 8701ab1a-11a8-4e8f-9cfc-701b070fcb34
+        ProviderRedirectUrl: https://secure.barion.com/Pay?Id=d2dfdaff269e4aa0b7a12e1c0cc2f9ad
+      
+    RecurringPaymentRes:
+      value:
+      - PaymentRequestId: '3323RE'
+        PaymentProcessId: '2138791566'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        NatureOfTransaction: '230'
+        OrderNumber: 'Hivatkozási szám: 2138791566'
+        Total: 12000
+
+    CommitReq:
+      value:
+        PaymentRequestId: '12345C'
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-21T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        NatureOfTransaction: '180'
+        CustomerSpecificInformation:
+          CAID: '4315435'
+          Ban: 14531
+          Ben: 63144
+          Ctn: '36201234567'
+          FirstName: Kálmán
+          LastName: Kelemen
+          Zip: '1000'
+          City: Budapest
+          StreetName: Fő utca
+        TransactionToFinish:
+          Total: 12000
+          Comment: Commit comment
+          
+    PartialCommitReq:
+      value:
+        PaymentRequestId: '12345PC'
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-21T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        NatureOfTransaction: '180'
+        CustomerSpecificInformation:
+          CAID: '4315435'
+          Ban: 14531
+          Ben: 63144
+          Ctn: '36201234567'
+          FirstName: Kálmán
+          LastName: Kelemen
+          Zip: '1000'
+          City: Budapest
+          StreetName: Fő utca
+        TransactionToFinish:
+          Total: 1199
+          Comment: Partial commit comment
+          
+    CompleteReq:
+      value:
+        PaymentRequestId: '332338-Comp'
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-21T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+          
+    CommitRes:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345C'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        RecurrenceId: 3F2504E0-4F89-11D3-9A0C-0305E82C3301
+        TraceId: trid-7e7c07e74faa4bfdbd69805c6d04387d
+        FundingInformation:
+          BankCard:
+            MaskedPan: '0923'
+            BankCardType: Visa
+            ValidThruYear: '2025'
+            ValidThruMonth: '9'
+          AuthorizationCode: 1ew075
+          ProcessResult: Successful
+            
+    CommitBarionBalanceRes:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345C'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        RecurrenceId: 3F2504E0-4F89-11D3-9A0C-0305E82C3301
+        TraceId: null
+
+    PartialCommitRes:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345PC'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 1
+        ResponseDescription: Success partial commit
+        ResponseCategory: Success
+        RecurrenceId: 3F2504E0-4F89-11D3-9A0C-0305E82C3301
+        TraceId: trid-7e7c07e74faa4bfdbd69805c6d04387d
+        FundingInformation:
+          BankCard:
+            MaskedPan: '0923'
+            BankCardType: Visa
+            ValidThruYear: '2025'
+            ValidThruMonth: '9'
+          AuthorizationCode: 1ew075
+          ProcessResult: Successful
+            
+    PartialCommitBarionBalanceRes:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345PC'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 1
+        ResponseDescription: Success partial commit
+        ResponseCategory: Success
+        RecurrenceId: 3F2504E0-4F89-11D3-9A0C-0305E82C3301
+        TraceId: null
+
+    CompleteRes:
+      value:
+        PaymentId: d2dfdaff269e4aa0b7a12e1c0cc2f9ad
+        PaymentRequestId: '332338-Comp'
+        PaymentProcessId: '2138791535'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+
+    CancelReq:
+      value:
+        PaymentRequestId: '12345-CAN'
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-21T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        
+    CancelRes:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345-CAN'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 2
+        ResponseDescription: Success cancel
+        ResponseCategory: Released
+
+    RefundReq:
+      value:
+        PaymentRequestId: 12345-Refund
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-30T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        CallbackURL: https://pandocs.callback.service.yettel.hu/callback
+        RefundTransaction:
+          AmountToRefund: 12000
+          Comment: Refund transaction
+        
+    PartialRefundReq:
+      value:
+        PaymentRequestId: 12345-PartRefund
+        PaymentChannelId: 10
+        CreatedAt: '2023-12-30T12:30:00.334+01:00'
+        CallerSystem: MyApp
+        CallerNode: Node1
+        CallbackURL: https://pandocs.callback.service.yettel.hu/callback
+        RefundTransaction:
+          AmountToRefund: 10801
+          Comment: Partial refund transaction
+
+    RefundRes:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: 12345-Refund
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        Transaction:
+          TransactionId: 0944de9503abee118bff001dd8b71cc4
+          POSTransactionId: e102580c-a490-47c5-87b6-0090e52aab81
+          Status: Succeeded
+          Total: 12000
+          Comment: Refund transaction
+      
+    PartialRefundRes:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: 12345-PartRefund
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        Transaction:
+          TransactionId: 0944de9503abee118bff001dd8b71cc4
+          POSTransactionId: e102580c-a490-47c5-87b6-0090e52aab81
+          Status: Succeeded
+          Total: 10801
+          Comment: Partial refund transaction
+    
+    OneTimeWithTokenRegReq:
+      value:
+      - PaymentRequestId: 'B1F089E4-095D-45F7-AEA6-2DF7AF18220D'
+        PaymentChannelId: 11
+        CreatedAt: '2025-05-07T12:30:00.334+01:00'
+        CallerSystem: APP
+        CallerNode: NodeA
+        PurposeOfTransaction: '31' #OneTimePaymentWithTokenRegistration
+        PaymentDescription: Számlafizetés új kártyával
+        CustomerSpecificInformation:
+          CAID: '1231'
+          Ban: 3215
+          Ben: 12313
+          Ctn: '36202345678'
+          FirstName: János
+          LastName: Balogh
+          Zip: '1011'
+          City: Budapest
+          StreetName: Csontváry Kosztka Tivadar utca
+          Email: baloghjanika@email.hu
+          Type: INDIVIDUAL
+        CallbackURL: https://app.callback.service.yettel.hu/callback
+        PaymentParameters:
+          CardHolderEmailHint: baloghjanika@email.hu
+          CardHolderNameHint: Balogh János
+          RedirectUrl: https://app.yettel.hu/redirect
+          PaymentTransaction:
+            Total: 10200
+            Comment: Számlafizetés
+          PayerPhoneNumber: '36202345678'
+          PayerAccountInformation:
+            AccountId: '1231'
+        BillingSpecificInformation:
+          TerminalId: T01
+          ChannelType: C01
+          OuterPandocsPaymentType: Application
+          Name: Example
+          Channel:
+            Id: channel1
+            Name: app
+          PaymentItems:
+          - Id: '1'
+            TotalAmount:
+              Unit: HUF
+              Value: 10200
+            Item:
+              Id: B01234
+              Name: Számlaszám
+              Type: CustomerBill
+              
+    OneTimePaymentForBillReq:
+      value:
+      - PaymentRequestId: 'B2F089E4-095D-45F7-AEA6-2DF7AF18220E'
+        PaymentChannelId: 11
+        CreatedAt: '2025-05-07T12:30:00.334+01:00'
+        CallerSystem: APP
+        CallerNode: NodeA
+        PurposeOfTransaction: '32' #OneTimePaymentForBill
+        PaymentDescription: Számlafizetés tárolt kártyával
+        CustomerSpecificInformation:
+          CAID: '1231'
+          Ban: 3215
+          Ben: 12313
+          Ctn: '36202345678'
+          FirstName: János
+          LastName: Balogh
+          Zip: '1011'
+          City: Budapest
+          StreetName: Csontváry Kosztka Tivadar utca
+          Email: baloghjanika@email.hu
+          Type: INDIVIDUAL
+        CallbackURL: https://app.callback.service.yettel.hu/callback
+        PaymentParameters:
+          RecurrenceId: 3F2504E0-4F89-11D3-9A0C-0305E82C3301
+          CardHolderEmailHint: baloghjanika@email.hu
+          CardHolderNameHint: Balogh János
+          TraceId: trid-7e7c07e74faa4bfdbd69805c6d04387d
+          RedirectUrl: https://app.yettel.hu/redirect
+          PaymentTransaction:
+            Total: 10200
+            Comment: Számlafizetés
+          PayerPhoneNumber: '36202345678'
+          PayerAccountInformation:
+            AccountId: '1231'
+        BillingSpecificInformation:
+          TerminalId: T01
+          ChannelType: C01
+          OuterPandocsPaymentType: Application
+          Name: Example
+          Channel:
+            Id: channel1
+            Name: app
+          PaymentItems:
+          - Id: '1'
+            TotalAmount:
+              Unit: HUF
+              Value: 10200
+            Item:
+              Id: B01234
+              Name: Számlaszám
+              Type: CustomerBill
+
+    TokenRegWOPaymentReq:
+      value:
+      - PaymentRequestId: 'B3F089E4-095D-45F7-AEA6-2DF7AF18220F'
+        PaymentChannelId: 11
+        CreatedAt: '2025-05-07T12:30:00.334+01:00'
+        CallerSystem: APP
+        CallerNode: NodeA
+        PurposeOfTransaction: '11' #TokenRegistration
+        NatureOfTransaction: '123' #TokenRegistrationWithReservation
+        PaymentDescription: Kártyaregisztráció fizetés nélkül
+        CustomerSpecificInformation:
+          CAID: '1231'
+          Ban: 3215
+          Ben: 12313
+          Ctn: '36202345678'
+          FirstName: János
+          LastName: Balogh
+          Zip: '1011'
+          City: Budapest
+          StreetName: Csontváry Kosztka Tivadar utca
+          Email: baloghjanika@email.hu
+          Type: INDIVIDUAL
+        CallbackURL: https://app.callback.service.yettel.hu/callback
+        PaymentParameters:
+          CardHolderEmailHint: baloghjanika@email.hu
+          CardHolderNameHint: Balogh János
+          RedirectUrl: https://app.yettel.hu/redirect
+          PaymentTransaction:
+            Total: 100
+            Comment: Kártyaregisztráció
+          PayerPhoneNumber: '36202345678'
+          PayerAccountInformation:
+            AccountId: '1231'
+        BillingSpecificInformation:
+          Name: Example
+          Channel:
+            Id: channel1
+            Name: app

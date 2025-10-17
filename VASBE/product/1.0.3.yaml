@@ -1,0 +1,1316 @@
+openapi: 3.0.0
+servers:
+# Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/aweimann/ProductService/1.0.0
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/SesameProductService/v1
+info:
+  description: This doc describes the product service API for Sesame micropayment system
+  version: "1.0.3"
+  title: Sesame Product Service API
+  contact:
+    email: aweimann@verisis.hu
+paths:
+  /subscriptions/{msisdn}/clients:
+    post:
+      summary: register client
+      operationId: registerClient
+      description: |
+        Register a new subscription-client pair
+      parameters:
+        - $ref: '#/components/parameters/p_MSISDN'
+        - $ref: '#/components/parameters/p_SubscriptionId'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/s_ClientId'
+        description: Id of client to be registered
+      responses:
+        '201':
+          description: Client created
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '409':
+          description: The client already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  /cities:
+    get:
+      summary: Query available cities
+      operationId: cityQuery
+      description: Get the cities provide services
+      parameters:
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      responses:
+        '200':
+          description: Cities to add
+          headers:
+            count-reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_CityAndOwnerList'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  /subscriptions/{msisdn}/clients/{clientId}/products:
+    get:
+      summary: Query products
+      operationId: getProducts
+      description: Get the available and purchased products
+      parameters:
+        #path params
+        - $ref: '#/components/parameters/p_MSISDN'
+        - $ref: '#/components/parameters/p_ClientIdPath'
+        #headers
+        - $ref: '#/components/parameters/p_SubscriptionId'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        #query params
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+        - $ref: '#/components/parameters/p_LastPCVersion'
+        - $ref: '#/components/parameters/p_LastPCUpdateTimestamp'
+        - $ref: '#/components/parameters/p_ProductId'
+        - $ref: '#/components/parameters/p_OwnerId'
+        - $ref: '#/components/parameters/p_CityId'
+        - $ref: '#/components/parameters/p_FixType'
+        - $ref: '#/components/parameters/p_ProductType'
+        - $ref: '#/components/parameters/p_ValidityStart'
+        - $ref: '#/components/parameters/p_ValidityEnd'
+        - $ref: '#/components/parameters/p_TicketState'
+      responses:
+        '200':
+          description: List of queried products
+          headers:
+            count-reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+          content:
+            application/json:
+              schema:
+                properties:
+                  available:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/s_Product'
+                  purchased:
+                    type: array
+                    items:
+                      allOf:
+                      - $ref: '#/components/schemas/s_PurchasedProduct'
+                      - $ref: '#/components/schemas/s_AdditionalPurchaseData'
+                  pcVersion:
+                    $ref: '#/components/schemas/s_LastPCVersion'
+                  pcUpdateTimestamp:
+                    $ref: '#/components/schemas/s_LastPCUpdateTimestamp'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  /subscriptions/{msisdn}/clients/{clientId}/purchases:
+    post:
+      summary: purchase products
+      operationId: purchase
+      description: |
+        Purchase some products
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_MSISDN'
+        - $ref: '#/components/parameters/p_ClientIdPath'
+        #header
+        - $ref: '#/components/parameters/p_SubscriptionId'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                pcVersion:
+                  $ref: '#/components/schemas/s_LastPCVersion'
+                pcUpdateTimestamp:
+                  $ref: '#/components/schemas/s_LastPCUpdateTimestamp'
+                products:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/s_ProductToPurchase'
+        description: Purchase object
+      responses:
+        '201':
+          description: Success purchase
+          content:
+            application/json:
+              schema:
+                properties:
+                  pcVersion:
+                    $ref: '#/components/schemas/s_LastPCVersion'
+                  pcUpdateTimestamp:
+                    $ref: '#/components/schemas/s_LastPCUpdateTimestamp'
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/s_PurchasedProduct'
+                  cartId:
+                    $ref: '#/components/schemas/s_CartId'
+                  paymentId:
+                    $ref: '#/components/schemas/s_PaymentId'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  /subscriptions/{msisdn}/clients/{clientId}/purchases/{purchaseId}:
+    get:
+      summary: Query a purchased product identifying by purchaseId
+      operationId: getPurchasedProductInfo
+      description: Get a purchased product
+      parameters:
+        #path params
+        - $ref: '#/components/parameters/p_MSISDN'
+        - $ref: '#/components/parameters/p_ClientIdPath'
+        - $ref: '#/components/parameters/p_PurchaseIdPath'
+        #headers
+        - $ref: '#/components/parameters/p_SubscriptionId'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      responses:
+        '200':
+          description: The queried product
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/s_PurchasedProduct'
+                - $ref: '#/components/schemas/s_AdditionalPurchaseData'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+    delete:
+      summary: Refund a purchased product identifying by purchaseId
+      operationId: StornoProduct
+      description: Refund a purchased product
+      parameters:
+        #path params
+        - $ref: '#/components/parameters/p_MSISDN'
+        - $ref: '#/components/parameters/p_ClientIdPath'
+        - $ref: '#/components/parameters/p_PurchaseIdPath'
+        #headers
+        - $ref: '#/components/parameters/p_SubscriptionId'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        - $ref: '#/components/parameters/p_PurchaseTokenId' #hashelni kellene. esetleg a purchaseId-val együtt
+      responses:
+        '204':
+          description: Success deletion
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  /subscriptions/{msisdn}/clients/{clientId}/purchases/{purchaseId}/validate:
+    post:
+      summary: Valdate a product
+      operationId: validate
+      description: |
+        Validate a product identifying by its purchaseId
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_MSISDN'
+        - $ref: '#/components/parameters/p_ClientIdPath'
+        - $ref: '#/components/parameters/p_PurchaseIdPath'
+        #header
+        - $ref: '#/components/parameters/p_SubscriptionId'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                code:
+                  $ref: '#/components/schemas/s_Code'
+                purchaseTokenId:
+                  $ref: '#/components/schemas/s_PurchaseTokenId'
+        description: Aztec code and the token of the product
+      responses:
+        '201':
+          description: Success validate - product.purchaseTokenId is the new purchaseTokenId
+          content:
+            application/json:
+              schema:
+                properties:
+                  product:
+                    $ref: '#/components/schemas/s_PurchasedProduct'
+                  secret:
+                    $ref: '#/components/schemas/s_Secret'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  /subscriptions/{msisdn}/purchases/{purchaseId}:
+    patch:
+      summary: Assign a purchased product to an other client
+      operationId: assignPurchaseToOtherDevice
+      description: |
+        The destination client initiates the operation
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_MSISDN'
+        - $ref: '#/components/parameters/p_PurchaseIdPath'
+        #header
+        - $ref: '#/components/parameters/p_SubscriptionId'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                clientId:
+                  $ref: '#/components/schemas/s_ClientId'
+        description: Id of the new owner client
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                properties:
+                  product:
+                    $ref: '#/components/schemas/s_PurchasedProduct'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  /subscriptions/{msisdn}/clients/{clientId}/purchases/{purchaseId}/newProductToken:
+    post:
+      summary: Request a new token
+      operationId: newToken
+      description: |
+        Request a new product token (validate without code)
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_MSISDN'
+        - $ref: '#/components/parameters/p_ClientIdPath'
+        - $ref: '#/components/parameters/p_PurchaseIdPath'
+        #header
+        - $ref: '#/components/parameters/p_SubscriptionId'
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                purchaseTokenId:
+                  $ref: '#/components/schemas/s_PurchaseTokenId'
+        description: Old product token identifier
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                properties:
+                  product:
+                    $ref: '#/components/schemas/s_PurchasedProduct'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+components:
+  parameters:
+    p_ProductType:
+      in: query
+      name: productType
+      description: Type of the products to be queried
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_ProductType'
+    p_SubscriptionId:
+      in: header
+      name: subid
+      description: subscription is identified by subid and msisdn
+      required: true
+      schema:
+        $ref: '#/components/schemas/s_SubscriptionId'
+    p_MSISDN:
+      in: path
+      name: msisdn
+      description: subscription is identified by subid and msisdn
+      required: true
+      schema:
+        $ref: '#/components/schemas/s_MSISDN'
+    p_ClientIdPath:
+      in: path
+      name: clientId
+      description: identifier of client (e.g application id)
+      required: true
+      schema:
+        $ref: '#/components/schemas/s_ClientId'
+    p_PurchaseIdPath:
+      in: path
+      name: purchaseId
+      description: Id of a specified purchasedProduct
+      required: true
+      schema:
+        $ref: '#/components/schemas/s_PurchaseId'
+    p_Count:
+      name: count
+      required: false
+      in: query
+      description: Requested number of resources to be provided in response.
+      schema:
+        type: integer
+        minimum: 1
+    p_Offset:
+      name: offset
+      required: false
+      in: query
+      description: Page number. 0 means the first one
+      schema:
+        type: integer
+        minimum: 0
+    p_LastPCVersion:
+      in: query
+      name: lastPCVersion
+      description: Last known product catalog version
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_LastPCVersion'
+    p_LastPCUpdateTimestamp:
+      in: query
+      name: lastPCUpdateTimestamp
+      description: Timestamp of the last PC update
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_LastPCUpdateTimestamp'
+    p_ProductId:
+      in: query
+      name: productId
+      description: Identifier of the product
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_ProductId'
+    p_OwnerId:
+      in: query
+      name: ownerId
+      description: Identifier of the product owner
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_OwnerId'
+    p_CityId:
+      in: query
+      name: cityId
+      description: Identifier of the city
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_CityId'
+    p_FixType:
+      in: query
+      name: fixType
+      description: Type of the product
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_FixType'
+    p_ValidityStart:
+      in: query
+      name: validityStart
+      description: Start time of the ticket's validity
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_ValidityStart'
+    p_ValidityEnd:
+      in: query
+      name: validityEnd
+      description: End time of the ticket's validity
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_ValidityEnd'
+    p_TicketState:
+      in: query
+      name: ticketState
+      description: It can be active or inactive. If you want to get the not invalid products you have to choose "active" value.
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_TicketState'
+    p_msgcntx_src:
+      name: msgcntx_src
+      description: 'Name of the source system, the sender party of the reqeust. This is the ApplicationID'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    p_msgcntx_srcmodule:
+      name: msgcntx_srcmodule
+      description: 'Optional, name of the source system’s module which sent the request'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    p_msgcntx_env:
+      name: msgcntx_env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+    p_msgcntx_id:
+      name: msgcntx_id
+      description: UUID of the message like 'f257ba66-75cf-4921-affa-5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    p_msgcntx_corelid:
+      name: msgcntx_corelid
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    p_msgcntx_userid:
+      name: msgcntx_userid
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    p_PurchaseTokenId:
+      in: header
+      name: purchaseTokenId
+      required: true
+      description: Purchase token id which provides access to the product
+      schema:
+        $ref: '#/components/schemas/s_PurchaseTokenId'
+  schemas:
+    s_SubscriptionId:
+      type: string
+      pattern: '^[0-9]{10}$'
+      example: '1234567890'
+      description: Identifier of the subscription. It is the subscription ID from MCSIS
+    s_MSISDN:
+      type: string
+      pattern: '^36[0-9]{9}$'
+      example: '36201234567'
+      description: Phone number of the subscription
+    s_CountReached:
+      type: boolean
+      description: True, if the count of the queried data is more or equals than the requested by count header parameter
+      example: false
+    s_ClientId:
+      type: string
+      minLength: 0
+      maxLength: 127
+      description: Identifier of the client. e.g application id
+      example: askji6ask34-dou3-ds98zf3
+    s_CityAndOwnerList:
+      type: object
+      properties:
+        cities:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_CityAndOwner'
+    s_CityAndOwner:
+      type: object
+      required:
+        - cityId
+        - cityName
+      properties:
+        cityId:
+          $ref: '#/components/schemas/s_CityId'
+        cityName:
+          $ref: '#/components/schemas/s_CityName'
+        productOwners:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_ProductOwner'
+    s_City:
+      type: object
+      properties:
+        cityId:
+          $ref: '#/components/schemas/s_CityId'
+        cityName:
+          $ref: '#/components/schemas/s_CityName'
+      description: Represents a City object
+    s_Cities:
+      type: array
+      items:
+        $ref: '#/components/schemas/s_City'
+    s_CityId:
+      type: string
+      minLength: 1
+      maxLength: 15
+      description: Identifier of the city
+      pattern: '[A-Z_\-]{1,15}'
+      example: BUDAPEST
+    s_CityName:
+      type: string
+      description: Name of the city
+      maxLength: 50
+      example: BUDAPEST
+    s_ProductOwner:
+      type: object
+      description: List of the cities where the product is available
+      properties:
+        ownerId:
+          $ref: '#/components/schemas/s_OwnerId'
+        ownerName:
+          $ref: '#/components/schemas/s_OwnerName'
+    s_OwnerId:
+      type: string
+      minLength: 2
+      maxLength: 12
+      pattern: '[0-9]{2,12}'
+      description: Identifier of the owner of the product
+      example: 147915284
+    s_OwnerName:
+      type: string
+      maxLength: 255
+      description: Name of the owner of the product
+      example: BKV ZRT.
+    s_LastPCVersion:
+      type: string
+      description: Version of the Product Catalog
+      minLength: 3
+      maxLength: 8
+    s_LastPCUpdateTimestamp:
+      type: string
+      format: date-time
+      description: Timestamp of the last PC update
+    s_ProductId:
+      type: string
+      description: Identifier of the product
+      maxLength: 30
+      pattern: '[+a-zA-Z0-9_/=]{1,30}'
+      example: BKK30KOZOK
+    s_ProductName:
+      type: string
+      description: Name of the product
+      maxLength: 255
+      example: Havi Budapest-bérlet közoktatásban tanulóknak
+    s_FixType:
+      type: string
+      enum:
+        - ENTRY_PRODUCT
+        - PUBLIC_TRANSPORT
+        - PROTECTED_ZONE_PRODUCT
+      description: Type of the product (fix ticket)
+      example: PUBLIC_TRANSPORT
+    s_TimeBased:
+      type: boolean
+      description: True if it is a time based ticket
+      example: true
+    s_TimeBasedData:
+      type: string
+      maxLength: 50
+      description: Unit of the time base e.g hour,day,week,moths,year
+      example: day
+    s_TimeBasedValue:
+      type: integer
+      description: Value of the time base
+      example: 30
+    s_UsabilityData:
+      type: string
+      maxLength: 50
+      description: Felhasználhatóság Időalap érték típusa pl hour,day,week,moths,year
+      example: day
+    s_UsabilityValue:
+      type: integer
+      description: Felhasználhatóság Időalap típus mennyisége
+      example: 30
+    s_UsabilityEndDate:
+      type: string
+      format: date-time
+      description: Felhasználhatóság végének fix dátuma
+    s_QuantityBased:
+      type: boolean
+      description: Korlátozott felhasználás igen/nem
+      example: false
+    s_QuantityValue:
+      type: integer
+      description: Korlátozott felhasználás száma
+      example: 60
+    s_ValidityStartType:
+      type: string
+      enum:
+        - SYSDATE
+        - BY_USER
+        - BY_VALIDATION
+      description: Érvényesség kezdetének megadásának módja
+      example: BY_USER
+    s_ValidityEndType:
+      type: string
+      enum:
+        - SYSDATE
+        - END_OF_DAY
+      description: Érvényesség végének megadásának módja
+      example: END_OF_DAY
+    s_PresaleDays:
+      type: integer
+      minimum: 0
+      description: Megszorítás arra, hogy a teméket maximum hány napra előre lehet megvásárolni
+      example: 30
+    s_DistanceBased:
+      type: boolean
+      description: Távolságalapú jegy igen/nem
+      example: false
+    s_ValidityInfo:
+      type: object
+      properties:
+        timeBased:
+          $ref: '#/components/schemas/s_TimeBased'
+        timeBasedData:
+          $ref: '#/components/schemas/s_TimeBasedData'
+        timeBasedValue:
+          $ref: '#/components/schemas/s_TimeBasedValue'
+        usabilityData:
+          $ref: '#/components/schemas/s_UsabilityData'
+        usabilityValue:
+          $ref: '#/components/schemas/s_UsabilityValue'
+        usabilityEndDate:
+          $ref: '#/components/schemas/s_UsabilityEndDate'
+        quantityBased:
+          $ref: '#/components/schemas/s_QuantityBased'
+        quantityValue:
+          $ref: '#/components/schemas/s_QuantityValue'
+        validityStartType:
+          $ref: '#/components/schemas/s_ValidityStartType'
+        validityEndType:
+          $ref: '#/components/schemas/s_ValidityEndType'
+        presaleDays:
+          $ref: '#/components/schemas/s_PresaleDays'
+        fixType:
+           $ref: '#/components/schemas/s_FixType'
+        distanceBased:
+          $ref: '#/components/schemas/s_DistanceBased'
+    s_CostInfo:
+      type: integer
+      description: Cost of the product
+      example: 3450
+    s_BusinessType:
+      type: string
+      maxLength: 255
+      description: Értékesítési mód, hogy milyen értékesítésben vesz részt az adott termék
+      example: PUBLIC_SERVICE
+    s_IdentifierId:
+      description: Id of the identifier
+      type: string
+      maxLength: 30
+      pattern: '[+a-zA-Z0-9_/=]{1,30}'
+      example: B6DGFD2EJ5L
+    s_IdentifierName:
+      description: Name of the identifier
+      type: string
+      maxLength: 255
+      example: Magyar közoktatási diákigazolvány
+    s_IdentifierValue:
+      description: Value of the identifier
+      type: string
+      maxLength: 4000
+    s_RequiredIdentifier:
+      type: object
+      required:
+        - identifierId
+      properties:
+        identifierId:
+          $ref: '#/components/schemas/s_IdentifierId'
+        identifierName:
+          $ref: '#/components/schemas/s_IdentifierName'
+        identifierValue:
+          $ref: '#/components/schemas/s_IdentifierValue'
+    s_RequiredIdentifiers:
+      type: array
+      items:
+        $ref: '#/components/schemas/s_RequiredIdentifier'
+    s_StateAid:
+      type: boolean
+      description: Állami kedvezményt tartalmazó termékek
+      example: true
+    s_DelayDuration:
+      type: number
+      minimum: 0
+      description: Türelmi idő értéke percben
+      example: 2
+    s_TransportLineId:
+      type: string
+      maxLength: 30
+      pattern: '[+a-zA-Z0-9_/=]{1,30}'
+      description: Közlekedési volnal azonosítója
+    s_DepartureTransportStationId:
+      type: string
+      maxLength: 30
+      pattern: '[+a-zA-Z0-9_/=]{1,30}'
+      description: Induló állomás azonosítója
+    s_ArrivalTransportStationId:
+      type: string
+      maxLength: 30
+      pattern: '[+a-zA-Z0-9_/=]{1,30}'
+      description: Érkező állomás azonosítója
+    s_Combined:
+      type: boolean
+      description: Kombinált jegyek lekérdezése
+    s_TransportLineName:
+      type: string
+      minLength: 2
+      maxLength: 100
+      pattern: '.{2,100}'
+      description: A közlekedési útvonal neve
+    s_DepartureStationName:
+      type: string
+      minLength: 3
+      maxLength: 100
+      pattern: '.{3,100}'
+      description: Az indulási állomás neve
+    s_ArrivalStationName:
+      type: string
+      minLength: 3
+      maxLength: 100
+      pattern: '.{3,100}'
+    s_TransportDistanceDetails:
+      type: object
+      required:
+        - transportLineId
+        - departureTransportStationId
+        - arrivalTransportStationId
+      properties:
+        transportLineId:
+          $ref: '#/components/schemas/s_TransportLineId'
+        departureTransportStationId:
+          $ref: '#/components/schemas/s_DepartureTransportStationId'
+        arrivalTransportStationId:
+          $ref: '#/components/schemas/s_ArrivalTransportStationId'
+        combined:
+          $ref: '#/components/schemas/s_Combined'
+        transportLineName:
+          $ref: '#/components/schemas/s_TransportLineName'
+        departureStationName:
+          $ref: '#/components/schemas/s_DepartureStationName'
+        arrivalStationName:
+          $ref: '#/components/schemas/s_ArrivalStationName'
+    s_ProductDescription:
+      type: string
+      example: "
+      A bérlet csak érvényes magyar közoktatási diákigazolvánnyal együtt
+      használható, az oktatási azonosítót vagy a diákigazolvány sorszámát a vásárláskor kell megadni. A bérlet a
+      sikeres vásárlást követen 2 perccel érhet el az alkalmazásban. A bérletet az ellenrzést végz személy részére
+      (kérés esetén az általa felmutatott kód beolvasását követen) be kell mutatni – metróállomáson és elsajtós
+      felszállási rendben közleked autóbuszon, trolibuszon a kiragasztott kód beolvasását követen a jegyképet kell
+      bemutatni. A mobiljegy csak aktív internetkapcsolattal vehet igénybe. A bérlet az érvényesség kezdete eltt
+      legfeljebb 30 nappal váltható meg elvételben, nem cserélhet, nem ruházható át, és csak az érvényesség kezdete
+      eltt váltható vissza.Részletek a kedvezmény igénybevételérl a Jegyek és bérletek / Kedvezmények menüpont alatt.
+      CIVTovábbi információ: https://bkk.hu/tomegkozlekedes/jegyek-es-berletek/jegy-es-berletarak/havi-budapestberlet-
+      kozoktatasban-tanuloknak/, https://bkk.hu/mobiljegy/"
+    s_ProductShortDescription:
+      type: string
+      example: "Tetszleges kezdnappal váltható. Érvényes a jelölt kezdnapon 0 órától
+      (de legkorábban a vásárlás idpontjától) a következ hónap kezdnappal megegyez napon 02 óráig Budapest
+      közigazgatási határán belül az 1-99, 101-299, 900-999, CITY trolibusz, M1, M2, M3, M4, H5, H6, H7, H8, H9, D14
+      vonalakon, a MÁV-START meghatározott vonatain, a VOLÁN társaságok kijelölt elvárosi járatain és munkanapokon a
+      D2, D11, D12 vonalakon."
+    s_OwnerAddress:
+      type: string
+      maxLength: 4000
+      example: 1075 BUDAPEST, RUMBACH SEBESTYÉN UTCA 19-21.
+    s_OwnerPhone:
+      type: string
+      maxLength: 255
+      example: +3613255255
+    s_NeedVehicleDetails:
+      type: boolean
+      example: false
+    s_RelatedTag:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          example: 2_Kedvezményes árú bérletek
+    s_RelatedTags:
+      type: array
+      items:
+        $ref: '#/components/schemas/s_RelatedTag'
+    s_StornoAvailable:
+      type: boolean
+      example: true
+    s_Marketable:
+      type: boolean
+      example: true
+    s_ProductUniquePrefix:
+      type: string
+      maxLength: 50
+      example: 1121137
+    s_AvailableForCorporation:
+      type: boolean
+      example: false
+    s_TokenMaxDeviceChange:
+      type: integer
+      example: 2
+    s_BaseProductData:
+      type: object
+      properties:
+        productId:
+          $ref: '#/components/schemas/s_ProductId'
+        productName:
+          $ref: '#/components/schemas/s_ProductName'
+        validityInfo:
+          $ref: '#/components/schemas/s_ValidityInfo'
+        costInfo:
+          $ref: '#/components/schemas/s_CostInfo'
+        businessType:
+          $ref: '#/components/schemas/s_BusinessType'
+        requiredIdentifiers:
+          $ref: '#/components/schemas/s_RequiredIdentifiers'
+        stateAid:
+          $ref: '#/components/schemas/s_StateAid'
+        delayDuration:
+          $ref: '#/components/schemas/s_DelayDuration'
+        transportDistanceDetails:
+          $ref: '#/components/schemas/s_TransportDistanceDetails'
+        ownerId:
+          $ref: '#/components/schemas/s_OwnerId'
+        ownerName:
+          $ref: '#/components/schemas/s_OwnerName'
+    s_Product:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseProductData'
+      - type: object
+        properties:
+          cities:
+            $ref: '#/components/schemas/s_Cities'
+          productDescription:
+            $ref: '#/components/schemas/s_ProductDescription'
+          productShortDescription:
+            $ref: '#/components/schemas/s_ProductShortDescription'
+          ownerAddress:
+            $ref: '#/components/schemas/s_OwnerAddress'
+          ownerPhone:
+            $ref: '#/components/schemas/s_OwnerPhone'
+          needVehicleDetails:
+            $ref: '#/components/schemas/s_NeedVehicleDetails'
+          relatedTags:
+            $ref: '#/components/schemas/s_RelatedTags'
+          stornoAvailable:
+            $ref: '#/components/schemas/s_StornoAvailable'
+          marketable:
+            $ref: '#/components/schemas/s_Marketable'
+          productUniquePrefix:
+            $ref: '#/components/schemas/s_ProductUniquePrefix'
+          availableForCorporation:
+            $ref: '#/components/schemas/s_AvailableForCorporation'
+          tokenMaxDeviceChange:
+            $ref: '#/components/schemas/s_TokenMaxDeviceChange'
+    s_PurchaseId:
+      type: string
+      pattern: '[a-zA-Z0-9_]{5,46}'
+      example: 1XTC6Y7TVS
+    s_PurchaseTokenId:
+      type: string
+      maxLength: 12
+      example: j4ztChMUqzKS
+    s_TicketValidity:
+      type: string
+      enum:
+        - INVALID
+        - VALID
+        - FUTURE_VALID
+        - START_ON_VALIDATION
+        - SUSPENDED
+      example: VALID
+    s_TicketUsageIndex:
+      type: string
+      maxLength: 50
+      example: 0
+    s_ValidityStart:
+      type: string
+      format: date-time
+      example: 2020-02-26T11:34:20+01:00
+    s_ValidityEnd:
+      type: string
+      format: date-time
+      example: 2020-02-26T12:34:20+01:00
+    s_UsabilityEnd:
+      type: string
+      format: date-time
+    s_PurchaseDate:
+      type: string
+      format: date-time
+      example: 2020-02-26T11:32:20+01:00
+    s_ComfortCost:
+      type: integer
+      example: 0
+    s_Storno:
+      type: boolean
+      example: false
+    s_StornoDate:
+      type: string
+      format: date-time
+    s_Reseller:
+      type: string
+      maxLength: 255
+      example: TELENOR
+    s_CorrectedCost:
+      type: integer
+    s_PlateNumber:
+      type: string
+      minLength: 3
+      maxLength: 15
+      pattern: '[A-Z0-9ÖŐÜŰ]{3,15}'
+    s_UsedToday:
+      type: boolean
+    s_DeviceName:
+      type: string
+      maxLength: 100
+    s_LastEntryPointName:
+      type: string
+      maxLength: 50
+    s_RemainingDeviceChange:
+      type: number
+      minimum: 0
+    s_CartId:
+      type: string
+      pattern: '[+a-zA-Z0-9_/=]{1,30}'
+    s_PaymentId:
+      type: number
+      format: int64
+    s_AdditionalPurchaseData:
+      type: object
+      properties:
+        cartId:
+          $ref: '#/components/schemas/s_CartId'
+        paymentId:
+          $ref: '#/components/schemas/s_PaymentId'
+    s_PurchasedProduct:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseProductData'
+      - type: object
+        properties:
+          purchaseId:
+            $ref: '#/components/schemas/s_PurchaseId'
+          purchaseTokenId:
+            $ref: '#/components/schemas/s_PurchaseTokenId'
+          clientId:
+            $ref: '#/components/schemas/s_ClientId'
+          ticketValidity:
+            $ref: '#/components/schemas/s_TicketValidity'
+          ticketUsageIndex:
+            $ref: '#/components/schemas/s_TicketUsageIndex'
+          validityStart:
+            $ref: '#/components/schemas/s_ValidityStart'
+          validityEnd:
+            $ref: '#/components/schemas/s_ValidityEnd'
+          usabilityEnd:
+            $ref: '#/components/schemas/s_UsabilityEnd'
+          purchaseDate:
+            $ref: '#/components/schemas/s_PurchaseDate'
+          comfortCost:
+            $ref: '#/components/schemas/s_ComfortCost'
+          storno:
+            $ref: '#/components/schemas/s_Storno'
+          stornoDate:
+            $ref: '#/components/schemas/s_StornoDate'
+          reseller:
+            $ref: '#/components/schemas/s_Reseller'
+          correctedCost:
+            $ref: '#/components/schemas/s_CorrectedCost'
+          plateNumber:
+            $ref: '#/components/schemas/s_PlateNumber'
+          usedToday:
+            $ref: '#/components/schemas/s_UsedToday'
+          stornoAvailable:
+            $ref: '#/components/schemas/s_StornoAvailable'
+          deviceName:
+            $ref: '#/components/schemas/s_DeviceName'
+          lastEntryPointName:
+            $ref: '#/components/schemas/s_LastEntryPointName'
+          remainingDeviceChange:
+            $ref: '#/components/schemas/s_RemainingDeviceChange'
+    s_ProductQuantity:
+      type: integer
+      minimum: 1
+    s_LicencePlateNumber:
+      type: string
+      pattern: '[A-Z0-9ÖŐÜŰ]{3,15}'
+    s_CountryCode:
+      type: string
+      minLength: 1
+      maxLength: 3
+      pattern: '[A-Z]{1,3}'
+    s_Category:
+      type: string
+      minLength: 1
+      maxLength: 3
+      pattern: '[A-Z0-9]{1,3}'
+    s_Vehicle:
+      type: object
+      properties:
+        licencePlateNumber:
+          $ref: '#/components/schemas/s_LicencePlateNumber'
+        countryCode:
+          $ref: '#/components/schemas/s_CountryCode'
+        category:
+          $ref: '#/components/schemas/s_Category'
+    s_ProductToPurchase:
+      type: object
+      required:
+        - productId
+      properties:
+        productId:
+          $ref: '#/components/schemas/s_ProductId'
+        productQuantity:
+          $ref: '#/components/schemas/s_ProductQuantity'
+        vehicle:
+          $ref: '#/components/schemas/s_Vehicle'
+        validityStart:
+          $ref: '#/components/schemas/s_ValidityStart'
+        requiredIdentifiers:
+          $ref: '#/components/schemas/s_RequiredIdentifiers'
+        transportDistanceDetails:
+          $ref: '#/components/schemas/s_TransportDistanceDetails'
+    s_Code:
+      type: string
+      maxLength: 255
+    s_Image:
+      type: string
+      format: byte
+    s_ValidFrom:
+      type: string
+      format: date-time
+    s_Validto:
+      type: string
+      format: date-time
+    s_AnimationType:
+      type: string
+      maxLength: 50
+    s_SecretData:
+      type: object
+      properties:
+        image:
+          $ref: '#/components/schemas/s_Image'
+        validFrom:
+          $ref: '#/components/schemas/s_ValidFrom'
+        validTo:
+          $ref: '#/components/schemas/s_Validto'
+        animationType:
+          $ref: '#/components/schemas/s_AnimationType'
+    s_EntryPointName:
+      type: string
+      maxLength: 50
+    s_EntryPointype:
+      type: string
+      maxLength: 50
+    s_Timestamp:
+      type: string
+      format: date-time
+    s_Secret:
+      type: object
+      properties:
+        previous:
+          $ref: '#/components/schemas/s_SecretData'
+        current:
+          $ref: '#/components/schemas/s_SecretData'
+        next::
+          $ref: '#/components/schemas/s_SecretData'
+        entryPointName:
+          $ref: '#/components/schemas/s_EntryPointName'
+        entryPointType:
+          $ref: '#/components/schemas/s_EntryPointype'
+        timestamp:
+          $ref: '#/components/schemas/s_Timestamp'
+    s_ProductType:
+      description: Type of the product. It can be available or purchased.
+    s_Error:
+      required:
+        - title
+        - status
+        - detail
+        - code
+      properties:
+        title:
+          type: string
+          maxLength: 64
+          description: 'A short, human-readable summary of the problem type. It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization.'
+        status:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: 'The HTTP status code, generated by the origin server for this occurrence of the problem.'
+        detail:
+          type: string
+          maxLength: 128
+          description: Short description of the problem. Always respond with generic error messages to avoid revealing details of the failure unnecessarily.
+        code:
+          type: integer
+          minimum: -9999999
+          maximum: 9999999
+          description: Only for internal problem code.
+    s_TicketState:
+      type: string
+      enum:
+        - active
+        - inactive
+      description: Type of the product (fix ticket)
+      example: active

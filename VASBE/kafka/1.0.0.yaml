@@ -1,0 +1,687 @@
+openapi: 3.0.0
+info:
+  version: 'KAFKA_1.0'
+  title: VAS backend KAFKA producer requests
+  description: |
+    This is the API specification for VAS portal
+    
+    v1.0:
+      * add DAY vignette type
+
+    v0.4
+      * add startOfParkingAssignment and endOfParkingAssignment parameters
+      * add CHARGE_STOPPED and STOP_PROCESSING statuses
+  contact:
+    email: aweimann@verisis.hu
+servers:
+  - url: https://{host_url}/vasbackend
+tags:
+  - name: notification
+    description: Operation for kafka notification
+paths:
+  # Kafka service            
+  /v1/kafka/producer/highwayTopic:
+    post:
+      summary: Highway vignette notification
+      tags:
+        - notification
+      operationId: highwayNotif
+      description: Highway vignette kafka notification
+      requestBody:
+        content:
+          application/json:
+            schema:
+                allOf:
+                  - $ref: '#/components/schemas/s_HighwayNotif'
+        description: Highway vignette notification
+      responses:
+        '204':
+          description: No content
+
+  /v1/kafka/producer/parkingTopic:
+    post:
+      summary: Parking notification
+      tags:
+        - notification
+      operationId: parkingNotif
+      description: Parking kafka notification
+      requestBody:
+        content:
+          application/json:
+            schema:
+                allOf:
+                  - $ref: '#/components/schemas/s_ParkingNotif'
+        description: Parking transaction notification
+      responses:
+        '204':
+          description: No content
+
+  /v1/kafka/producer/gamblingTopic:
+    post:
+      summary: Gambling notification
+      tags:
+        - notification
+      operationId: gamblingNotif
+      description: Gambling kafka notification
+      requestBody:
+        content:
+          application/json:
+            schema:
+                allOf:
+                  - $ref: '#/components/schemas/s_GamblingNotif'
+        description: Gambling info notification
+      responses:
+        '204':
+          description: No content
+
+components:
+  schemas:
+    s_MSISDN:
+      type: string
+      pattern: '^36[0-9]{9}$'
+      example: '36201234567'
+      description: Phone number of the subscription
+    s_SesameId:
+      type: integer
+      format: int64
+      description: Sesame transaction id
+      example: 12434264
+    s_HighwayTransaction:
+      type: object
+      description: Highway vignette purchase transaction
+      properties:
+        msisdn:
+          $ref: '#/components/schemas/s_MSISDN'
+        sesameId:
+          $ref: '#/components/schemas/s_SesameId'
+        nmfrId:
+          $ref: '#/components/schemas/s_NMFRId'
+        trxStart:
+          $ref: '#/components/schemas/s_Timestamp'
+        trxEnd:
+          $ref: '#/components/schemas/s_Timestamp'
+        highwayVignette:
+          $ref: '#/components/schemas/s_HighwayVignette'
+        costInfo:
+          $ref: '#/components/schemas/s_HighwayCostInfo'
+    s_HighwayVignetteInfo:
+      type: object
+      description: Highway vignette info
+      properties:
+        vehicleCategory:
+          $ref: '#/components/schemas/s_VehicleCategory'
+        vignetteType:
+          $ref: '#/components/schemas/s_VignetteType'
+        cost:
+          $ref: '#/components/schemas/s_CostDouble'
+        trxFee:
+          $ref: '#/components/schemas/s_CostDouble'
+    s_CostChanegHighwayVignetteInfo:
+      type: object
+      description: Cost change vigenette infp
+      properties:
+        from:
+          type: string
+          format: date
+          description: Start of the cost change
+          example: 2023-01-01
+        highwayVignettes:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_HighwayVignetteInfo'
+    s_ParkingTransaction:
+      type: object
+      description: Parking transaction
+      properties:
+        msisdn:
+          $ref: '#/components/schemas/s_MSISDN'
+        sesameId:
+          $ref: '#/components/schemas/s_SesameId'
+        assignmentId:
+          $ref: '#/components/schemas/s_SesameId'
+        nmfrId:
+          $ref: '#/components/schemas/s_NMFRId'
+        trxStart:
+          $ref: '#/components/schemas/s_Timestamp'
+        trxEnd:
+          $ref: '#/components/schemas/s_Timestamp'
+        parkingDetails:
+          $ref: '#/components/schemas/s_Parking'
+        costInfo:
+          $ref: '#/components/schemas/s_ParkingCostInfo'
+        channel:
+          $ref: '#/components/schemas/s_ChannelType'
+        startOfAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+        endOfAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+        startOfParkingAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+        endOfparkingAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+        
+    s_NMFRId:
+      type: string
+      description: NMFR transaction id
+      example: "6SHD86SAD6"
+    s_HighwayVignette:
+      type: object
+      properties:
+        vignetteNumber:
+          $ref: '#/components/schemas/s_VignetteNumber'
+        validityStart:
+          $ref: '#/components/schemas/s_Timestamp'
+        validityEnd:
+          $ref: '#/components/schemas/s_Timestamp'
+        vehicle:
+          $ref: '#/components/schemas/s_BaseVehicle'
+        vignetteCategory:
+          $ref: '#/components/schemas/s_VignetteCategory'
+        vignetteType:
+          $ref: '#/components/schemas/s_VignetteType'
+    s_Parking:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/s_ParkingStatus'
+        startTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        endTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        expectedEndTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        chargeEndTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        vehicle:
+          $ref: '#/components/schemas/s_BaseVehicle'
+        isFinished:
+          $ref: '#/components/schemas/s_Boolean'
+        zoneInfo:
+          $ref: '#/components/schemas/s_ZoneInfo'
+    s_ParkingStatus:
+      type: string
+      enum:
+        - PREPARED
+        - RUNING
+        - STOPPED
+        - CANCELLED
+        - EXPIRED
+        - FAILED
+        - FINISHED
+        - CHARGE_STOPPED
+        - STOP_PROCESSING
+    s_Boolean:
+      type: boolean
+      example: false
+    s_ZoneInfo:
+      type: object
+      description: Parking zone info
+      properties:
+        zoneName:
+          $ref: '#/components/schemas/s_String50'
+        zoneTarif:
+          $ref: '#/components/schemas/s_CostDouble'
+        isEstimatedTarif:
+          $ref: '#/components/schemas/s_Boolean'
+        isFixTicketZone:
+          $ref: '#/components/schemas/s_Boolean'
+        zoneType:
+          $ref: '#/components/schemas/s_ZoneType'
+        zoneCode:
+          $ref: '#/components/schemas/s_String4'
+        zoneTarifMultiplier:
+          $ref: '#/components/schemas/s_CostDouble'
+        city:
+          $ref: '#/components/schemas/s_String50'
+    s_ZoneType:
+      type: string
+      enum:
+        - ONSITE
+        - OFFSITE
+    s_String50:
+      type: string
+      minLength: 0
+      maxLength: 50
+    s_String4:
+      type: string
+      minLength: 0
+      maxLength: 4
+    s_VignetteNumber:
+      type: string
+      minLength: 4
+      maxLength: 22
+      example: 112305281940371074111
+    s_ChannelType:
+      type: string
+      enum: [SMS,APP,IVR, USSD]
+      example: SMS
+    s_GamblingInfo:
+      type: object
+      description: Gambling info
+      properties:
+        lotto5:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_Lotto5Info'
+        lotto6:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_Lotto6Info'
+        lotto7:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_Lotto7Info'
+        eurojackpot:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_EuroJackpotInfo'
+        joker:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_JokerInfo'
+    s_BaseDrawInfo:
+      type: object
+      description: Base draw information
+      properties:
+        drawId:
+          type: string
+          example: SZ20505
+        year:
+          type: integer
+          example: 2020
+        weekOfYear:
+          type: integer
+          example: 51
+        dayOfYear:
+          type: integer
+          example: 356
+        dayOfWeek:
+          type: integer
+          example: 6          
+        drawDate:
+          $ref: '#/components/schemas/s_GamblingDateTime'
+        nextBetStartDate:
+          $ref: '#/components/schemas/s_GamblingDateTime'
+        nextBetEndDate:
+          $ref: '#/components/schemas/s_GamblingDateTime'
+        nextDrawDate:
+          $ref: '#/components/schemas/s_GamblingDateTime'
+        nextDrawExpectedWin:
+          $ref: '#/components/schemas/s_GamblingAmount'
+    s_BaseGamblingInfo:
+      type: object
+      description: Base gambling information
+      properties:
+        actualPrice:
+          $ref: '#/components/schemas/s_GamblingPrice'
+        maxBasketPrice:
+          $ref: '#/components/schemas/s_GamblingPrice'
+    s_DividendsInfoLotto:
+      type: object
+      description: Dividens information for lotto5, lotto6, lotto7
+      properties:
+        hit: 
+          type: string
+        winners:
+          type: integer
+        amount: 
+           $ref: '#/components/schemas/s_GamblingAmount'
+        currency:
+          $ref: '#/components/schemas/s_CurrencyType'
+    s_DividendsInfoEJ:
+      type: object
+      description: Dividens information for Eurojackpot
+      allOf:
+      - $ref: '#/components/schemas/s_DividendsInfoLotto'
+      - type: object
+        properties:
+          totWinCount:
+            type: number
+    s_CurrencyType:
+      type: string
+      enum:
+        - Ft
+        - Euro
+    s_GamblingAmount:
+      type: number
+      format: double
+      example: 25675.36
+    s_DividendsLottoArray:
+      type: object
+      properties:
+        dividends:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_DividendsInfoLotto'
+    s_DividendsEJArray:
+      type: object
+      properties:
+        dividends:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_DividendsInfoEJ'
+    s_Lotto5Info:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_Lotto5'
+      - $ref: '#/components/schemas/s_DividendsLottoArray'
+    s_Lotto6Info:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_Lotto6'
+      - $ref: '#/components/schemas/s_DividendsLottoArray'
+    s_Lotto7Info:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_Lotto7'
+      - $ref: '#/components/schemas/s_DividendsLottoArray'
+    s_EuroJackpotInfo:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_EuroJackpot'
+      - $ref: '#/components/schemas/s_DividendsEJArray'
+      - type: object
+        properties:
+          nextDrawExpectedWinMrdHuf:
+            type: string
+            example: 11.2
+    s_JokerInfo:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_Joker'
+      - $ref: '#/components/schemas/s_DividendsLottoArray'
+    s_Lotto5:
+      type: object
+      description: Lotto 5
+      properties:
+        numbers:
+          type: array
+          minimum: 5
+          maximum: 5
+          items:
+            $ref: '#/components/schemas/s_Lotto5Number'
+          example: [12,23,45,67,86]
+    s_GamblingPrice:
+      type: number
+      minimum: 0
+      example: 300.0
+    s_Lotto6:
+      type: object
+      description: Lotto 6
+      properties:
+        numbers:
+          type: array
+          minimum: 6
+          maximum: 6
+          items:
+            $ref: '#/components/schemas/s_Lotto6Number'
+          example: [3,6,12,23,34,45]
+    s_Lotto7:
+      type: object
+      description: Lotto 7
+      properties:
+        numbers:
+          type: array
+          minimum: 7
+          maximum: 7
+          items:
+            $ref: '#/components/schemas/s_Lotto7Number'
+          example: [3,6,12,17,23,34,35]
+    s_EuroJackpot:
+      type: object
+      description: Eurojackpot
+      properties:
+        numbersA:
+          type: array
+          minimum: 5
+          maximum: 5
+          items:
+            $ref: '#/components/schemas/s_EuroJackpotNumberA'
+          example: [3,6,12,27,50]
+        numbersB:
+          type: array
+          minimum: 2
+          maximum: 2
+          items:
+            $ref: '#/components/schemas/s_EuroJackpotNumberB'
+          example: [3,10]
+    s_Joker:
+      type: object
+      description: Jopker
+      properties:
+        numbers:
+          type: array
+          minimum: 6
+          maximum: 6
+          items:
+            $ref: '#/components/schemas/s_JokerNumber'
+          example: [0,2,3,2,8,9]
+    s_Lotto5Number:
+      type: integer
+      minimum: 1
+      maximum: 90
+      example: 1
+    s_Lotto6Number:
+      type: integer
+      minimum: 1
+      maximum: 45
+      example: 1
+    s_Lotto7Number:
+      type: integer
+      minimum: 1
+      maximum: 35
+      example: 1
+    s_EuroJackpotNumberA:
+      type: integer
+      minimum: 1
+      maximum: 50
+      example: 1
+    s_EuroJackpotNumberB:
+      type: integer
+      minimum: 1
+      maximum: 10
+      example: 1
+    s_JokerNumber:
+      type: integer
+      minimum: 0
+      maximum: 9
+      example: 1
+    s_GamblingDateTime:
+      type: string
+      format: date-time
+    s_BaseVehicle:
+      type: object
+      properties:
+        licensePlateNumber:
+          $ref: '#/components/schemas/s_LicencePlateNumber'
+        countryCode:
+          $ref: '#/components/schemas/s_CountryCode'
+        category:
+          $ref: '#/components/schemas/s_VehicleCategory'
+    s_VehicleCategory:
+      type: string
+      enum:
+        - CAR
+        - CAR8
+        - BUS
+        - MOTOR
+        - VAN
+        - TRUCK
+        - TRAIL
+    s_VignetteCategory:
+      type: string
+      enum:
+        - D1M
+        - D1
+        - D2
+        - B
+        - U
+    s_VignetteType:
+      type: string
+      enum:
+        - DAY
+        - WEEK
+        - MONTH
+        - YEAR
+        - YEAR_11
+        - YEAR_12
+        - YEAR_13
+        - YEAR_14
+        - YEAR_15
+        - YEAR_16
+        - YEAR_17
+        - YEAR_18
+        - YEAR_19
+        - YEAR_20
+        - YEAR_21
+        - YEAR_22
+        - YEAR_23
+        - YEAR_24
+        - YEAR_25
+        - YEAR_26
+        - YEAR_27
+        - YEAR_28
+        - YEAR_29
+    s_HighwayCostInfo:
+      allOf:
+        - type: object
+          properties:
+            highwayVignetteCost:
+              $ref: '#/components/schemas/s_CostDouble'
+        - type: object
+          properties:
+            comfortFee:
+              $ref: '#/components/schemas/s_CostDouble'
+    s_ParkingCostInfo:
+      allOf:
+        - type: object
+          properties:
+            parkingCost:
+              $ref: '#/components/schemas/s_CostDouble'
+        - type: object
+          properties:
+            comfortFee:
+              $ref: '#/components/schemas/s_CostDouble'
+    s_CostDouble:
+      type: number
+      example: 3500.0
+    s_LicencePlateNumber:
+      type: string
+      minLength: 3
+      maxLength: 15
+      pattern: '[A-Z0-9ÖŐÜŰ]{3,15}'
+    s_CountryCode:
+      type: string
+      minLength: 1
+      maxLength: 3
+      pattern: '[A-Z]{1,3}'
+    s_Timestamp:
+      type: string
+      format: date-time
+    s_HighwayNotif:
+      type: object
+      properties:
+        msisdn:
+          $ref: '#/components/schemas/s_MSISDN'
+        timeStamp:
+          $ref: '#/components/schemas/s_Timestamp'
+        notifType:
+          $ref: '#/components/schemas/s_HighwayNotifType'
+        notifValue:
+          $ref: '#/components/schemas/s_NotifValue'
+        vignettes:
+          $ref: '#/components/schemas/s_VignetteList'
+        vignetteInfo:
+          $ref: '#/components/schemas/s_VignetteInfo'
+    s_VignetteInfo:
+      type: object
+      properties:
+        preemptionPeriod:
+          type: object
+          description: Preemption period
+          properties:
+            start:
+              type: string
+              format: date
+              description: Start of the period in YYYY-MM-DD format
+              example: 2024-12-07
+            end:
+              type: string
+              format: date
+              description: End of the period in YYYY-MM-DD format
+              example: 2024-12-31
+        countyPeriod:
+          type: object
+          description: Preemption period
+          properties:
+            start:
+              type: string
+              format: date
+              description: Start of the period in YYYY-MM-DD format
+              example: 2024-01-01
+            end:
+              type: string
+              format: date
+              description: End of the period in YYYY-MM-DD format
+              example: 2024-11-30
+        highwayVignettes:
+          type: array
+          items:
+               $ref: '#/components/schemas/s_HighwayVignetteInfo'
+        costChange:
+          $ref: '#/components/schemas/s_CostChanegHighwayVignetteInfo'
+    s_VignetteList:
+      type: array
+      items:
+          $ref: '#/components/schemas/s_HighwayTransaction'  
+    s_HighwayNotifType:
+      type: string
+      enum:
+        - EXPIRE_SOON
+        - COST_CHANGED
+    s_NotifValue:
+      type: number
+      minimum: 1
+      maximum: 15
+      example: 5
+    s_ParkingNotif:
+      type: object
+      properties:
+        msisdn:
+          $ref: '#/components/schemas/s_MSISDN'
+        timeStamp:
+          $ref: '#/components/schemas/s_Timestamp'
+        notifType:
+          $ref: '#/components/schemas/s_ParkingNotifType'
+        notifValue:
+          $ref: '#/components/schemas/s_NotifValue'
+        details:
+          $ref: '#/components/schemas/s_ParkingTransaction'
+    s_ParkingNotifType:
+      type: string
+      enum:
+        - STOPPED
+        - START
+        - WILL_STOP
+        - WILL_START
+        - CHARGE_STOPPED
+        - ZONES_CHANGED
+    s_GamblingNotif:
+      type: object
+      properties:
+        timeStamp:
+          $ref: '#/components/schemas/s_Timestamp'
+        notifType:
+          $ref: '#/components/schemas/s_GamblingNotifType'
+        details:
+          $ref: '#/components/schemas/s_GamblingInfo'
+    s_GamblingNotifType:
+      type: string
+      enum:
+        - NEW_DRAW
+        - COST_CHANGED

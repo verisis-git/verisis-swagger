@@ -1,0 +1,363 @@
+openapi: 3.0.0
+info:
+  version: '1.0'
+  title: Sesame network security interface
+  description: >-
+    This document describes the interface of the Sesame which implements a
+    service to provision network and endpoint security features
+tags:
+  - name: provisioning
+paths: 
+  #provisioning
+  /nsus/provision/bans/{ban}/ctns/{ctn}/activateDS:
+    post:
+      tags:
+        - provisioning
+      summary: Activate DNS security
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/deactivateDS:
+    post:
+      tags:
+        - provisioning
+      summary: Deactivate DNS security
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'        
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/activateEP:
+    post:
+      tags:
+        - provisioning
+      summary: Activate endpoint security
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                license_count:
+                  $ref: '#/components/schemas/iLicense_count'
+        description: Activate EP sec
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/deactivateEP:
+    post:
+      tags:
+        - provisioning
+      summary: Deactivate endpoint security
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                license_count:
+                  $ref: '#/components/schemas/iLicense_count'
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/changeCTN:
+    post:
+      tags:
+        - provisioning
+      summary: Change ctn
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                new_ctn:
+                  $ref: '#/components/schemas/sCtn'
+        description: New ctn
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/moveCTN:
+    post:
+      tags:
+        - provisioning
+      summary: Move ctn
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                new_ban:
+                  $ref: '#/components/schemas/nBan'
+        description: New ban
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+components:
+  responses:
+    '400':
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 400
+            error_description: Invalid ctn format
+      description: Bad request
+    '404':
+      description: Returned if any entity was not found.
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 404
+            error_description: Customer not found
+    '500':
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 500
+            error_description: Internal server error
+      description: Internal server error
+    '503':
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 503
+            error_description: Service is not available
+      description: Server unavailable
+  parameters:
+    msgcntx_src:
+      name: Msg-Ctx-Src
+      description: 'Name of the source system, the sender party of the message (e.g ApplicationId)'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_srcmodule:
+      name: Msg-Ctx-Src-Module
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_env:
+      name: Msg-Ctx-Env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+    msgcntx_id:
+      name: Msg-Ctx-Id
+      description: UUID of the message like 'f257ba6675cf4921affa5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_corelid:
+      name: Msg-Ctx-Corr-Id
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_userid:
+      name: Msg-Ctx-User-Id
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    ctn:
+      name: ctn
+      in: path
+      description: Affected CTN. In case of ChangeCTN it is the old ctn
+      required: true
+      schema:
+        $ref: '#/components/schemas/sCtn'
+    ban:
+      name: ban
+      in: path
+      description: Affected BAN. In case of MoveCTN it is the old BAN
+      required: true
+      schema:
+        $ref: '#/components/schemas/nBan'
+  schemas:
+    sCtn:
+      description: User MSISDN
+      type: string
+      pattern: '36[0-9]{9}'
+      example: '36201234567'
+    nBan:
+      description: BAN
+      type: number
+      example: 36184912
+    sMsgcntx_rrid:
+      type: string
+      minLength: 1
+      maxLength: 40
+    iLicense_count:
+      type: integer
+      minimum: 0
+      example: 10
+      description: "number of the device to be registrated or canceled"
+    oErrorResponse:
+      type: object
+      properties:
+          error_code:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          error_description:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error

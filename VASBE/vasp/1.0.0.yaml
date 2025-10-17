@@ -1,0 +1,2000 @@
+openapi: 3.0.0
+info:
+  version: '1.0'
+  title: VAS backend online API
+  description: |
+    This is the API specification for VAS portal
+    
+    v1.0:
+      * add DAY vignette type
+        
+    v0.7:
+      * add assignmentId query parameter to parking history
+
+    v0.6:
+      * add startOfParkingAssignment and endOfParkingAssignment parameters
+      * add CHARGE_STOPPED status        
+      
+    v0.5:
+      * add service query param to monthly-spends endpoint
+      * add STOP_PROCESSING parking status
+      
+    v0.4:
+      * add *maximumDayOfStart fields to parking info
+      
+
+    v0.3:
+      * add channelType
+      * add gamblingType
+      * remove http status 204, 401, 503
+      * remove /v1/service/parameters
+      * add monthly spends details
+
+
+  contact:
+    email: aweimann@verisis.hu
+servers:
+  - url: https://{host_url}/vasbackend
+tags:
+  - name: general
+    description: independent of service
+  - name: highway
+    description: Operations for highway vignette
+  - name: parking
+    description: Operations for mobile parking
+  - name: gambling
+    description: Operations for gambling
+paths:
+  # General service
+  /v1/service/{userId}/transactions:
+    get:
+      summary: Query mcom transactions
+      tags:
+        - general
+      operationId: getTransactionHistory
+      description: |
+        Get the mcom transactions of the customer
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        #query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+        - name: from-start-time
+          in: query
+          description: To query transactions started afterthe given timestamp
+          required: true
+          schema:
+            $ref: '#/components/schemas/s_Timestamp'
+        - name: to-start-time
+          in: query
+          description: |
+            To query transactions started before the given timestamp.
+            
+            Default is the next day 00:00:00
+          required: false
+          schema:
+            $ref: '#/components/schemas/s_Timestamp'
+        - $ref: '#/components/parameters/p_ServiceTypeList'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+
+      responses:
+        '200':
+          description: Mcom transactions
+          headers:
+            Count-Reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_Transaction'
+
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+                
+  /v1/service/{userId}/statistics/monthly-spends:
+    get:
+      summary: Query mcom monthly spends statistics
+      tags:
+        - general
+      operationId: getMonthlySpendsStat
+      description: |
+        Mcom monthly spend statistics (12 month) of the customer. The data should be understood to be in forint
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        #query
+        - $ref: '#/components/parameters/p_ServiceTypeList'
+
+      responses:
+        '200':
+          description: Mcom transactions
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_MonthlyData'
+
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+
+  # Highway vignette service
+  /v1/service/{userId}/transactions/highway:
+    get:
+      summary: Query highway transaction
+      tags:
+        - highway
+      operationId: getVignetteHistory
+      description: |
+        Get the highway vignette transactions by customer
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        #query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+        - name: only-valid
+          in: query
+          description: If true, result contains only valid and future valid vignettes (validation end time is in the future). Default value is false
+          required: false
+          schema:
+            type: boolean
+        - name: from-start-time
+          in: query
+          description: To query vignettes purchased after the given time
+          required: false
+          schema:
+            $ref: '#/components/schemas/s_Timestamp'
+        - name: to-start-time
+          in: query
+          description: To query vignettes purchased before the given time
+          required: false
+          schema:
+            $ref: '#/components/schemas/s_Timestamp'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+
+      responses:
+        '200':
+          description: HV transactions
+          headers:
+            Count-Reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_HighwayTransaction'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+
+    post:
+      summary: Highway vignette purchase
+      tags:
+        - highway
+      operationId: purchaseVignette
+      description: |
+        Highway vignette purchase operation
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+                allOf:
+                  - $ref: '#/components/schemas/s_HighwayVignettePurchaseRequestDetails'
+                  - $ref: '#/components/schemas/s_HVRequiredNotif'
+        description: Highway vignette to be purchased
+      responses:
+        '201':
+          description: Succesful purchase
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_HighwayTransaction'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+                
+  /v1/service/{userId}/transactions/highway/{sesameId}:
+    get:
+      summary: get a specified highway purchase transaction
+      tags:
+        - highway
+      operationId: getVignetteById
+      description: |
+        Get a purchased highway vignette
+      parameters:
+        # path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        - $ref: '#/components/parameters/p_SesameId'
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      responses:
+        '200':
+          description: HV transaction
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_HighwayTransaction'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+                
+  /v1/service/highway/info:
+    get:
+      summary:  Query highway vignette info
+      tags:
+        - highway
+      operationId: getVignetteInfo
+      description: Get highway vignette info
+      parameters:
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        - $ref: '#/components/parameters/p_hv_version'
+      responses:
+        '200':
+          description: HV service Info
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hvInfoVersion:
+                    $ref: '#/components/schemas/s_InfoVersion'
+                  preemptionPeriod:
+                    type: object
+                    description: Preemption period
+                    properties:
+                      start:
+                        type: string
+                        format: date
+                        description: Start of the period in YYYY-MM-DD format
+                        example: 2021-12-07
+                      end:
+                        type: string
+                        format: date
+                        description: End of the period in YYYY-MM-DD format
+                        example: 2021-12-31
+                  countyPeriod:
+                    type: object
+                    description: Preemption period
+                    properties:
+                      start:
+                        type: string
+                        format: date
+                        description: Start of the period in YYYY-MM-DD format
+                        example: 2021-01-01
+                      end:
+                        type: string
+                        format: date
+                        description: End of the period in YYYY-MM-DD format
+                        example: 2021-11-30
+                  highwayVignettes:
+                    type: array
+                    items:
+                         $ref: '#/components/schemas/s_HighwayVignetteInfo'
+                  costChange:
+                    $ref: '#/components/schemas/s_CostChanegHighwayVignetteInfo'
+        '204':
+          description: No info change
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  
+  # Parking service
+  /v1/service/{userId}/transactions/parking:
+    get:
+      summary: Query parking transaction
+      tags:
+        - parking
+      operationId: getParkingHistory
+      description: |
+        Get the highway vignette transactions by customer
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        #query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+        - name: only-active
+          in: query
+          description: If true, result contains only active and scheduled parking (end time is in the future). Default value is false
+          required: false
+          schema:
+            type: boolean
+        - name: from-start-time
+          in: query
+          description: To query parking started after the given time
+          required: false
+          schema:
+            $ref: '#/components/schemas/s_Timestamp'
+        - name: to-start-time
+          in: query
+          description: To query parking started before the given time
+          required: false
+          schema:
+            $ref: '#/components/schemas/s_Timestamp'
+        - name: assignment-id
+          in: query
+          description: To query parking transactions with the given assignmentId
+          required: false
+          schema:
+            $ref: '#/components/schemas/s_SesameId'
+      responses:
+        '200':
+          description: Parking transactions
+          headers:
+            Count-Reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_ParkingTransaction'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+    post:
+      summary: Start parking or purchase parking ticket
+      tags:
+        - parking
+      operationId: startParking
+      description: |
+        Parking start operation
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/s_ParkingRequestDetails'
+              - $ref: '#/components/schemas/s_ParkingRequiredNotif'
+        description: Parking transaction data
+      responses:
+        '201':
+          description: Succesful start/purchase
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_ParkingTransaction'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error' 
+    
+  /v1/service/{userId}/transactions/parking/{sesameId}:
+    get:
+      summary: get a specified parking transaction
+      tags:
+        - parking
+      operationId: getParkingById
+      description: |
+        Get a parking transaction
+      parameters:
+        # path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        - $ref: '#/components/parameters/p_SesameId'
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      responses:
+        '200':
+          description: Parking transaction
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_ParkingTransaction'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+    delete:
+      summary: Stop or cancel parking
+      tags:
+        - parking
+      operationId: stopParking
+      description: |
+        Stop or cancel parking
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        - $ref: '#/components/parameters/p_SesameId'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      responses:
+        '200':
+          description: Parking transaction
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_ParkingTransaction'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  
+  /v1/service/parking/info:
+    get:
+      summary:  Query parking info
+      tags:
+        - parking
+      operationId: getParkingInfo
+      description: |
+        Get parking zone info
+      parameters:
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        - $ref: '#/components/parameters/p_zone_version'
+      responses:
+        '200':
+          description: Parking service info
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+                schema:
+                  $ref: '#/components/schemas/s_ParkingInfo'
+        '204':
+          description: No info change
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+
+  # Gambling service
+  /v1/service/gambling/info:
+    get:
+      summary:  Query gambling info
+      tags:
+        - gambling
+      operationId: getGamblingInfo
+      description: |
+        Get gambling info
+      parameters:
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+      responses:
+        '200':
+          description: Gambling service info
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_GamblingInfo'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+
+  /v1/service/gambling/info/lotto5:
+    get:
+      summary:  Query gambling info
+      tags:
+        - gambling
+      operationId: getLotto5Info
+      description: |
+        Get lotto 5 info
+      parameters:
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        # query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+      responses:
+        '200':
+          description: Lotto 5 info
+          headers:
+            Count-Reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_Lotto5Info'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  
+  /v1/service/gambling/info/lotto6:
+    get:
+      summary:  Query gambling info
+      tags:
+        - gambling
+      operationId: getLotto6Info
+      description: |
+        Get lotto 6 info
+      parameters:
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        # query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+      responses:
+        '200':
+          description: Lotto 6 info
+          headers:
+            Count-Reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_Lotto6Info'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+
+  /v1/service/gambling/info/lotto7:
+    get:
+      summary:  Query gambling info
+      tags:
+        - gambling
+      operationId: getLotto7Info
+      description: |
+        Get lotto 7 info
+      parameters:
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        # query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+      responses:
+        '200':
+          description: Lotto 7 info
+          headers:
+            Count-Reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_Lotto7Info'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+                
+  /v1/service/gambling/info/eurojackpot:
+    get:
+      summary:  Query gambling info
+      tags:
+        - gambling
+      operationId: getEuroJackpotInfo
+      description: |
+        Get EuroJackpot info
+      parameters:
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        # query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+      responses:
+        '200':
+          description: EuroJakcpot info
+          headers:
+            Count-Reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_EuroJackpotInfo'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  
+  /v1/service/gambling/info/joker:
+    get:
+      summary:  Query gambling info
+      tags:
+        - gambling
+      operationId: getJokerInfo
+      description: |
+        Get Joker info
+      parameters:
+        # header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_srcmodule'
+        - $ref: '#/components/parameters/p_msgcntx_env'
+        - $ref: '#/components/parameters/p_msgcntx_corelid'
+        - $ref: '#/components/parameters/p_msgcntx_userid'
+        # query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+      responses:
+        '200':
+          description: Joker info
+          headers:
+            Count-Reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/s_Msgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_JokerInfo'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+
+components:
+  parameters:
+    p_msgcntx_src:
+      name: Msg-Ctx-Src
+      description: 'Name of the source system, the sender party of the message (e.g ApplicationId)'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+      example: MIRA
+    p_msgcntx_srcmodule:
+      name: Msg-Ctx-Src-Module
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+      example: mira_xtv
+    p_msgcntx_env:
+      name: Msg-Ctx-Env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+      example: UAT15
+    p_msgcntx_id:
+      name: Msg-Ctx-Id
+      description: UUID of the message like 'f257ba6675cf4921affa5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+      example: f257ba6675cf4921affa5fb06f5ca20e
+    p_msgcntx_corelid:
+      name: Msg-Ctx-Corr-Id
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+      example: 23asf33JOISA-sad4329
+    p_msgcntx_userid:
+      name: Msg-Ctx-User-Id
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+      example: teszt.elek
+    p_msgcntx_ts:
+      name: Msg-Ctx-Ts
+      description: Timestamp of the request
+      in: header
+      required: true
+      schema:
+        type: string
+        format: date-time
+      example: 2023-07-03T15:27:36+02:00
+    p_UserIdPath:
+      in: path
+      name: userId
+      description: Subscription is identified by mpayId as userid
+      required: true
+      schema:
+        $ref: '#/components/schemas/s_MSISDN'
+    p_SesameId:
+      in: path
+      name: sesameId
+      description: Sesame transaction Id
+      required: true
+      schema:
+        $ref: '#/components/schemas/s_SesameId'
+    p_Count:
+      name: count
+      required: false
+      in: query
+      description: Requested number of resources to be provided in response.
+      schema:
+        type: integer
+        minimum: 1
+    p_Offset:
+      name: offset
+      required: false
+      in: query
+      description: Page number. 0 means the first one
+      schema:
+        type: integer
+        minimum: 0
+    p_ServiceTypeList:
+      name: service
+      in : query
+      description: List of services. Default is ALL
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/s_ServiceType'
+    p_ValidityStart:
+      in: query
+      name: validity-start
+      description: Start time of the ticket's validity
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_Timestamp'
+    p_ValidityEnd:
+      in: query
+      name: validity-end
+      description: End time of the ticket's validity
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_Timestamp'
+    p_zone_version:
+      name: Zone-Info-Version
+      description: Last known zone info version
+      in: header
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_InfoVersion'
+    p_hv_version:
+      name: Vignette-Info-Version
+      description: Last known vignette info version
+      in: header
+      required: false
+      schema:
+        $ref: '#/components/schemas/s_InfoVersion'
+  schemas:
+    s_MSISDN:
+      type: string
+      pattern: '^36[0-9]{9}$'
+      example: '36201234567'
+      description: Phone number of the subscription
+    s_CountReached:
+      type: boolean
+      description: True, if the count of the queried data is more or equals than the requested by count header parameter
+      example: false
+    s_Msgcntx_rrid:
+      type: string
+      minLength: 1
+      maxLength: 40
+      example: 23asf33JOISA-sad4329
+    s_SesameId:
+      type: integer
+      format: int64
+      description: Sesame transaction id
+      example: 12434264
+    s_ServiceType:
+      type: string
+      description: available VAS backend services
+      enum: [HIGHWAY,PARKING,GAMBLING,OTHER,ALL]
+      example: GAMBLING
+    s_Transaction:
+      type: object
+      description: Mcom transaction
+      properties:
+        partnerName:
+          description: Name of the partner
+          type: string
+          maxLength: 50
+          example: SzZrt.
+        id:
+          $ref: '#/components/schemas/s_SesameId'
+        msisdn:
+          $ref: '#/components/schemas/s_MSISDN'
+        trxStartTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        trxCloseTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        name:
+          description: Name of the purchased item
+          type: string
+          maxLength: 50
+          example: Számsorsjáték - Ötöslottó
+        cost:
+          $ref: '#/components/schemas/s_CostDouble'
+        trxFee:
+          $ref: '#/components/schemas/s_CostDouble'
+        serviceType:
+          $ref: '#/components/schemas/s_ServiceType'
+        partnerTrxId:
+          type: string
+          description: id of the transaction used by the partner
+          maxLength: 50
+          example: ADSA896ASD876I
+        refTrxId:
+          $ref: '#/components/schemas/s_SesameId'
+        basketName:
+          type: string
+          maxLength: 50
+          example: Ötöslottó
+        channel:
+          $ref: '#/components/schemas/s_ChannelType'
+    s_MonthlyData:
+      type: object
+      additionalProperties:
+        type: number
+      example: {"1": 12300.0,"2": 6500.0,"3": 7300.0,"4": 9700.0,"5": 3700.0,"6": 1200.0,"7": 100.0,"8": 2400.0,"9": 12200.0,"10": 5600.0,"11": 7600,"12": 34500.0}
+    s_HighwayTransaction:
+      type: object
+      description: Highway vignette purchase transaction
+      properties:
+        msisdn:
+          $ref: '#/components/schemas/s_MSISDN'
+        sesameId:
+          $ref: '#/components/schemas/s_SesameId'
+        nmfrId:
+          $ref: '#/components/schemas/s_NMFRId'
+        trxStart:
+          $ref: '#/components/schemas/s_Timestamp'
+        trxEnd:
+          $ref: '#/components/schemas/s_Timestamp'
+        highwayVignette:
+          $ref: '#/components/schemas/s_HighwayVignette'
+        costInfo:
+          $ref: '#/components/schemas/s_HighwayCostInfo'
+        channel:
+          $ref: '#/components/schemas/s_ChannelType'
+    s_HighwayVignetteInfo:
+      type: object
+      description: Highway vignette info
+      properties:
+        vehicleCategory:
+          $ref: '#/components/schemas/s_VehicleCategory'
+        vignetteType:
+          $ref: '#/components/schemas/s_VignetteType'
+        cost:
+          $ref: '#/components/schemas/s_CostDouble'
+        trxFee:
+          $ref: '#/components/schemas/s_CostDouble'
+    s_CostChanegHighwayVignetteInfo:
+      type: object
+      description: Cost change vigenette infp
+      properties:
+        from:
+          type: string
+          format: date
+          description: Start of the cost change
+          example: 2023-01-01
+        highwayVignettes:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_HighwayVignetteInfo'
+    s_ParkingTransaction:
+      type: object
+      description: Parking transaction
+      properties:
+        msisdn:
+          $ref: '#/components/schemas/s_MSISDN'
+        sesameId:
+          $ref: '#/components/schemas/s_SesameId'
+        assignmentId:
+          $ref: '#/components/schemas/s_SesameId'
+        nmfrId:
+          $ref: '#/components/schemas/s_NMFRId'
+        trxStart:
+          $ref: '#/components/schemas/s_Timestamp'
+        trxEnd:
+          $ref: '#/components/schemas/s_Timestamp'
+        parkingDetails:
+          $ref: '#/components/schemas/s_Parking'
+        costInfo:
+          $ref: '#/components/schemas/s_ParkingCostInfo'
+        channel:
+          $ref: '#/components/schemas/s_ChannelType'
+        startOfAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+        endOfAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+        startOfParkingAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+        endOfParkingAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+    s_ParkingInfo:
+      type: object
+      description: Parking info
+      properties:
+        zoneInfoVersion:
+          $ref: '#/components/schemas/s_InfoVersion'
+        comfortFee:
+          $ref: '#/components/schemas/s_ParkingComfortFeeInfo'
+        maximumDayOfStart:
+          $ref: '#/components/schemas/s_MaximumDayOfStartInfo'
+        zoneInfo:
+          $ref: '#/components/schemas/s_ParkingZoneInfo'
+    s_ParkingComfortFeeInfo:
+      type: object
+      description: Parking comfort fee info
+      properties:
+        startStopParking:
+          $ref: '#/components/schemas/s_CostDouble'
+        ticketParking:
+          $ref: '#/components/schemas/s_CostDouble'
+        offsiteParking:
+          $ref: '#/components/schemas/s_CostDouble'
+    s_MaximumDayOfStartInfo:
+      type: object
+      description: How many days in advance parking can be started
+      properties:
+        startStopParking:
+          type: number
+        ticketParking:
+          type: number
+    s_ZoneDimensions:
+      type: object
+      description: Parkolási zóna poligon. Csak akkor van töltve a válaszokban, ha van elérhető poligon
+      properties: 
+        dimension: 
+          type: array
+          items: 
+            type: object
+            properties: 
+              gpsCoord: 
+                type: array
+                description: GPS koordináta
+                items: 
+                  type: object
+                  properties: 
+                    lat: 
+                      type: number
+                      format: double
+                    time: 
+                      type: string
+                      format: datetime
+                      description: UTC
+                    long: 
+                      type: number
+                      format: double
+                  required: [
+                    lat,
+                    long
+                  ]
+            required: [
+              gpsCoord
+            ]
+    s_ZoneParams: 
+      type: object
+      properties: 
+        parkingOperatorName: 
+          type: string
+          maxLength: 50
+          description: Parkolási zónát üzemeltető szervezet neve! (Akik a büntetés adják ki!)
+        city: 
+          type: string
+          maxLength: 50
+        zoneCodes: 
+          type: object
+          properties: 
+            zoneCode: 
+              type: array
+              items: 
+                type: string
+                pattern: "[0-9]{2,12}"
+        operationStartTimeWorkDay: 
+          type: string
+          format: timde
+        operationEndTimeWorkDay: 
+          type: string
+          format: time
+        operationStartTimeFreeDay: 
+          type: string
+          format: time
+        operationEndTimeFreeDay: 
+          type: string
+          format: time
+        operationStartTimeHolidayDay: 
+          type: string
+          format: time
+        operationEndTimeHolidayDay: 
+          type: string
+          format: time
+        availableVehicleCategory: 
+          type: object
+          description: Zónában használható jármű kategóriák!
+          properties: 
+            category: 
+              type: array
+              items: 
+                type: string
+                enum: [CAR,BUS,MOTOR,VAN,TRUCK]
+        minimumCost: 
+          type: number
+          description: Minimum fizetendő összeg
+        minimumLength: 
+          type: number
+          description: Minimum fizetendő parkolási idő. Egy parkolás nem lehet ennél rövidebb! Kivéve ha törlik!
+        maxParkingLength: 
+          type: number
+          description: Maximum parkolható idő, ennél nem lehet hosszabb egy parkolás az adott zónában.
+        maxBillingCost: 
+          type: number
+          description: "Maximum fizetendő összeg! Egy parkolás költsége nem lehet ennél az összegnél nagyobb. Ha eléri ezt az összeget a parkolás nem nő tovább a költsége. Pl.: 1500 Ft elérése után egész nap ott állhat a jármű"
+        maxBillingLength: 
+          type: number
+          description: "Maximum fizetendő parkolási hossz! Ha egy parkolás hossza eléri ezt az értéket, akkor a költsége nem nő tovább. Pl.: 3 óra fizetése után elérése után egész nap ott állhat a jármű"
+        zoneDimensions: 
+          $ref: '#/components/schemas/s_ZoneDimensions'
+        operationStartTimeActualMotor: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő kezdete (MOTOR)
+        operationEndTimeActualMotor: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő vége (MOTOR)
+        operationStartTimeActualCar: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő kezdete (CAR)
+        operationEndTimeActualCar: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő vége (CAR)
+        operationStartTimeActualBus: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő kezdete (BUS)
+        operationEndTimeActualBus: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő vége (BUS)
+        operationStartTimeActualVan: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő kezdete (VAN)
+        operationEndTimeActualVan: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő vége (VAN)
+        operationStartTimeActualTruck: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő kezdete (TRUCK)
+        operationEndTimeActualTruck: 
+          type: string
+          format: datetime
+          description: Aktuális üzemeltetési idő vége (TRUCK)
+    s_ParkingZoneInfo:
+      type: array
+      items:
+        type: object
+        properties: 
+          zoneName:
+            type: string
+            maxLength: 50
+            description: A zóna elnevezése, neve!
+          zoneTarif:
+            type: number
+            format: double
+            description: CAR Tarifa az adott zónában
+          isEstimatedTarif:
+            type: boolean
+            description: Igen, ha a zoneTarif mezőben nem pontos tarifa (egy órányi parkolás költsége) van, hanem egy kalkulált bescült érték. Olyan zónák esetén fordulhat ez elő ahol nem óra alapú lineáris a parkolási díj számítása!
+          isFixTicketZone: 
+            type: boolean
+            description: Adott zóna fix összegű jegyvásárlásra szolgál! Igaz érték esetén az ide indított parkolásokat nem lehet leállítani! Notification és Allocation hívások nem történnek az itt indított parkolásokkal kapcsolatban!
+          zoneType: 
+            type: string
+            description: A zóna típusa
+            enum: [ONSITE,OFFSITE]
+          id: 
+            type: string
+            description: NMFR oldali azonosító
+            pattern: "[A-Z0-9_]{3,30}"
+          zoneTarifBus: 
+            type: number
+            format: double
+            description: BUS Tarifa az adott zónában
+          zoneTarifVan: 
+            type: number
+            format: double
+            description: VAN Tarifa az adott zónában
+          zoneTarifTruck: 
+            type: number
+            format: double
+            description: TRUCK Tarifa az adott zónában
+          zoneTarifMotor: 
+            type: number
+            format: double
+            description: MOTOR Tarifa az adott zónában
+          zoneParams: 
+            $ref: '#/components/schemas/s_ZoneParams'
+    s_InfoVersion:
+      type: integer
+      format: int64
+      description: Version number
+      example: 1685435234
+    s_NMFRId:
+      type: string
+      description: NMFR transaction id
+      example: "6SHD86SAD6"
+    s_HighwayVignette:
+      type: object
+      properties:
+        vignetteNumber:
+          $ref: '#/components/schemas/s_VignetteNumber'
+        validityStart:
+          $ref: '#/components/schemas/s_Timestamp'
+        validityEnd:
+          $ref: '#/components/schemas/s_Timestamp'
+        vehicle:
+          $ref: '#/components/schemas/s_BaseVehicle'
+        vignetteCategory:
+          $ref: '#/components/schemas/s_VignetteCategory'
+        vignetteType:
+          $ref: '#/components/schemas/s_VignetteType'
+    s_Parking:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/s_ParkingStatus'
+        startTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        endTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        expectedEndTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        chargeEndTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        vehicle:
+          $ref: '#/components/schemas/s_BaseVehicle'
+        isFinished:
+          $ref: '#/components/schemas/s_Boolean'
+        zoneInfo:
+          $ref: '#/components/schemas/s_ZoneInfo'
+    s_ParkingStatus:
+      type: string
+      enum:
+        - PREPARED
+        - RUNING
+        - STOPPED
+        - STOP_PROCESSING
+        - CANCELLED
+        - EXPIRED
+        - FAILED
+        - FINISHED
+        - CHARGE_STOPPED
+    s_Boolean:
+      type: boolean
+      example: false
+    s_ZoneInfo:
+      type: object
+      description: Parking zone info
+      properties:
+        zoneName:
+          $ref: '#/components/schemas/s_String50'
+        zoneTarif:
+          $ref: '#/components/schemas/s_String50'
+        isEstimatedTarif:
+          $ref: '#/components/schemas/s_Boolean'
+        isFixTicketZone:
+          $ref: '#/components/schemas/s_Boolean'
+        zoneType:
+          $ref: '#/components/schemas/s_ZoneType'
+        zoneCode:
+          $ref: '#/components/schemas/s_String4'
+        zoneTarifMultiplier:
+          $ref: '#/components/schemas/s_CostDouble'
+        city:
+          $ref: '#/components/schemas/s_String50'
+    s_ZoneType:
+      type: string
+      enum:
+        - ONSITE
+        - OFFSITE
+    s_String50:
+      type: string
+      minLength: 0
+      maxLength: 50
+    s_String4:
+      type: string
+      minLength: 0
+      maxLength: 4
+      example: "1234"
+    s_VignetteNumber:
+      type: string
+      minLength: 4
+      maxLength: 22
+      example: 112305281940371074111
+    s_GamblingInfo:
+      type: object
+      description: Gambling info
+      properties:
+        lotto5:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_Lotto5Info'
+        lotto6:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_Lotto6Info'
+        lotto7:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_Lotto7Info'
+        eurojackpot:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_EuroJackpotInfo'
+        joker:
+          allOf:
+            - $ref: '#/components/schemas/s_BaseGamblingInfo'
+            - $ref: '#/components/schemas/s_JokerInfo'
+    s_BaseDrawInfo:
+      type: object
+      description: Base draw information
+      properties:
+        drawId:
+          type: string
+          example: SZ20505
+        type:
+          $ref: '#/components/schemas/s_GamblingType'
+        year:
+          type: integer
+          example: 2020
+        weekOfYear:
+          type: integer
+          example: 51
+        dayOfYear:
+          type: integer
+          example: 356
+        dayOfWeek:
+          type: integer
+          example: 6          
+        drawDate:
+          $ref: '#/components/schemas/s_GamblingDateTime'
+        nextBetStartDate:
+          $ref: '#/components/schemas/s_GamblingDateTime'
+        nextBetEndDate:
+          $ref: '#/components/schemas/s_GamblingDateTime'
+        nextDrawDate:
+          $ref: '#/components/schemas/s_GamblingDateTime'
+        nextDrawExpectedWin:
+          $ref: '#/components/schemas/s_GamblingAmount'
+    s_BaseGamblingInfo:
+      type: object
+      description: Base gambling information
+      properties:
+        actualPrice:
+          $ref: '#/components/schemas/s_GamblingPrice'
+        maxBasketPrice:
+          $ref: '#/components/schemas/s_GamblingPrice'
+    s_DividendsInfoLotto:
+      type: object
+      description: Dividens information for lotto5, lotto6, lotto7
+      properties:
+        hit: 
+          type: string
+        winners:
+          type: integer
+        amount: 
+           $ref: '#/components/schemas/s_GamblingAmount'
+        currency:
+          $ref: '#/components/schemas/s_CurrencyType'
+    s_DividendsInfoEJ:
+      type: object
+      description: Dividens information for Eurojackpot
+      allOf:
+      - $ref: '#/components/schemas/s_DividendsInfoLotto'
+      - type: object
+        properties:
+          totWinCount:
+            type: number
+    s_CurrencyType:
+      type: string
+      enum:
+        - Ft
+        - Euro
+    s_GamblingAmount:
+      type: number
+      format: double
+      example: 25675.36
+    s_DividendsLottoArray:
+      type: object
+      properties:
+        dividends:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_DividendsInfoLotto'
+    s_DividendsEJArray:
+      type: object
+      properties:
+        dividends:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_DividendsInfoEJ'
+    s_Lotto5Info:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_Lotto5'
+      - $ref: '#/components/schemas/s_DividendsLottoArray'
+    s_Lotto6Info:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_Lotto6'
+      - $ref: '#/components/schemas/s_DividendsLottoArray'
+    s_Lotto7Info:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_Lotto7'
+      - $ref: '#/components/schemas/s_DividendsLottoArray'
+    s_EuroJackpotInfo:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_EuroJackpot'
+      - $ref: '#/components/schemas/s_DividendsEJArray'
+      - type: object
+        properties:
+          nextDrawExpectedWinMrdHuf:
+            type: string
+            example: 11.2
+    s_JokerInfo:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/s_BaseDrawInfo'
+      - $ref: '#/components/schemas/s_Joker'
+      - $ref: '#/components/schemas/s_DividendsLottoArray'
+    s_Lotto5:
+      type: object
+      description: Lotto 5
+      properties:
+        numbers:
+          type: array
+          minimum: 5
+          maximum: 5
+          items:
+            $ref: '#/components/schemas/s_Lotto5Number'
+          example: [12,23,45,67,86]
+    s_GamblingPrice:
+      type: number
+      minimum: 0
+      example: 300.0
+    s_Lotto6:
+      type: object
+      description: Lotto 6
+      properties:
+        numbers:
+          type: array
+          minimum: 6
+          maximum: 6
+          items:
+            $ref: '#/components/schemas/s_Lotto6Number'
+          example: [3,6,12,23,34,45]
+    s_Lotto7:
+      type: object
+      description: Lotto 7
+      properties:
+        numbers:
+          type: array
+          minimum: 7
+          maximum: 7
+          items:
+            $ref: '#/components/schemas/s_Lotto7Number'
+          example: [3,6,12,17,23,34,35]
+    s_EuroJackpot:
+      type: object
+      description: Eurojackpot
+      properties:
+        numbersA:
+          type: array
+          minimum: 5
+          maximum: 5
+          items:
+            $ref: '#/components/schemas/s_EuroJackpotNumberA'
+          example: [3,6,12,27,50]
+        numbersB:
+          type: array
+          minimum: 2
+          maximum: 2
+          items:
+            $ref: '#/components/schemas/s_EuroJackpotNumberB'
+          example: [3,10]
+    s_Joker:
+      type: object
+      description: Jopker
+      properties:
+        numbers:
+          type: array
+          minimum: 6
+          maximum: 6
+          items:
+            $ref: '#/components/schemas/s_JokerNumber'
+          example: [0,2,3,2,8,9]
+    s_Lotto5Number:
+      type: integer
+      minimum: 1
+      maximum: 90
+      example: 1
+    s_Lotto6Number:
+      type: integer
+      minimum: 1
+      maximum: 45
+      example: 1
+    s_Lotto7Number:
+      type: integer
+      minimum: 1
+      maximum: 35
+      example: 1
+    s_EuroJackpotNumberA:
+      type: integer
+      minimum: 1
+      maximum: 50
+      example: 1
+    s_EuroJackpotNumberB:
+      type: integer
+      minimum: 1
+      maximum: 10
+      example: 1
+    s_JokerNumber:
+      type: integer
+      minimum: 0
+      maximum: 9
+      example: 1
+    s_GamblingDateTime:
+      type: string
+      format: date-time
+    s_BaseVehicle:
+      type: object
+      properties:
+        licensePlateNumber:
+          $ref: '#/components/schemas/s_LicencePlateNumber'
+        countryCode:
+          $ref: '#/components/schemas/s_CountryCode'
+        category:
+          $ref: '#/components/schemas/s_VehicleCategory'
+    s_VehicleCategory:
+      type: string
+      enum:
+        - CAR
+        - CAR8
+        - BUS
+        - MOTOR
+        - VAN
+        - TRUCK
+        - TRAIL
+    s_VignetteCategory:
+      type: string
+      enum:
+        - D1M
+        - D1
+        - D2
+        - B
+        - U
+    s_VignetteType:
+      type: string
+      enum:
+        - DAY
+        - WEEK
+        - MONTH
+        - YEAR
+        - YEAR_11 # Bács-Kiskun
+        - YEAR_12 # Baranya
+        - YEAR_13 # Békés
+        - YEAR_14 # Borsod-Abaúj-Zemplén
+        - YEAR_15 # Csongrád
+        - YEAR_16 # Fejér
+        - YEAR_17 # Győr-Moson-Sopron
+        - YEAR_18 # Hajdú-Bihar 
+        - YEAR_19 # Heves
+        - YEAR_20 # Jász-Nagykun-Szolnok
+        - YEAR_21 # Komárom-Esztergom
+        - YEAR_22 # Nógrád
+        - YEAR_23 # Pest
+        - YEAR_24 # Somogy
+        - YEAR_25 # Szabolcs-Szatmár-Bereg
+        - YEAR_26 # Tolna
+        - YEAR_27 # Vas
+        - YEAR_28 # Veszprém
+        - YEAR_29 # Zala
+    s_HighwayCostInfo:
+      allOf:
+        - type: object
+          properties:
+            highwayVignetteCost:
+              $ref: '#/components/schemas/s_CostDouble'
+        - type: object
+          properties:
+            comfortFee:
+              $ref: '#/components/schemas/s_CostDouble'
+    s_ParkingCostInfo:
+      allOf:
+        - type: object
+          properties:
+            parkingCost:
+              $ref: '#/components/schemas/s_CostDouble'
+        - type: object
+          properties:
+            comfortFee:
+              $ref: '#/components/schemas/s_CostDouble'
+    s_CostDouble:
+      type: number
+      example: 3500.0
+    s_HighwayVignettePurchaseRequestDetails:
+      type: object
+      properties:
+        validityStart:
+          $ref: '#/components/schemas/s_Timestamp'
+        vehicle:
+          $ref: '#/components/schemas/s_BaseVehicle'
+        vignetteType:
+          $ref: '#/components/schemas/s_VignetteType'
+    s_ParkingRequestDetails:
+      type: object
+      properties:
+        ticketNumber:
+          $ref: '#/components/schemas/s_String50'
+        vehicle:
+          $ref: '#/components/schemas/s_BaseVehicle'
+        zoneCode:
+          $ref: '#/components/schemas/s_String4'
+        length:
+          $ref: '#/components/schemas/s_ParkingLengthValue'
+        startTime:
+          $ref: '#/components/schemas/s_Timestamp'
+        endOfAssignment:
+          $ref: '#/components/schemas/s_Timestamp'
+    s_ParkingLengthValue:
+      type: integer
+      description: Value of the time base
+      example: 45
+    s_NotifValue:
+      type: number
+      minimum: 1
+      maximum: 15
+      example: 5
+    s_ParkingRequiredNotif:
+      type: object
+      description: List of required notifications before parking end time (or charge end time) in minutes
+      properties:
+        parkingRequiredNotif:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_NotifValue'
+    s_HVRequiredNotif:
+      type: object
+      description: List of required notifications before validity end date in days
+      properties:
+        hvRequiredNotif:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_NotifValue'
+    s_LicencePlateNumber:
+      type: string
+      minLength: 3
+      maxLength: 15
+      pattern: '[A-Z0-9ÖŐÜŰ]{3,15}'
+    s_CountryCode:
+      type: string
+      minLength: 1
+      maxLength: 3
+      pattern: '[A-Z]{1,3}'
+    s_Timestamp:
+      type: string
+      format: date-time
+    s_ChannelType:
+      type: string
+      enum: [SMS,APP,IVR, USSD]
+      example: SMS
+    s_GamblingType:
+      type: string
+      enum: [LOTTO5,LOTTO6,LOTTO7,EUROJACKPOT,JOKER]
+      example: LOTTO5
+    s_Error:
+      required:
+        - title
+        - status
+        - detail
+        - code
+      properties:
+        title:
+          type: string
+          maxLength: 64
+          description: 'A short, human-readable summary of the problem type. It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization.'
+        status:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: 'The HTTP status code, generated by the origin server for this occurrence of the problem.'
+        detail:
+          type: string
+          maxLength: 128
+          description: 'Short description of the problem. Always respond with generic error messages to avoid revealing details of the failure unnecessarily.'
+        code:
+          type: integer
+          minimum: -9999999
+          maximum: 9999999
+          description: 'Only for internal problem code.'

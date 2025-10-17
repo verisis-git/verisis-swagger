@@ -1,0 +1,273 @@
+openapi: '3.0.2'
+info:
+  title: Sesame interfaces exposed to M2M Portal
+  version: '1.1.0'
+servers:
+  - url: https://sesame.m2m.pgsm.hu/
+paths:
+  /m2msesame/v1/job/upload:
+    post:
+      tags:
+          - Job operations
+      summary: Initiate bulk job create
+      parameters:
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      requestBody:
+        description: M2M Job list
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/JobList'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/jobRequestResult'
+          description: OK
+        '400':
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 400
+                  errorDescription: Invalid startTime format
+          description: Bad request
+        '500':
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 500
+                  errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 503
+                  errorDescription: Server is not available.
+          description: Server unavailable
+  /m2msesame/v1/job/delete:
+    post:
+      tags:
+          - Job operations
+      summary: Initiate bulk job delete
+      parameters:
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      requestBody:
+        description: Job Transaction ids
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/JobDeleteList'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/jobDeleteRequestResult'
+          description: Deleted
+        '400':
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 400
+                  errorDescription: Invalid request data
+          description: Bad request
+        '500':
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 500
+                  errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 503
+                  errorDescription: Server is not available
+          description: Server unavailable
+components:
+  parameters:
+    msgcntx_src:
+      name: msgcntx_src
+      description: 'Name of the source system, the sender party of the message (e.g ApplicationId)'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_srcmodule:
+      name: msgcntx_srcmodule
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_env:
+      name: msgcntx_env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+    msgcntx_id:
+      name: msgcntx_id
+      description: UUID of the message like 'f257ba6675cf4921affa5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_corelid:
+      name: msgcntx_corelid
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_userid:
+      name: msgcntx_userid
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+  schemas:
+    JobList:
+      type: array
+      description: Array of jobs
+      items:
+        $ref: '#/components/schemas/Job'
+    Job:
+      type: object
+      required: [jobId,startTime]
+      properties:
+        jobId:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: M2M id of the job
+          example: 1123
+        type:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: Type of the job
+          example: ROAMING
+        startTime:
+          type: string
+          format: date-time
+          description: Start time of the job
+        ban:
+          description: BAN
+          type: number
+          example: 36184912    
+    JobDeleteList:
+      type: array
+      description: List of jobIds will be deleted
+      items:
+        properties:
+          trxId:
+            type: integer
+            format: int64
+            minimum: 1
+            description: Sesame trx id
+            example: 4000123211
+    errorResponse:
+      type: object
+      properties:
+          errorCode:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          errorDescription:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error
+    jobRequestResult:
+      type: array
+      description: List of job trx results 
+      items:
+        $ref: '#/components/schemas/singleJobResult'
+    singleJobResult:
+      type: object
+      description: Result of a single job 
+      properties:
+        jobId:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: M2M id of the job
+          example: 1123
+        trxId:
+            type: integer
+            minimum: 1
+            format: int64
+            description: Sesame trx id
+            example: 4000123211
+        trxStatus:
+          type: string
+          description: Single trx status
+          enum:
+            - ACCEPTED
+            - FAILED
+            - INVALID
+          example: ACCEPTED
+    jobDeleteRequestResult:
+      type: array
+      description: List of delete job results 
+      items:
+        $ref: '#/components/schemas/singleJobDeleteResult'
+    singleJobDeleteResult:
+      type: object
+      description: Result of a single delete job 
+      properties:
+        trxId:
+            type: integer
+            minimum: 1
+            description: Sesame trx id
+            example: 4000123211
+        trxStatus:
+          type: string
+          description: Single delete status
+          enum:
+            - DELETED
+            - FAILED
+            - NOTFOUND
+          example: DELETED

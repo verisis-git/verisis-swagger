@@ -1,0 +1,484 @@
+openapi: '3.0.2'
+info:
+  title: Telenor Device insurance interface for Insurance company
+  description: |
+    **v1.1**:
+    * modify header parameters' name
+    
+    **v1.2**:
+    * remove isBroughtIn parameter (boolean)
+    * add broughtIn parameter (string enum)
+
+  version: '1.2'
+servers:
+  - url: https://sesame.devins.pgsm.hu/
+  
+paths:
+
+  /deviceinsurance/v1/transactions:
+    get:
+      tags:
+          - Marsh
+      summary: Get transactions
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # query
+        - $ref: '#/components/parameters/dLastTransferTime'
+        - $ref: '#/components/parameters/iCount'
+        - $ref: '#/components/parameters/iOffset'
+      responses:
+        '200':
+          headers:
+            Count-Reached:
+              description: True, if the count of the queried data is more or equals than the requested by count header parameter
+              schema:
+                $ref: '#/components/schemas/bCountReached'
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/aTransactions'
+          description: Success
+        '400':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid data
+          description: Bad request
+        '404':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid tacCode format
+          description: Not found
+        '500':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 503
+                errorDescription: Service is not available
+          description: Server unavailable
+          
+  /deviceinsurance/v1/termination:
+    post:
+      tags:
+          - Marsh
+      summary: Initiate delete insuers record(s)
+      parameters:
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      requestBody:
+        description: Termination elements
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/aTermination'
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid ctn format
+          description: Bad request
+        '500':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 503
+                errorDescription: Service is not available
+          description: Server unavailable
+          
+components:
+  parameters:
+    msgcntx_src:
+      name: Msg-Ctx-Src
+      description: 'Name of the source system, the sender party of the message (e.g ApplicationId)'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_srcmodule:
+      name: Msg-Ctx-Src-Module
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_env:
+      name: Msg-Ctx-Env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+    msgcntx_id:
+      name: Msg-Ctx-Id
+      description: UUID of the message like 'f257ba6675cf4921affa5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_corelid:
+      name: Msg-Ctx-Corr-Id
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_userid:
+      name: Msg-Ctx-User-Id
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    iCount:
+      name: count
+      required: false
+      in: query
+      description: Requested number of resources to be provided in response.
+      schema:
+        type: integer
+        minimum: 1
+    iOffset:
+      name: offset
+      required: false
+      in: query
+      description: Page number. 0 means the first one
+      schema:
+        type: integer
+        minimum: 0
+    dLastTransferTime:
+      name: last_transfer_time
+      required: false
+      in: query
+      description: "Last transfer time. Default: current date - 7 days"
+      schema:
+        type: string
+        format: date-time
+    sTacCode:
+      name: tacCode
+      required: false
+      in: query
+      description: Tac code. It is required if materialId query param is not set
+      schema:
+        type: string
+    sMaterialId:
+      name: materialId
+      required: false
+      in: query
+      description: Material id. It is required if tacCode query param is not set
+      schema:
+        $ref: '#/components/schemas/sSapMaterialId'
+  schemas:
+    sMsgcntx_rrid:
+      type: string
+      minLength: 1
+      maxLength: 40
+    bCountReached:
+      type: boolean
+      example: false
+    aTransactions:
+      type: array
+      description: Array of transactions
+      items:
+        $ref: '#/components/schemas/oTransactionElement'
+    oTransactionElement:
+      type: object
+      description: Transaction element
+      required: [contractId, customer, device, salesInfo, insurance, activationDate]
+      properties:
+        contractId:
+          type: string
+          description: Insurance identifier
+        customer:
+          $ref: '#/components/schemas/oCustomer'
+        device:
+          $ref: '#/components/schemas/oDevice'
+        salesInfo:
+          $ref: '#/components/schemas/oSalesInfo'
+        insurance:
+          $ref: '#/components/schemas/oInsurance'
+        activationDate:
+          type: string
+          format: date
+          description: Activation date of the insurance
+        termination:
+          $ref: '#/components/schemas/oTermination'
+        lastModificationDate:
+          type: string
+          format: date
+          description: Last modification date of the insurance
+        isNewDevice:
+          type: boolean
+          description: True if the device is new
+        broughtIn:
+          type: string
+          description: |
+            * notBroughtIn - NONE
+            * broughtInFromTelenor - TELENOR
+            * broughtInFromOther - OTHER
+          enum:
+            - "NONE"
+            - "TELENOR"
+            - "OTHER"
+    oSalesInfo:
+      type: object
+      description: Sales info object
+      properties:
+        channel:
+          $ref: '#/components/schemas/eChannel'
+        system:
+          type: string
+          description: Name of the system
+        dealerCode:
+          type: string
+          description: Dealer code
+        outletCode:
+          type: string
+          description: Outlet code
+        salesmanCode:
+          type: string
+          description: Salesman code
+    eChannel:
+      type: string
+      description: Channel enumeration. It can be Retail or Online
+      enum:
+        - RETAIL
+        - ONLINE
+    aTermination:
+      type: array
+      description: Array of termination elements
+      items:
+        $ref: '#/components/schemas/oTerminationElement'
+    oTerminationElement:
+      type: object
+      description: Termination element
+      required: [contractId, monthlyFee, ownShare]
+      properties:
+        contractId:
+          type: string
+          description: Insurance identifier
+        customer:
+          $ref: '#/components/schemas/oCustomer'
+        device:
+          $ref: '#/components/schemas/oDevice'
+        insurance:
+          $ref: '#/components/schemas/oInsurance'
+        monthlyFee:
+          type: number
+          description: Amount of monthly fee
+        ownShare:
+          type: number
+          description: Amount of share
+        termination:
+          $ref: '#/components/schemas/oTermination'
+        isBlacklisted:
+          type: boolean
+          description: true if the customer has to be on blacklist after the termination. False is the default
+    oCustomer:
+      type: object
+      description: Customer object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Name of the customer
+        country:
+          type: string
+          description: Country part of the address
+        zipCode:
+          type: string
+          description: Zip code part of the address
+        city:
+          type: string
+          description: City part of the address
+        nameOfStreet:
+          type: string
+          description: Name of the street. It is part of the address
+        typeOfStreet:
+          type: string
+          description: Type of the street. It is part of the address. E.g. street
+        houseNumber:
+          type: string
+          description: House number part of the address
+        additionalHouseNumber:
+          type: string
+          description: Additional info for house number. It is part of the address
+        motherName:
+          type: string
+          description: Name of customer's mother. It is required in case of an individual customer
+        birthDate:
+          type: string
+          format: date
+          description: Date of birth. It is required in case of an individual customer
+        birthPlace:
+          type: string
+          description: Date of place of birth. It is required in case of an individual customer
+        firmRegistryNumber:
+          type: string
+          description: Firm registry number. It is required in case of a non-individual customer
+    oDevice:
+      type: object
+      description: Device object
+      properties:
+        imeiNumber:
+          type: string
+          description: IMEI number of the device
+          maxLength: 20
+        serialNumber:
+          type: string
+          description: Serial number of the device
+        deviceMake:
+          type: string
+          description: Manufacturer of the device 
+        deviceName:
+          type: string
+          description: Name of the device
+        materialId:
+          $ref: '#/components/schemas/sSapMaterialId'
+        retailPrice:
+          type: number
+          description: Retail price of the device
+    oInsurance:
+      type: object
+      description: Insurance info object
+      properties:
+        insuranceCompanyName:
+          type: string
+          description: Insurance company name
+        insuranceProductId:
+          type: number
+          description: Insurance product identifier
+        insuranceProductName:
+          type: string
+          description: Insurance product name
+        insurancePriceBand:
+          $ref: '#/components/schemas/eInsurancePriceBand'
+        insuranceGrade:
+          $ref: '#/components/schemas/eInsuranceGrade'
+    oTermination:
+      type: object
+      description: Termination object
+      required: [defaultTerminationDate]
+      properties:
+        terminationDate:
+          type: string
+          format: date
+          description: Date of the termination
+        defaultTerminationDate:
+          type: string
+          format: date
+          description: Default termination date. It is defined in the contract
+        terminationReason:
+          type: string
+          description: Reason of the termination. Free text field
+        terminatingParty:
+          $ref: '#/components/schemas/eTerminator'
+    eInsuranceGrade:
+      type: string
+      description: Insurance grade enumeration
+      enum:
+        - BASIC
+        - MEDIUM
+        - EXTRA
+      example: MEDIUM
+    eTerminator:
+      type: string
+      description: Terminator enumeration
+      enum:
+        - INSURANCECOMPANY
+        - TELENOR
+        - CUSTOMER
+    sSapMaterialId:
+      type: string
+      description: SAP material id of the device
+      example: 218736821736821
+    eInsurancePriceBand:
+      type: integer
+      description: Insurance price band enumeration
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+      example: 1
+    oErrorResponse:
+      type: object
+      properties:
+          errorCode:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          errorDescription:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error

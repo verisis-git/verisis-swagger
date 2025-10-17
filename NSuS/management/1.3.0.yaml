@@ -1,0 +1,1406 @@
+openapi: 3.0.0
+info:
+  version: '1.3'
+  title: Sesame network security management interface
+  description: |-
+    This document describes the interface of the Sesame which implements a
+    service to manage endpoint security features and query reports
+    
+    v1.1: 
+    * define device rename responses
+    * add POST /reports/gui-modes/{guimode_id} endpoint
+    
+    v1.2:
+    * remove POST /reports/gui-modes/{guimode_id} endpoint
+    * add GET /reports/total-blocks endpoint
+    
+    v1.3:
+    * modify total-blocks endpoint: remove date-interval query param, because the interval became 
+tags:
+  - name: reports
+  - name: command
+  - name: massmanipulation
+  - name: query
+paths: 
+  /nsus/management/reports/total-blocks:
+    get:
+      tags:
+        - reports
+      summary: Retrieve the number of total blocks.
+      description: |-
+        Retrieve the number of total blocks (amount of Web AntiPhising and Web AntiBotnet blocks)
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      responses:
+        '200':
+          description: Returns the report
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oReportScalar'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /nsus/management/customers/{customer_id}/report:
+    get:
+      summary: Get an account/customer report
+      description: |-
+        Retrieves one of the predefined reports for the account that you request.
+        The supported Reports is per deployment.
+
+        Query Params: Each Report ID support different query params and query params values.
+        This is described in a separate Table.
+
+        Report Types - Using Query Params:
+
+        Only date_interval is required (start_time is not required):
+        "last24h", "last7d", "last30d", "today", "yesterday"
+
+      tags:
+        - reports
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #query
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/report_id'
+        - $ref: '#/components/parameters/report_date_interval'
+        - $ref: '#/components/parameters/start_time'
+      responses:
+        '200':
+          description: Returns the report
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oReport'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      
+  /nsus/management/customers/{customer_id}/users/{user_id}/report:
+    get:
+      summary: Get a user report
+      description: |-
+        Retrieves one of the predefined reports for the user and account that you request.
+        The supported Reports is per deployment.
+
+        Query Params: Each Report ID support different query params and query params values.
+        This is described in a separate Table.
+
+        Report Types - Using Query Params:
+
+        Only date_interval is required (start_time is not required):
+        "last6h", "last12h", "last24h", "last7d", "last30d", "today", "yesterday"
+      tags:
+        - reports
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #query
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/report_id'
+        - $ref: '#/components/parameters/report_date_interval'
+        - $ref: '#/components/parameters/start_time'
+      responses:
+        '200':
+          description: Returns the predefined user report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oReport'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /nsus/management/customers/{customer_id}/devices/{device_id}/report:
+    get:
+      summary: Get a device report
+      description: |-
+        Retrieves a report for a user's device that you request.
+        The supported Reports is per deployment.
+
+        Query Params: Each Report ID support different query params and query params values.
+        This is described in a separate Table.
+
+        Report Types - Using Query Params:
+
+        Only date_interval is required (start_time is not required): 
+        "last6h", "last12h", "last24h", "last7d", "last30d", "today", "yesterday"
+      tags:
+        - reports
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #query
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/device_id'
+        - $ref: '#/components/parameters/report_id'
+        - $ref: '#/components/parameters/report_date_interval'
+        - $ref: '#/components/parameters/start_time'
+      responses:
+        '200':
+          description: Returns the device report
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oReport'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  /nsus/management/customers:
+    get:
+      tags:
+        - query
+      summary: Get the users of specified accounts
+      description: |-
+        Retrieves a list of users of an account.
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # query
+        - name: customers
+          in: query
+          required: true
+          schema:
+            type: array
+            description: List of the customers to be queried identifying by id
+            items:
+              $ref: '#/components/schemas/sCustomer_id'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Returns the list of users (may be empty).
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+            count-reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  allOf:
+                    - $ref: '#/components/schemas/oCustomer'
+                    - $ref: '#/components/schemas/oErrorResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  /nsus/management/customers/{customer_id}/users/{user_id}:
+    get:
+      tags:
+        - query
+      summary: Get a user of a customer
+      description: |-
+        Retrieves a user of an account.
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+
+      responses:
+        '200':
+          description: Returns the user
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oCustomer'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  /nsus/management/customers/{customer_id}/users/{user_id}/devices:
+    get:
+      tags:
+        - query
+      summary: Get the devices of a specified user
+      description: |-
+        Retrieves a list of devices of a user, where you specify the account and the user.
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+        # query
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Returns the list of devices associated with the user (may be empty).
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+            count-reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/oDevice' 
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+          
+  /nsus/management/customers/{customer_id}/users/{user_id}/settings:
+    get:
+      tags:
+        - query
+      summary: Get settings of a specified user
+      description: |-
+        Retrieves the settings of the endpoint security (white- and blacklist, and the blocked categories) for the specified customer and user.
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '200':
+          description: Returns the settings. (may be three empty arrays)
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+            count-reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oSettings'  
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+    put:
+      tags:
+        - command
+      summary: Update user settings
+      description: |-
+        Update user settings
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/oSettings'
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /nsus/management/categories:
+    get:
+      tags:
+        - query
+      summary: Get ISP categories
+      description: |-
+        Retrieves a list of the ISP-defined categories (may be empty).
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      responses:
+        '200':
+          description: Returns the list of ISP-defined categories
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/oCategory'
+        '204':
+          description: There are no available categories
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+          
+  /nsus/management/manipulation/customers/{customer_id}/manipulation:
+    post:
+      tags:
+        - massmanipulation
+      summary: Mass manipulation
+      description: |-
+        Manipulates more users' settings at the same time in one request.
+        
+        This request is asynchronous, so the success response means that the microservice has accepted the request and a background process has started
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - properties:
+                    user_id:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/sUser_id'
+                      example: ["36201234567","36201111111"]
+                - $ref: '#/components/schemas/oSettings'
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /nsus/management/customers/{customer_id}/users/{user_id}/registration-url/send-sms:
+    post:
+      tags:
+        - command
+      summary: Request registration link with sms sending
+      description: |-
+        This method is for the purpose of requesting a setup_id (and registration link) in ASM. The user_id is to be provided for the device where the setup is completed to be assigned to the given user.
+        The link will be sent to the user (represented by user_id) via SMS
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: Information sent by the client when requesting to generate a new setup request to install EndpointSecure in a new device.
+              properties:
+                platform:
+                  type: string
+                  default: other
+                  description: |-
+                    The operating system of the device.
+                  enum:
+                    - android
+                    - ios
+                    - macos
+                    - windows
+                    - other
+                  example: android
+              required:
+                - platform
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: setup_response
+                type: object
+                description: Object that is returned on a request for generate an EndpointSecure setup request.
+                properties:
+                  setup_url:
+                    type: string
+                    description: |-
+                      Relevant for all ES clients, i.e. Android, iOS, Windows, and macOS.
+
+                      This URL points to the EndpointSecure application setup mechanism (in case the EndpointSecure is to be installed on Windows, this value corresponds to the 64 bits installer).
+
+                      This URL is platform-specific. In the case of Android, the standard Google Play store URL has the form https://play.google.com/store/apps/details?id=package_name, where the package name typically will be 'com.provider.appname'.
+
+                      Additionally, it will use the URL query parameter 'referred' to embed both the callback URL and the setup id as described below for Android setups.
+
+                      1) A human-readable version of the referrer is composed.
+
+                      E.g. callback_url=http://providerdemo.tk:8081/api-account/v1/subsystems/endpoint-secure/endpoint-registration&setup_id=76545823d25341d084d209bf916f50aa
+
+                      2) The string is encoded in base64
+
+                      E.g. Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY.VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9NzY1NDU4MjNkMjUzNDFkMDg0ZDIwOWJmOTE2ZjUwYWE=
+
+                      3) The base64 string is the actual referrer value
+
+                      E.g. https://play.google.com/store/apps/details?id=com.provider.endpointsecure&referrer=Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY3VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9NzY1NDU4MjNkMjUzNDFkMDg0ZDIwOWJmOTE2ZjUwYWE=
+
+                      For iOS, it refers to the Apple store, and it has the form https://itunes.com/apps/appname, where appname corresponds to the BundleId of the app.
+
+                      For Windows and MacOS, it will refer to the download location of the software client, as defined by the operator. Note that SM does not provide support for hosting Windows and MacOS clients and that hosting shall be provided externally.
+                    format: uri
+                    example: https://play.google.com/store/apps/details?id=com.provider.endpointsecure&referrer=Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY3VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9NzY1NDU4MjNkMjUzNDFkMDg0ZDIwOWJmOTE2ZjUwYWE=
+                    maxLength: 2048
+                    anyOf:
+                      - title: URL with domain host
+                        pattern: ^(https?://)([\w\d]+(-[\w\d]+)*\.)+[\w]{2,}(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv4 host
+                        pattern: ^(https?://)([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv6 host
+                        pattern: ^(https?://)\[((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?\](:\d{1,5})?(\/.*)?$
+                  setup_url_32bit:
+                    type: string
+                    description: |-
+                      Relevant for Windows only.
+
+                      This optional property applies only in case the link with the installer
+                      is for 32 bit target Operating System.
+
+                      For the rest, the description for setup_url is fully equivalent.
+                    format: uri
+                    example: https://play.google.com/store/apps/details?id=com.provider.endpointsecure&referrer=Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY3VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9NzY1NDU4MjNkMjUzNDFkMDg0ZDIwOWJmOTE2ZjUwYWE=
+                    maxLength: 2048
+                    anyOf:
+                      - title: URL with domain host
+                        pattern: ^(https?://)([\w\d]+(-[\w\d]+)*\.)+[\w]{2,}(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv4 host
+                        pattern: ^(https?://)([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv6 host
+                        pattern: ^(https?://)\[((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?\](:\d{1,5})?(\/.*)?$
+                  ios_setup_uri:
+                    type: string
+                    description: |-
+                      Relevant for iOS only.
+
+                      URI that must be clicked on iOS devices after installing the app to
+                      complete the registration process.
+                    format: uri
+                    example: smendpointsecure://register?referrer=Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY3VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9OTYxYTA0NDcwZmFkNGRiOTljNzdjYWI2M2U0OGVlNGI=
+                    maxLength: 2048
+                  key_setup_url:
+                    type: string
+                    description: |-
+                      Relevant for Windows and MacOS.
+
+                      URL to download key file needed by desktop ES clients to complete
+                      onboarding. It will point to onboarding domain defined in SM.
+                    format: uri
+                    example: https://download.provider.com/GetWindowsApp?setup_id=639c2e08d7dc47489b6b36ee3578cb19
+                    maxLength: 1024
+                    anyOf:
+                      - title: URL with domain host
+                        pattern: ^(https?://)([\w\d]+(-[\w\d]+)*\.)+[\w]{2,}(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv4 host
+                        pattern: ^(https?://)([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv6 host
+                        pattern: ^(https?://)\[((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?\](:\d{1,5})?(\/.*)?$
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /nsus/management/customers/{customer_id}/users/{user_id}/registration-url/show:
+    post:
+      tags:
+        - command
+      summary: Request registration link without sms sending
+      description: |-
+        This method is for the purpose of requesting a setup_id (and registration link) in ASM. The user_id is to be provided for the device where the setup is completed to be assigned to the given user.
+        The link will NOT be sent to the user via SMS
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: Information sent by the client when requesting to generate a new setup request to install EndpointSecure in a new device.
+              properties:
+                platform:
+                  type: string
+                  default: other
+                  description: |-
+                    The operating system of the device.
+                  enum:
+                    - android
+                    - ios
+                    - macos
+                    - windows
+                    - other
+                  example: android
+              required:
+                - platform
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: setup_response
+                type: object
+                description: Object that is returned on a request for generate an EndpointSecure setup request.
+                properties:
+                  setup_url:
+                    type: string
+                    description: |-
+                      Relevant for all ES clients, i.e. Android, iOS, Windows, and macOS.
+
+                      This URL points to the EndpointSecure application setup mechanism (in case the EndpointSecure is to be installed on Windows, this value corresponds to the 64 bits installer).
+
+                      This URL is platform-specific. In the case of Android, the standard Google Play store URL has the form https://play.google.com/store/apps/details?id=package_name, where the package name typically will be 'com.provider.appname'.
+
+                      Additionally, it will use the URL query parameter 'referred' to embed both the callback URL and the setup id as described below for Android setups.
+
+                      1) A human-readable version of the referrer is composed.
+
+                      E.g. callback_url=http://providerdemo.tk:8081/api-account/v1/subsystems/endpoint-secure/endpoint-registration&setup_id=76545823d25341d084d209bf916f50aa
+
+                      2) The string is encoded in base64
+
+                      E.g. Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY.VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9NzY1NDU4MjNkMjUzNDFkMDg0ZDIwOWJmOTE2ZjUwYWE=
+
+                      3) The base64 string is the actual referrer value
+
+                      E.g. https://play.google.com/store/apps/details?id=com.provider.endpointsecure&referrer=Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY3VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9NzY1NDU4MjNkMjUzNDFkMDg0ZDIwOWJmOTE2ZjUwYWE=
+
+                      For iOS, it refers to the Apple store, and it has the form https://itunes.com/apps/appname, where appname corresponds to the BundleId of the app.
+
+                      For Windows and MacOS, it will refer to the download location of the software client, as defined by the operator. Note that SM does not provide support for hosting Windows and MacOS clients and that hosting shall be provided externally.
+                    format: uri
+                    example: https://play.google.com/store/apps/details?id=com.provider.endpointsecure&referrer=Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY3VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9NzY1NDU4MjNkMjUzNDFkMDg0ZDIwOWJmOTE2ZjUwYWE=
+                    maxLength: 2048
+                    anyOf:
+                      - title: URL with domain host
+                        pattern: ^(https?://)([\w\d]+(-[\w\d]+)*\.)+[\w]{2,}(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv4 host
+                        pattern: ^(https?://)([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv6 host
+                        pattern: ^(https?://)\[((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?\](:\d{1,5})?(\/.*)?$
+                  setup_url_32bit:
+                    type: string
+                    description: |-
+                      Relevant for Windows only.
+
+                      This optional property applies only in case the link with the installer
+                      is for 32 bit target Operating System.
+
+                      For the rest, the description for setup_url is fully equivalent.
+                    format: uri
+                    example: https://play.google.com/store/apps/details?id=com.provider.endpointsecure&referrer=Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY3VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9NzY1NDU4MjNkMjUzNDFkMDg0ZDIwOWJmOTE2ZjUwYWE=
+                    maxLength: 2048
+                    anyOf:
+                      - title: URL with domain host
+                        pattern: ^(https?://)([\w\d]+(-[\w\d]+)*\.)+[\w]{2,}(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv4 host
+                        pattern: ^(https?://)([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv6 host
+                        pattern: ^(https?://)\[((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?\](:\d{1,5})?(\/.*)?$
+                  ios_setup_uri:
+                    type: string
+                    description: |-
+                      Relevant for iOS only.
+
+                      URI that must be clicked on iOS devices after installing the app to
+                      complete the registration process.
+                    format: uri
+                    example: smendpointsecure://register?referrer=Y2FsbGJhY2tfdXJsPWh0dHA6Ly9hbGxvdGRlbW8udGs6ODA4MS9hcGktYWNjb3VudC92MS9zdWJzeXN0ZW1zL2VuZHBvaW50LXNlY3VyZS9lbmRwb2ludC1yZWdpc3RyYXRpb24mc2V0dXBfaWQ9OTYxYTA0NDcwZmFkNGRiOTljNzdjYWI2M2U0OGVlNGI=
+                    maxLength: 2048
+                  key_setup_url:
+                    type: string
+                    description: |-
+                      Relevant for Windows and MacOS.
+
+                      URL to download key file needed by desktop ES clients to complete
+                      onboarding. It will point to onboarding domain defined in SM.
+                    format: uri
+                    example: https://download.provider.com/GetWindowsApp?setup_id=639c2e08d7dc47489b6b36ee3578cb19
+                    maxLength: 1024
+                    anyOf:
+                      - title: URL with domain host
+                        pattern: ^(https?://)([\w\d]+(-[\w\d]+)*\.)+[\w]{2,}(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv4 host
+                        pattern: ^(https?://)([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?(:\d{1,5})?(\/.*)?$
+                      - title: URL with IPv6 host
+                        pattern: ^(https?://)\[((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?(\/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))?\](:\d{1,5})?(\/.*)?$
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /nsus/management/customers/{customer_id}/users/{user_id}/settings/enable:
+    post:
+      tags:
+        - command
+      summary: Enable network security service
+      description: |-
+        Network security service are enabled for this user
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /nsus/management/customers/{customer_id}/users/{user_id}/settings/disable:
+    post:
+      tags:
+        - command
+      summary: Disable network security service
+      description: |-
+        Network security service are totally disabled for this user
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  /nsus/management/customers/{customer_id}/users/{user_id}/devices/{device_id}:
+    delete:
+      tags:
+        - command
+      summary: Delete a device of a specified user
+      description: |-
+        Deletes an existing device.
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/device_id'
+      responses:
+        '204':
+          description: Returns after the device was deleted
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+          
+  /nsus/management/customers/{customer_id}/users/{user_id}/devices/{device_id}/rename:
+    post:
+      tags:
+        - command
+      summary: Rename device
+      description: |-
+        This method is for the purpose of renaming an existing device
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/customer_id'
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/device_id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: New name of the device
+              properties:
+                name:
+                  type: string
+                  description: New name of the device
+                  example: Androidom
+              required:
+                - name
+      responses:
+        '204':
+          description: No content
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+          
+components:
+  responses:
+    '400':
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 400
+            error_description: Invalid ctn format
+      description: Bad request
+    '404':
+      description: Returned if any entity was not found.
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 404
+            error_description: Customer not found
+    '409':
+      description: Returned if the user does not belong to the customer according to the nsus database. Some provision steps may have been omitted
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 409
+            error_description: Customer-user conflict
+    '500':
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 500
+            error_description: Internal server error
+      description: Internal server error
+    '503':
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 503
+            error_description: Service is not available
+      description: Server unavailable
+  parameters:
+    msgcntx_src:
+      name: Msg-Ctx-Src
+      description: 'Name of the source system, the sender party of the message (e.g ApplicationId)'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_srcmodule:
+      name: Msg-Ctx-Src-Module
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_env:
+      name: Msg-Ctx-Env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+    msgcntx_id:
+      name: Msg-Ctx-Id
+      description: UUID of the message like 'f257ba6675cf4921affa5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_corelid:
+      name: Msg-Ctx-Corr-Id
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_userid:
+      name: Msg-Ctx-User-Id
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    customer_id:
+      name: customer_id
+      description: Unique identifier of an account.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/sCustomer_id'
+    user_id:
+      name: user_id
+      description: Value to uniquely identify a user through the system.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/sUser_id'
+    query_user_id:
+      name: user_id
+      description: Value to uniquely identify a user through the system.
+      in: query
+      required: true
+      schema:
+        $ref: '#/components/schemas/sUser_id'
+    device_id:
+      name: device_id
+      description: Unique identifier of device.
+      in: path
+      required: true
+      schema:
+        type: string
+        description: Unique identifier of the current entity. It must be provided for all operations except entity creation.
+        example: d290f1ee6c544b0190e6d701748f0852
+        maxLength: 159
+        pattern: ^[ a-zA-Z0-9\-\._@\|]+$
+    report_date_interval:
+      name: date_interval
+      required: true
+      in: query
+      schema:
+        title: report_period
+        description: |-
+          Defines the time range of the queried data: "last24h", "last7d", "last30d", "today", "yesterday".
+          "hour", "day", "week" and "month" require start_time.
+        type: string
+        enum:
+          - last24h
+          - last7d
+          - last30d
+          - today
+          - yesterday
+        example: last24h
+        default: last24h
+    report_id:
+      name: report_id
+      description: |-
+        Unique identifier of report requested. The report_id contentfilterblocksbyuser,
+        blockedthreatsbyuser, contentfilteraccessesbycategoryanduser,  
+        totalthreatsandvirusblocksbyuser and totalsecurityeventsbyuser are valid only for account reports.
+        Reports related to contentfilterblocksbycategory and 
+        contentfilteraccessesbycategoryanduser don't include non-categorized requests.
+        | report id | description | report type | 
+        |---------- | -------- | -------- |
+        | totalblockedthreats | Total blocked threats for the account. | scalar |
+        | totalblockedviruses | Total blocked viruses (AV Web + Mail) for the account. | scalar |
+        | totalrequests | Total requests (WebFilter + MailFilter) for the account.| scalar |
+        | totalcontentfilterblocks |Total blocks (ContentFilter) for the account.| scalar |
+        | blockedthreatsbyuser | Total blocked threats for each user. | aggregated_1_level |
+        | blockedthreatsbypolicy | Top 5 malware blocking policies for the account/user. | aggregated_1_level|
+        | contentfilterblocksbyuser | Top 5 CF blocks grouped by user. | aggregated_1_level |
+        | contentfilterblocksbycategory | Top blocked CF categories for the account. | aggregated_1_level |
+        | contentfilteraccessesbycategoryanduser | Top 5 accessed CF categories grouped by user. | aggregated_2_levels |
+      in: query
+      required: true
+      schema:
+        type: string
+        enum:
+          - totalblockedthreats
+          - totalblockedviruses
+          - totalrequests
+          - totalcontentfilterblocks
+          - blockedthreatsbyuser
+          - blockedthreatsbypolicy
+          - contentfilterblocksbyuser
+          - contentfilterblocksbycategory
+          - contentfilteraccessesbycategoryanduser
+        example: totalrequests
+        description: |-
+          The report_id contentfilterblocksbyuser, blockedthreatsbyuser,
+          contentfilteraccessesbycategoryanduser,  
+          totalthreatsandvirusblocksbyuser and totalsecurityeventsbyuser are valid only for account reports.
+          Reports related to contentfilterblocksbycategory and 
+          contentfilteraccessesbycategoryanduser don't include non-categorized requests.
+    start_time:
+      name: start_time
+      description: Report start time.
+      in: query
+      schema:
+        $ref: '#/components/schemas/sDateTime'
+    count:
+      name: count
+      required: false
+      in: query
+      description: "Requested number of resources to be provided in response. Default: 100"
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+    offset:
+      name: offset
+      required: false
+      in: query
+      description: Page number. 0 means the first one
+      schema:
+        type: integer
+        minimum: 0
+  schemas:
+    sCustomer_id:
+      type: string
+      description: Unique identifier of an account being provisioned into the system. Any further operation referencing this account must provide this unique identifier. In case of administrators is not required.
+      example: d290f1ee6c544b0190e6d701748f0851
+      minLength: 1
+      maxLength: 79
+      pattern: ^[a-zA-Z0-9\-\._@]+$
+    sUser_id:
+      type: string
+      description: Value to uniquely identify a user through the system. It should be the phone number in format 36201234567
+      example: 36201234567
+      minLength: 1
+      maxLength: 15
+      pattern: ^36[0-9]{9,11}$
+    sDateTime:
+      type: string
+      description: 'Date and time expressed in UTC ISO-8601 as follows: YYYY-MM-DDThh:mm:ssZ (Note that the time must finish with a "Z" to indicate UTC.)'
+      format: date-time
+      example: '2019-12-31T15:53:00Z'
+      pattern: ^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:Z|[+-][01]\d:[0-5]\d)$
+
+    s_CountReached:
+      type: boolean
+      description: True, if the count of the queried data is more or equals than the requested by count header parameter
+      example: false
+    sMsgcntx_rrid:
+      type: string
+      minLength: 1
+      maxLength: 40
+    iLicense_count:
+      type: integer
+      example: 42
+      description: "number of the device to be registrated"
+    oReportScalar:
+      title: ReportScalar
+      type: object
+      properties:
+        total:
+          type: number
+          description: Total number of entries of the report type requested.
+          example: 42
+        report_type:
+          type: string
+          enum:
+            - scalar
+          example: scalar
+          default: scalar
+    oReport:
+      title: Report
+      description: Data describing results in a report.
+      oneOf:
+        - $ref: '#/components/schemas/oReportScalar'
+        - title: ReportAggregated1Level
+          type: object
+          properties:
+            data:
+              type: array
+              default: []
+              description: Data contained in the report.
+              example: []
+              items:
+                type: object
+                description: A name-value pair, representing one entry.
+                properties:
+                  name:
+                    type: string
+                    description: The name of the entity being reported.
+                    example: threats
+                  value:
+                    type: number
+                    example: 42
+                    description: The total number of entries of the requested report type.
+            report_type:
+              type: string
+              enum:
+                - aggregated_1_level
+              example: aggregated_1_level
+              default: aggregated_1_level
+        - title: ReportAggregated2Levels
+          type: object
+          properties:
+            data:
+              type: array
+              default: []
+              description: Data contained in the report.
+              example: []
+              items:
+                type: object
+                description: On the first level,a name-value pair, representing one entry.
+                properties:
+                  name:
+                    type: string
+                    description: Name of the entity being reported in the first level.
+                  value:
+                    type: array
+                    default: []
+                    description: List of name-value pairs requested at the first level.
+                    example: []
+                    items:
+                      type: object
+                      description: At the second level, a name-value pair, representing one entry.
+                      properties:
+                        name:
+                          type: string
+                          example: threats
+                          description: Name of the entity being reported at the second level.
+                        value:
+                          type: number
+                          description: Total number of entries of the report type requested at the second level.
+                          example: 42
+                  total:
+                    type: number
+            report_type:
+              type: string
+              enum:
+                - aggregated_2_levels
+              example: aggregated_2_levels
+    oCustomer:
+      type: object
+      description: Configuration associated to one of the users in an account
+      properties:
+        customer_id:
+          $ref: '#/components/schemas/sCustomer_id'
+        user_id:
+          $ref: '#/components/schemas/sUser_id'
+        total_user_devices:
+          type: integer
+          description: Total number of devices assigned to the user
+          readOnly: true
+          example: 8
+          minimum: 0
+        manipulation_is_running:
+          type: boolean
+          description: If mass manipulation is running with the user, this value is true
+          example: false
+        license_count:
+          $ref: '#/components/schemas/iLicense_count'
+        license_used:
+          type: integer
+          description: Total number of devices provisioned by endpoint security
+          minimum: 0
+          example: 6
+        enabled: #parental_control
+          type: boolean
+          description: |-
+            Whether or not the Parental Control service is provisioned to the account.
+          default: false
+          example: true
+    oDevice:
+      properties:
+        device_id:
+          type: string
+          example: KEND7947DS7S
+        name:
+          type: string
+          example: Saját
+        DS_status:
+          type: string
+          enum:
+            - enabled
+            - disabled
+          example: disabled
+        EP_status:
+          type: string
+          enum:
+            - enabled
+            - disabled
+          example: enabled
+    oSettings:
+      type: object
+      properties:
+        allowed_urls:
+          type: array
+          description: List of URLS that will be allowed to navigate, even if it belongs to one of the blocked categories.
+          example:
+            - disney.com
+            - nba.com
+          items:
+            type: string
+            maxLength: 2048
+        blocked_urls:
+          type: array
+          description: List of URLS that will be blocked to navigate under any condition.
+          example:
+            - playboy.com
+            - gambling.com
+          items:
+            type: string
+        blocked_categories:
+          type: array
+          items:
+            type: string
+            description: Unique identifier of the ISP-defined category, used to reference this category throughout the system.
+            example: adult content
+            minLength: 1
+            maxLength: 128
+    oCategory:
+      type: object
+      description: A category that the ISP defines from one or more SM filtering categories and exposes to the account.
+      properties:
+        isp_category_id:
+          type: string
+          title: field_is_category_id
+          description: Unique identifier of the ISP-defined category, used to reference this category throughout the system.
+          example: adult content
+          minLength: 1
+          maxLength: 128
+        isp_category_name:
+          type: string
+          description: ISP category name in Hungarian.
+          example: Felnőtt tartalom
+          minLength: 1
+    oErrorResponse:
+      type: object
+      properties:
+          error_code:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          error_description:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error

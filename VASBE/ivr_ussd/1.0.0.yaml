@@ -1,0 +1,99 @@
+openapi: 3.0.0
+servers: []
+info:
+  version: "1.0.0"
+  title: Sesame IVR/USSD parking API
+  contact:
+    email: support@verisis.hu
+paths:
+  /ivrussd/receiver:
+    get:
+      summary: Send IVR/USSD parking request
+      parameters:
+        - name: reqId
+          in: query
+          description: Unique request ID
+          required: true
+          schema:
+            type: number
+        - name: origNumber
+          in: query
+          description: MSISDN format of the original number
+          required: true
+          schema:
+            type: string
+            example: 36201234567
+        - name: destNumber
+          in: query
+          description: MSISDN format of the destination number (optional)
+          schema:
+            type: string
+            example: 36201234567
+        - name: msgType
+          in: query
+          description: Type of the message (START, STOP, HELP)
+          required: true
+          schema:
+            type: string
+            enum:
+              - START
+              - STOP
+              - HELP
+        - name: channelType
+          in: query
+          description: Type of the channel (IVR, USSD)
+          required: true
+          schema:
+            type: string
+            enum:
+              - IVR
+              - USSD
+        - name: timestamp
+          in: query
+          description: Timestamp in YYYYMMDDhhmmss format
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{14}$'
+        - name: eventText
+          in: query
+          description: Alphanumeric event text (optional, max 70 chars)
+          schema:
+            type: string
+            maxLength: 70
+        - name: zoneCode
+          in: query
+          description: Alphanumeric zone code (optional, max 4 chars)
+          schema:
+            type: string
+            maxLength: 4
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: |
+                      | Hibakód | Message | Leírás | 
+                      | -------------- | ---------------- | ----- | 
+                      | 0 | Successfull operation. | Sikeres kérés | 
+                      | 1 | General error. | Kiszolgáló hiba | 
+                      | 11 | Mandatory data is missing. | Hiányzó kötelező paraméter. | 
+                      | 12 | The message type is unknown. | Az msgType paraméter ismeretlen | 
+                      | 13 | The channel type is unknown. | A channelType paraméter ismeretlen | 
+                      | 14 | Date format of timeStamp parameter is wrong. | A timeStamp paraméter formátuma rossz. | 
+                      | 15 | DestNumber or ZoneCode is mandatory. It is missing. | A destNumber vagy a zoneCode paramétert kötelező megadni. | 
+                      | 16 | ReqId parameter is not positive integer. | A reqId paraméter nem pozitív egész szám. | 
+                      | 17 | The destAddr is unknown service. | A destAddr ismeretlen szolgáltatás. | 
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+              example:
+                code: 0
+                message: Successful operation.

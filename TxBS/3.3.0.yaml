@@ -1,0 +1,1585 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://10.229.240.161:7450'
+info:
+  version: 2.2.2
+  title: Sesame.BusinessService
+# Release notes:
+# v2
+#   Add feature info into service object (for manipulate and query)
+#   New types of manipulation: SETPP (for setPricePlan), UPDATE (for updateService)
+#   Remove single operations
+#
+# v2.2
+#   add new headers for Sales2Bi logs
+#
+# v2.2.1
+#   add verified and setInd parameters to ParameterInfo object
+#
+# v2.2.2
+#   add operator-id and displayOptions parameters
+security:
+  - basicAuth: []
+paths:
+  '/serviceman/v2/subscriptions/{subscriptionId}/services':
+    get:
+      tags:
+        - Query
+      summary: Get current and/or available services
+      description: |
+        Returns the list of current (ordered) services.
+        
+        Filterable by service status
+      operationId: GetServices
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/subscriptionId'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/displayOptionArray'
+        - name: serviceStatus
+          in: query
+          description: |
+            List of service status
+            
+            - [empty]: Current and Orderable services
+            
+            - current: Current services
+            
+            - available: Orderable services
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+    post:
+      tags:
+        - Manipulation
+      summary: Order an MPG or prove a voucher or manipulate more SOCs
+      description: Activate the multi product group service on the subscription or prove a voucher or manipulate one or more SOCs. The multi product group is defined by code and index, the voucher is defined by serial number, the SOC manipulation request contains a specified body. They can't be used in same request.
+      operationId: OrderMPGOrVoucher
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/subscriptionId'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/noConfirm'
+        - $ref: '#/components/parameters/mode'
+        - $ref: '#/components/parameters/asyncCallbackUrl'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/applicationId'
+        - $ref: '#/components/parameters/dealerCode'
+        - $ref: '#/components/parameters/outletCode'
+        - $ref: '#/components/parameters/salesmanCode'
+        - $ref: '#/components/parameters/saleslog'
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/mpgCode'
+        - $ref: '#/components/parameters/mpgIdx'
+        - $ref: '#/components/parameters/voucherSerialNo'
+      requestBody:
+        $ref: '#/components/requestBodies/SOCManipulationBody'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Order'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '202':
+          $ref: '#/components/responses/202'
+        '204':
+          description: Success, but no response content
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+          
+  '/serviceman/v2/bans/{ban-id}/services':
+    post:
+      tags:
+        - Manipulation
+      summary: Order an MPG or manipulate more SOCs
+      description: Activate the multi product group service on the subscription or manipulate one or more SOCs. The multi product group is defined by code and index, the SOC manipulation request contains a specified body. They can't be used in same request.
+      operationId: OrderMPGOrServiceBan
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/productCode'
+        - $ref: '#/components/parameters/noConfirm'
+        - $ref: '#/components/parameters/mode'
+        - $ref: '#/components/parameters/asyncCallbackUrl'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/applicationId'
+        - $ref: '#/components/parameters/dealerCode'
+        - $ref: '#/components/parameters/outletCode'
+        - $ref: '#/components/parameters/salesmanCode'
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/saleslog'
+        - $ref: '#/components/parameters/mpgCode'
+        - $ref: '#/components/parameters/mpgIdx'
+      requestBody:
+        $ref: '#/components/requestBodies/SOCManipulationBody'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Order'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '202':
+          $ref: '#/components/responses/202'
+        '204':
+          description: Success, but no response content
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+          
+  '/serviceman/v2/bans/{ban-id}/ctns/{ctn}/services':
+    post:
+      tags:
+        - Manipulation
+      summary: Order an MPG or prove a voucher or manipulate more SOCs
+      description: Activate the multi product group service on the subscription or prove a voucher or manipulate one or more SOCs. The multi product group is defined by code and index, the voucher is defined by serial number, the SOC manipulation request contains a specified body. They can't be used in same request.
+      operationId: OrderMPGOrVoucherBanCtn
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/noConfirm'
+        - $ref: '#/components/parameters/mode'
+        - $ref: '#/components/parameters/asyncCallbackUrl'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/applicationId'
+        - $ref: '#/components/parameters/dealerCode'
+        - $ref: '#/components/parameters/outletCode'
+        - $ref: '#/components/parameters/salesmanCode'
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/saleslog'
+        - $ref: '#/components/parameters/mpgCode'
+        - $ref: '#/components/parameters/mpgIdx'
+        - $ref: '#/components/parameters/voucherSerialNo'
+      requestBody:
+        $ref: '#/components/requestBodies/SOCManipulationBody'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Order'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '202':
+          $ref: '#/components/responses/202'
+        '204':
+          description: Success, but no response content
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+  '/serviceman/v2/subscriptions/{subscriptionId}/services/current':
+    get:
+      tags:
+        - Query
+      summary: Get current service(s)
+      description: Returns the current/ordered services list
+      operationId: GetCurrentServices
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/subscriptionId'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray'
+        - $ref: '#/components/parameters/displayOptionArray'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  '/serviceman/v2/bans/{ban-id}/services/current':
+    get:
+      tags:
+        - Query
+      summary: Get current service(s) by ban
+      description: Returns the current/ordered services list
+      operationId: GetCurrentServicesBan
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/productCode'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray'
+        - $ref: '#/components/parameters/displayOptionArray'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  '/serviceman/v2/bans/{ban-id}/ctns/{ctn}/services/current':
+    get:
+      tags:
+        - Query
+      summary: Get current service(s) by ban+ctn
+      description: Returns the current/ordered services list
+      operationId: GetCurrentServicesBanCtn
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray'
+        - $ref: '#/components/parameters/displayOptionArray'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+          
+  '/serviceman/v2/subscriptions/{subscriptionId}/services/available':
+    get:
+      tags:
+        - Query
+      summary: Get available service(s)
+      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
+      operationId: GetAvailableServices
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/subscriptionId'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray' 
+        - $ref: '#/components/parameters/voucherSerialNo'
+        - $ref: '#/components/parameters/voucherCategory'
+        - $ref: '#/components/parameters/displayOptionArray'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  '/serviceman/v2/bans/{ban-id}/services/available':
+    get:
+      tags:
+        - Query
+      summary: Get available service(s) by ban
+      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
+      operationId: GetAvailableServicesBan
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/productCode'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray' 
+        - $ref: '#/components/parameters/voucherSerialNo'
+        - $ref: '#/components/parameters/voucherCategory'
+        - $ref: '#/components/parameters/displayOptionArray'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+  
+  '/serviceman/v2/bans/{ban-id}/ctns/{ctn}/services/available':
+    get:
+      tags:
+        - Query
+      summary: Get available service(s) by ban+ctn
+      description: Returns the available/orderable services list. It can be fetched the available voucher by its serial number or category.
+      operationId: GetAvailableServicesBanCtn
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/ctn'
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/operatorId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/customerType'
+        - $ref: '#/components/parameters/serviceClassArray' 
+        - $ref: '#/components/parameters/voucherSerialNo'
+        - $ref: '#/components/parameters/voucherCategory'
+        - $ref: '#/components/parameters/displayOptionArray'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Services'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'
+          
+  '/serviceman/v2/subscriptions/{subscriptionId}/transactions/{trxId}':
+    get:
+      tags:
+        - Query
+      summary: Get a specified transaction
+      description: Returns the transaction details. It could be used in case of polling
+      operationId: GetTransaction
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/subscriptionId'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/transactionIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '501':
+          $ref: '#/components/responses/501'
+        '503':
+          $ref: '#/components/responses/503'  
+    patch:
+      tags:
+        - Manipulation
+      summary: Confirm a manipulation
+      description: The confirmation of the transaction. It could be a rejection as well if confirmation parameter is false.
+      operationId: ConfirmTransaction
+      parameters:
+        - $ref: '#/components/parameters/clientId'
+        - $ref: '#/components/parameters/sessionId'
+        - $ref: '#/components/parameters/requestId'
+        - $ref: '#/components/parameters/subscriptionId'
+        - $ref: '#/components/parameters/mode'
+        - $ref: '#/components/parameters/asyncCallbackUrl'
+        - $ref: '#/components/parameters/validity'
+        - $ref: '#/components/parameters/transactionIdPath'
+      requestBody:
+        $ref: '#/components/requestBodies/ConfBody'
+      responses:
+        '202':
+          $ref: '#/components/responses/202'
+        '204':
+          description: Success
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+components:
+  requestBodies:
+    ConfBody:
+      description: Body of the Confirmation request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConfSchema'
+    SOCManipulationBody:
+      required: false
+      description: Body of the SOC manipulation request
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SOCManipulation'
+  responses:
+    200:
+      description: OK
+    202:
+      description: Accepted (asynchronous response)
+      headers:
+        Location:
+          description: URI of manipulated service
+          schema:
+            type: string
+            example: /transactions/1234
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SyncAsyncResp'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/SyncAsyncResp'
+        text/xml:
+          schema:
+            $ref: '#/components/schemas/SyncAsyncResp'
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+        text/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+    401:
+      description: Unauthorized
+    403:
+      description: Forbidden
+    404:
+      description: Not Found
+    500:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+        text/xml:
+          schema:
+            $ref: '#/components/schemas/Error'
+    501:
+      description: Not implemented
+    503:
+      description: Service Unavailable
+  parameters:
+    clientId:
+      name: clientId
+      in: header
+      description: Identification of the client
+      required: true
+      schema:
+        type: string
+        example: 'MobileApp'
+    sessionId:
+      name: sessionId
+      in: header
+      description: Identification of the session
+      required: true
+      schema:
+        type: string
+        example: 'nbdfs874hjkdfs894ihf4h4hc'
+    requestId:
+      name: requestId
+      in: header
+      description: Identification of the request
+      required: true
+      schema:
+        type: string
+        example: 'lksajdsd984df-4r43r435-4535dsa'
+    subscriptionId:
+      name: subscriptionId
+      in: path
+      description: CTN of subscription
+      required: true
+      schema:
+        $ref: '#/components/schemas/msisdn'
+    ctn:
+      name: ctn
+      in: path
+      description: CTN of subscription
+      required: true
+      schema:
+        $ref: '#/components/schemas/msisdn'
+    ban:
+      name: ban-id
+      in: path
+      description: BAN of subscription
+      required: true
+      schema:
+        $ref: '#/components/schemas/ban'
+    productCode:
+      name: productCode
+      in: query
+      description: Productcode parameter for RFT operations
+      required: true
+      schema:
+        $ref: '#/components/schemas/productCode'
+    serviceClassArray:
+      name: serviceClass
+      in: query
+      description: Class of service list
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: '#/components/parameters/serviceClass'
+    displayOptionArray:
+      name: displayOptions
+      in: query
+      description: DisplayOption list
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: '#/components/parameters/displayOption'
+    serviceId:
+      name: serviceId
+      in: path
+      description: ID of service
+      required: true
+      schema:
+        $ref: '#/components/schemas/serviceId'
+    voucherSerialNo:
+      in: query
+      description: Voucher serial number
+      name: voucherSerialNo
+      required: false
+      schema:
+        $ref: '#/components/schemas/voucherSchema'
+    voucherCategory:
+      in: query
+      description: Voucher category
+      name: voucherCategory
+      required: false
+      schema:
+        $ref: '#/components/schemas/voucherCategory'
+    mpgCode:
+      name: mpgCode
+      in: query
+      description: Multi product group code
+      required: false
+      schema:
+        $ref: '#/components/schemas/mpgCode'
+    mpgIdx:
+      name: mpgIdx
+      in: query
+      description: Multi product group index
+      required: false
+      schema:
+        $ref: '#/components/schemas/mpgIdx'
+    mpg:
+      name: mpgIdx
+      in: query
+      description: Multi product group is defined by multi product group code and index
+      required: false
+      schema:
+        allOf:
+        - $ref: '#/components/schemas/mpgIdx'
+        - $ref: '#/components/schemas/mpgCode'
+    noConfirm:
+      name: no-confirm
+      in: header
+      description: True if confirmation is not required. False is the default
+      required: false
+      schema:
+        type: boolean
+        example: false
+    mode:
+      name: mode
+      in: header
+      description: It would be async, sync or offline. Synchronous is the default.
+      required: false
+      schema:
+        type: string
+        enum: [async,sync,offline]
+        example: async
+    asyncCallbackUrl:
+      name: async-callback-url
+      in: header
+      description: Callback URL for asynchronous response
+      required: false
+      schema:
+        type: string
+        example: https://1.2.3.4/callback/url
+    validity:
+      name: validity
+      in: header
+      description: Operation validity interval in sec
+      required: false
+      schema:
+        type: integer
+        example: '60'
+    applicationId:
+      name: application-id
+      in: header
+      description: Identifier of the application
+      required: false
+      schema:
+        type: string
+        example: 'SOL'
+    dealerCode:
+      name: dealer-code
+      in: header
+      description: Dealer code
+      required: false
+      schema:
+        type: string
+        example: 'D72'
+    outletCode:
+      name: outlet-code
+      in: header
+      description: Outlet code
+      required: false
+      schema:
+        type: string
+        example: 'O72'
+    salesmanCode:
+      name: salesman-code
+      in: header
+      description: Salesman code
+      required: false
+      schema:
+        type: string
+        example: 'S1057'
+    userId:
+      name: user-id
+      in: header
+      description: User id
+      required: false
+      schema:
+        type: string
+        example: 'AnVarga'
+    operatorId:
+      name: operator-id
+      in: header
+      description: Operator id (rft user)
+      required: false
+      schema:
+        type: string
+        example: 'rftUser'
+    saleslog:
+      name: saleslog
+      in: header
+      description: true if saleslog is needed
+      required: false
+      schema:
+        type: boolean
+        example: true
+    expDate:
+      name: expDate
+      in: query
+      description: Service expiration date
+      required: false
+      schema:
+        type: string
+        format: date
+        example: '2018-10-15'
+    serviceClass:
+      name: serviceClass
+      in: query
+      description: Class of service
+      required: false
+      schema:
+        type: string
+        enum: [AIS, DSC, EQP, NON, PP, SOC]
+        maxLength: 5
+        example: 'SOC'
+    displayOption:
+      name: displayOption
+      in: query
+      description: DisplayOption
+      required: false
+      schema:
+        type: string
+        example: '1'
+    customerType:
+      name: customerType
+      in: query
+      description: Type of subscriber
+      required: false
+      schema:
+        type: string
+        enum: [PREP, POST, HYBR]
+        maxLength: 5
+        example: 'POST'
+    transactionIdPath:
+      name: trxId
+      in: path
+      description: Id of transaction
+      required: true
+      schema:
+        $ref: '#/components/schemas/trxId'
+  schemas:
+    msisdn:
+      description: User MSISDN
+      type: string
+      pattern: '36[0-9]{9}'
+      example: '36201234567'
+    ban:
+      description: BAN
+      type: number
+      example: 36184912
+    serviceId:
+      type: string
+      example: SOC01
+    voucherSchema:
+      type: integer
+      example: 9182827
+    voucherCategory:
+      type: string
+      example: CAT
+    mpgCode:
+      type: string
+      example: MPG01
+    mpgIdx:
+      type: integer
+      example: 1
+    productCode:
+      type: string
+      maxLength: 6
+      example: REGL
+    trxId:
+      description: Transaction id
+      type: number
+      example: 1234
+    subscriptionId:
+      $ref: '#/components/schemas/msisdn'
+    confirmation:
+      description: True if the transaction is confirmed
+      type: boolean
+      example: true
+    errorCode:
+      description: Error code
+      type: integer
+      example: -6075
+    errorDescription:
+      description: Error description
+      type: string
+      example: Ez a SOC (SERVICEID) mar letezik.+FE+A szolgáltatás már létezik
+    index:
+      type: number
+      description: number of the operation. It defines the order of the manipulation tasks if the request contains more than one
+      example: 1
+    type:  
+      type: string
+      description: Name of the operation. ADD means add service (order), DELETE means delete service (cancellation), SETPP means set/change priceplan, UPDATE means update service
+      enum: [ADD,DELETE,SETPP,UPDATE]
+      example: ADD
+    SOCManipulation:
+      type: object
+      allOf:
+      - type: object
+        properties:
+          index:
+            $ref: '#/components/schemas/index'
+          type:
+            $ref: '#/components/schemas/type'
+      - oneOf:
+        - $ref: '#/components/schemas/PricePlanMan'
+        - $ref: '#/components/schemas/ServiceManObj'
+    ConfSchema:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/confirmation'
+    Error:
+      type: object
+      description: Basic error object
+      allOf:
+        - $ref: '#/components/schemas/errorCode'
+        - $ref: '#/components/schemas/errorDescription'
+    OrderBody:
+      description: Ordered service message and transaction id
+      allOf:
+        - $ref: '#/components/schemas/trxId'
+        - type: object
+          properties:
+            message:
+              description: Activity message for the confirmation
+              type: string
+              example: ""
+    Order:
+      oneOf:
+      - $ref: '#/components/schemas/OrderBody'
+      - allOf:
+        - $ref: '#/components/schemas/OrderBody'
+        - $ref: '#/components/schemas/serviceId'
+    SyncAsyncResp:
+      $ref: '#/components/schemas/trxId'
+    Transaction:
+      description: Transaction details
+      allOf:
+        - $ref: '#/components/schemas/trxId'
+        - $ref: '#/components/schemas/subscriptionId'
+        - $ref: '#/components/schemas/errorCode'
+        - $ref: '#/components/schemas/errorDescription'
+        - $ref: '#/components/schemas/serviceId'
+        - $ref: '#/components/schemas/confirmation'
+        - type: object
+          properties:
+            status:
+              description: Current status of the transaction
+              type: string
+              enum: [CLOSED,INPROGRESS,OFFLINE,WAIT_CONFIRMATION]
+              example: 'CLOSED'
+            requestSendingTs:
+              description: Start time of transaction
+              type: string
+              maxLength: 1
+              example: '2018-10-24T13:38:30.672'
+            serviceManType:
+              description: Order, delete or mass manipulation
+              type: string
+              maxLength: 9
+              example: 'ORDER_SERVICE'
+    Services:
+      description: Current and/or available services of subscription
+      type: object
+      properties:
+        services:
+          description: List of Services
+          type: array
+          items:
+            $ref: '#/components/schemas/Service'
+    Service:
+      description: Telco Service
+      type: object
+      properties:
+        serviceStatus:
+          description: If service current or available
+          type: string
+          pattern: 'current|available'
+          example: 'current'
+        grossActOcRate:
+          description: Gross SOC's One-time Charge for activation
+          type: number
+          format: double
+          maxLength: 11
+          multipleOf: 0.01
+          example: 123.89
+        nettoActOcRate:
+          description: Net SOC's One-time Charge for activation
+          type: number
+          format: double
+          maxLength: 11
+          multipleOf: 0.01
+          example: 123.89
+        addEnableInd:
+          description: Add Enable Indicator
+          type: string
+          maxLength: 1
+          example: 'Y'
+        balCheckInd:
+          description: Balance Check Indicator
+          type: string
+          maxLength: 1
+          example: 'N'
+        buySoc:
+          description: relevant BUY soc for TRY socs
+          type: string
+          maxLength: 9
+          example: 'SZMESE'
+        changeInd:
+          description: Change Indicator
+          type: string
+          maxLength: 1
+          example: 'N'
+        controlFlags:
+          description: Control flags
+          type: string
+          maxLength: 50
+          example: '00Y000000001'
+        delEnableInd:
+          description: Delete Enable Indikator
+          type: string
+          maxLength: 1
+          example: 'Y'
+        disablePeriod:
+          description: Disable period
+          type: integer
+          maxLength: 4
+          example: 0
+        displayOption:
+          description: Display option
+          type: integer
+          maxLength: 1
+          example: 2
+        effectiveDate:
+          description: Effective Date
+          type: string
+          format: date
+          example: '2018-03-27'
+        effectiveOnCycleStart:
+          description: Effective On Cycle Start
+          type: string
+          maxLength: 1
+          example: 'N'
+        enablePeriod:
+          description: Enable Period
+          type: integer
+          maxLength: 4
+          example: 0
+        expirationDate:
+          description: Expiration Date
+          type: string
+          format: date
+          example: '2018-11-30'
+        expireOnCycleEnd:
+          description: Expire Adjust to cycle end
+          type: string
+          maxLength: 1
+          example: 'N'
+        features:
+          description: Features
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureInfo'
+        groupPrice:
+          description: Group price
+          type: number
+          format: double
+          maxLength: 11
+          multipleOf: 0.01
+          example: 0.0
+        modEnableInd:
+          description: Modificate Enable Indicator
+          type: string
+          maxLength: 1
+          example: 'I'
+        infoUrl:
+          description: Info URL
+          type: string
+          maxLength: 500
+          example: 'https://mytv.telenor.hu/info'
+        offlineInd:
+          description: Offline indicator
+          type: boolean
+          example: false
+        ppRemarkText:
+          description: Remark for remark code '01' and remark type 'CO'
+          type: string
+          maxLength: 100
+          example: 'Online APN aktiváló'
+        rcChargeLvlCode:
+          description: SOC's RC's level
+          type: string
+          maxLength: 1
+          example: 'C'
+        nettoRcRate:
+          description: Net SOC's Recurring Charge
+          type: number
+          format: double
+          maxLength: 11
+          multipleOf: 0.01
+          example: 0.0
+        grossRcRate:
+          description: Gross SOC's Recurring Charge
+          type: number
+          format: double
+          maxLength: 11
+          multipleOf: 0.01
+          example: 0.0
+        rcWaiveFrom:
+          description: SOC's RC waive period start
+          type: integer
+          maxLength: 2
+          example: 0
+        rcWaiveTo:
+          description: SOC's RC waive period end
+          type: integer
+          maxLength: 2
+          example: 0
+        serviceCategory:
+          description: Service Category
+          type: string
+          maxLength: 5
+        serviceClass:
+          description: SOC's service class
+          type: string
+          enum: [AIS, DSC, EQP, NON, PP, SOC]
+          maxLength: 3
+          example: 'SOC'
+        serviceType:
+          description: Service Type
+          type: string
+          maxLength: 1
+          example: 'R'
+        soc:
+          description: Service Order Code
+          type: string
+          maxLength: 9
+          example: 'APNONLINE'
+        socEffectiveDate:
+          description: SOC Effective Date
+          type: string
+          format: date
+          example: '2018-03-27'
+        socIsTry:
+          description: TRY indicator
+          type: boolean
+          example: false
+        socLevelCode:
+          description: SOC Level Code
+          type: string
+          maxLength: 1
+          example: 'C'
+        socRelated:
+          description: SOC Related
+          type: string
+          maxLength: 9
+          example: 'APNONLINE'
+        socSeqNo:
+          description: SOC Sequence Number
+          type: integer
+          maxLength: 9
+          example: 413421744
+        socStatus:
+          description: Status of SOC
+          type: string
+          maxLength: 1
+          example: 'A'
+        soldInd:
+          description: sale indicator
+          type: string
+          maxLength: 1
+          example: 'O'
+        suspensionInd:
+          description: suspension indicator
+          type: string
+          example: 'ACTIVE'
+    FeatureInfo:
+      description: Feature Info response object
+      type: object
+      properties:
+        additionalInfo:
+          description: Additional Information
+          type: string
+          maxLength: 500
+          example: 'Additional info'
+        additionalInfoType:
+          description: Additional Information Type
+          type: string
+          maxLength: 3
+          example: 'AIT'
+        balCheckInd:
+          description: Balance Check Indicator
+          type: string
+          maxLength: 1
+          example: 'N'
+        changeInd:
+          description: Change Indicator
+          type: string
+          maxLength: 1
+          example: 'N'
+        controlFlags:
+          description: Control flags
+          type: string
+          maxLength: 50
+          example: '00Y000000001'
+        disablePeriod:
+          description: Disable period
+          type: integer
+          maxLength: 2
+          example: 0
+        displayOption:
+          description: Display option
+          type: integer
+          maxLength: 1
+          example: 2
+        excEnableInd:
+          description: Exclude Enable Indicator
+          type: string
+          maxLength: 1
+          example: 'N'
+        featureCode:
+          description: Feature Code
+          type: string
+          maxLength: 6
+          example: 'FEAT'
+        featureDesc:
+          description: Feature Description
+          type: string
+          maxLength: 100
+          example: 'Feature information'
+        ftrEffectiveDate:
+          description: Feature Effective Date
+          type: string
+          format: date
+          example: '2018-03-27'
+        ftrEffRsnCode:
+          description: Feature Effective Reason Code
+          type: string
+          maxLength: 1
+          example: 'N'
+        ftrExpirationDate:
+          description: Feature Expiration Date
+          type: string
+          format: date
+          example: '2018-11-30'
+        ftrExpRsnCode:
+          description: Feature Expiration Reason Code
+          type: string
+          maxLength: 1
+          example: 'Y'
+        ftrSecondaryStatus:
+          description: Status of Feature's secondary ctn
+          type: string
+          maxLength: 2
+          example: 'OK'
+        ftrStatus:
+          description: Status of Feature
+          type: string
+          maxLength: 1
+          example: 'A'  
+        incEnableInd:
+          description: Include Enable Indicator
+          type: string
+          maxLength: 1
+          example: 'N'
+        inclusionType:
+          description: Inclusion Type
+          type: string
+          maxLength: 1
+          example: 'I'
+        infoUrl:
+          description: Info URL
+          type: string
+          maxLength: 500
+          example: 'https://mytv.telenor.hu/info'
+        modEnableInd:
+          description: Modificate Enable Indicator
+          type: string
+          maxLength: 1
+          example: 'I'
+        mpsFeatureCode:
+          description: MPS Feature Code
+          type: string
+          maxLength: 6
+          example: 'Y'
+        nacEnableInd:
+          description: NAC Enable Indicator
+          type: string
+          maxLength: 1
+          example: 'I'
+        parameters:
+          description: Feature Parameters list
+          type: array
+          items:
+            $ref: '#/components/schemas/FtrParameter'
+        promSortCode:
+          description: Promotional Sort Code
+          type: integer
+          maxLength: 2
+          example: 32
+        rateCode:
+          description: Rate Code
+          type: string
+          maxLength: 9
+          example: 'RATE'
+        revenueCode:
+          description: Revenue Code
+          type: string
+          maxLength: 3
+          example: 'RVC'
+        secondaryTn:
+          description: Secondary Telephone Number
+          type: string
+          maxLength: 11
+          example: '36201234567'
+        serviceClass:
+          description: SOC's service class
+          type: string
+          enum: [AIS, DSC, EQP, NON, PP, SOC]
+          maxLength: 3
+          example: 'SOC'
+        serviceFtrSeqNo:
+          description: Service Feature Sequence Number
+          type: integer
+          maxLength: 10
+          example: 4134217440
+        soc:
+          description: Service Order Code
+          type: string
+          maxLength: 9
+          example: 'APNONLINE'
+        socRelated:
+          description: SOC Related
+          type: string
+          maxLength: 9
+          example: 'APNONLINE'
+        socSeqNo:
+          description: SOC Sequence Number
+          type: integer
+          maxLength: 9
+          example: 413421744
+    FtrParameter:
+      description: Feature parameter object
+      type: object
+      properties:
+        currentValue:
+          $ref: '#/components/schemas/FtrParamValue'
+        mandatoryInd:
+          description: Parameter mandatory indicator
+          type: string
+          maxLength: 1
+          example: 'L'
+        name:
+          description: Parameter name
+          type: string
+          maxLength: 30
+          example: 'Name of Parameter'
+        paramDesc:
+          description: Parameter description
+          type: string
+          maxLength: 30
+          example: 'Description of Parameter'
+        selectableValues:
+          description: Valid values of Parameter
+          type: array
+          items:
+            $ref: '#/components/schemas/FtrParamValue'
+        type:
+          description: Parameter type
+          type: string
+          maxLength: 1
+          example: 'N'
+    FtrParamValue:
+      description: Feature param value object
+      type: object
+      properties:
+        value:
+          description: Value of parameter
+          type: string
+        valueDesc:
+          description: Description of parameter value
+          type: string
+    PricePlanMan:
+      description: Set price plan for new activation or change old
+      type: object
+      required: [reasonCode]
+      properties:
+        memoUserTxt:
+          description: Memo User Text
+          type: string
+        ppEffInd:
+          description: PricePlan Effective Indicator (I-immediate, E-End of cycle or null)
+          type: string
+          enum: [I,E]
+          example: 'I'
+        reasonCode:
+          description: Reason code
+          type: string
+          example: 'CPTC'
+        service:
+          $ref: '#/components/schemas/ServiceMan'
+        waiveReasonCode:
+          description: Waive Reason Code
+          type: string
+    ServiceManObj:
+      type: object
+      required: [serviceMan]
+      properties:
+        serviceMan:
+          $ref: '#/components/schemas/ServiceMan'
+    ServiceMan:
+      description: Service descriptor for order or delete operation
+      type: object
+      required: [OfflineInd]
+      properties:
+        effectiveDate:
+          description: Effective Date
+          type: string
+          format: date
+          example: '2018-03-27'
+        expirationDate:
+          description: "Expiration Date (format: \"YYYYMMDD\"). It has to be null if operation type is UPDATE, and it is optional in case of DELETE operation type" 
+          type: string
+          pattern: "\\d{4}\\d{2}\\d{2}"
+          example: '20181130'
+        featureInfo:
+          description: Feature info objects, it is required if operation type is UPDATE
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureInfoMan'
+        offlineInd:
+          description: Offline indicator
+          type: boolean
+          example: false
+        sendSMS:
+          description: SMS send indicator
+          type: boolean
+          example: false
+        serviceId:
+          description: Service Order Code
+          type: string
+          maxLength: 9
+          example: 'APNONLINE'
+        socSeqNo:
+          description: SOC Sequence Number
+          type: integer
+          maxLength: 9
+          example: 413421744
+    FeatureInfoMan:
+      description: Feature info object for service manipulation
+      type: object
+      properties:
+        featureCode:
+          description: Feature Code
+          type: string
+          example: 'FEATURE1'
+        featureStatus:
+          description: Status of feature
+          type: boolean
+          example: false
+        parameterInfo:
+          description: Info array object about the feature
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterInfo'
+        secondaryCTN:
+          description: Set to secondary number if there is a secondary CTN
+          type: string
+          example: '36201234567'
+    ParameterInfo:
+      description: ParameterInfo item object
+      type: object
+      properties:
+        parameterName:
+          description: Name of the parameter
+          type: string
+          example: 'paramname'
+        parameterValue:
+          description: Value of the parameter
+          type: string
+          example: 'paramvalue'
+        setInd:
+          type: boolean
+          description: part of the RFT AppBasicClass object
+          example: true
+        verified:
+          type: boolean
+          description: part of the RFT AppBasicClass object
+          example: true
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic

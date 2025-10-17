@@ -1,0 +1,244 @@
+openapi: 3.1.0
+servers:
+  - description: Test environment
+    url: https:/roxi-uat.pgsm.hu:1234
+info:
+  description: |
+    The purpose of this documentation is to summarize and specify in detail the Roxi interface, which performs the tasks of the former FIXI NC module in the new system, Roxi.
+  version: "1.0.0"
+  title: Roxi recovery IP API
+  contact:
+    email: aweimann@verisis.hu
+security:
+  - basicAuth: []
+paths:
+  /roxi/v1/ip/recover-fixip:
+    post:
+      summary: ensures that the client recovers a subscriber's fixed IP address in a given APN
+      operationId: recover-fixip
+      description: endpoint that ensures that the client recovers a subscriber's fixed IP address in a given APN
+      parameters:
+        #header
+          - $ref: '#/components/parameters/Msg_ctx_src'
+          - $ref: '#/components/parameters/Msg_ctx_src_module'
+          - $ref: '#/components/parameters/Msg_ctx_env'
+          - $ref: '#/components/parameters/Msg_ctx_id'
+          - $ref: '#/components/parameters/Msg_ctx_corr_id'
+          - $ref: '#/components/parameters/Msg_ctx_build_number'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+        description: Msisdn and apn to recover fix ip
+      responses:
+        '200':
+          description: Success
+          headers:
+            msg-ctx-rrid:
+              $ref: '#/components/headers/Msg_ctx_rrid'
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '400':
+          description: Bad Request
+          headers:
+            msg-ctx-rrid:
+              $ref: '#/components/headers/Msg_ctx_rrid'
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '401':
+          description: Authentication Failed
+        '404':
+          description: Not found
+          headers:
+            msg-ctx-rrid:
+              $ref: '#/components/headers/Msg_ctx_rrid'
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '500':
+          description: Internal Error - retriable
+          headers:
+            msg-ctx-rrid:
+              $ref: '#/components/headers/Msg_ctx_rrid'
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+
+components:
+  headers:
+    Msg_ctx_rrid:
+      description: In case of regular responses, this field must contain the ID of the message, which to it answers. Messaging infrastructure permits the usage of multiple answers for the same request. The specific service / interface definitions should mark if this capability is used by the actual implementation
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_src:
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "LIGW"
+    Msg_ctx_src_module:
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: null
+    Msg_ctx_env:
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        example: "PROD"
+    Msg_ctx_id:
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "6b5fae5a-da07-4864-9683-ce55207d06af"
+    Msg_ctx_corr_id:
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      description: It represents the sender application’s build version
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "3.0.1"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "INODE"
+    Msg_ctx_src_module:
+      name: msg-ctx-src-module
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "INode6 SIP AS"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        example: "PROD"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      name: msg-ctx-build-number
+      description: It represents the sender application’s build version
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "14393.693"
+  schemas:
+    Event:
+      type: object
+      required:
+        - msisdn
+        - apn
+      properties:
+        msisdn:
+          type: string
+          pattern: "[0-9]{3,31}"
+          description: MSISDN
+          example: "36201234567"
+        apn:
+          type: string
+          maxLength: 40
+          description: Access point name
+          example: "otphu"
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic

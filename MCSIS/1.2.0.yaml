@@ -1,0 +1,229 @@
+openapi: 3.0.0
+info:
+  description: |
+    SESAME MCOMMERCE SUBSCRIPTION INFO MANAGER (MCSIS)
+    
+    Api Documentation
+  version: '1.2'
+  title: MCSIS Api documentation
+servers: 
+  - url: http://localhost:7447
+tags:
+  - name: load-balancer-controller
+    description: Load Balancer Controller
+  - name: m-commerce-subscription-info-api-controller
+    description: M Commerce Subscription Info Api Controller
+paths:
+  /loadbalancercheck:
+    get:
+      tags:
+        - load-balancer-controller
+      summary: check
+      operationId: checkUsingGET
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      deprecated: false
+  /mcsis/subs:
+    get:
+      tags:
+        - m-commerce-subscription-info-api-controller
+      summary: getSubsByMsisdn
+      operationId: getSubsByMsisdnUsingGET
+      parameters:
+        - name: msisdn
+          in: query
+          description: msisdn
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      deprecated: false
+    post:
+      tags:
+        - m-commerce-subscription-info-api-controller
+      summary: createSubs
+      operationId: createSubsUsingPOST
+      requestBody:
+        description: subscriber
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicSubscriber'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '201':
+          description: Created
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      deprecated: false
+  /mcsis/subs/{id}:
+    get:
+      tags:
+        - m-commerce-subscription-info-api-controller
+      summary: getSubsById
+      operationId: getSubsByIdUsingGET
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+      deprecated: false
+    patch:
+      tags:
+        - m-commerce-subscription-info-api-controller
+      summary: updateSubs
+      operationId: updateSubsUsingPATCH
+      parameters:
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: basicSubscriber
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicSubscriber'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+      deprecated: false
+components:
+  schemas:
+    BasicSubscriber:
+      type: object
+      properties:
+        adultContentBan:
+          type: boolean
+        blockServiceCategories:
+          type: array
+          example:
+            - GOODS
+          items:
+            type: string
+        moSmsBan:
+          type: boolean
+        msisdn:
+          type: string
+          example: 36201234567
+        paymartBan:
+          type: boolean
+        paymartService:
+          type: boolean
+        status:
+          type: string
+          example: ACTIVE
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - SUSPENDED
+        stickyBitDateTime:
+          type: string
+          example: yyyy-MM-dd HH:mm:ss
+      title: BasicSubscriber
+    Subscriber:
+      type: object
+      properties:
+        adultContentBan:
+          type: boolean
+        blockServiceCategories:
+          type: array
+          example:
+            - GOODS
+          items:
+            type: string
+        customerType:
+          type: string
+          enum:
+            - BUSINESS
+            - SELFEMPLOYEE
+            - INDIVIDUAL
+            - UNKNOWN
+        moSmsBan:
+          type: boolean
+        msisdn:
+          type: string
+          example: 36201234567
+        paymartBan:
+          type: boolean
+        paymartService:
+          type: boolean
+        subscriptionType:
+          type: string
+          enum:
+            - PREPAID
+            - POSTPAID
+            - UNKNOWN
+        status:
+          type: string
+          example: ACTIVE
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - SUSPENDED
+        stickyBitDateTime:
+          type: string
+          example: yyyy-MM-dd HH:mm:ss
+        subsId:
+          type: integer
+          format: int64
+      title: Subscriber

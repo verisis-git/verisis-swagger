@@ -1,0 +1,314 @@
+openapi: '3.0.2'
+info:
+  title: Sesame Device insurance interfaces
+  description: |
+    Interface for uService
+  
+    changelog:
+    
+      v1.3: Customer object modified: address data are removed
+      
+      v1.3.1: Add retailPrice data to WhitelistElement
+  version: 1.3.1
+servers:
+  - url: https://sesame.devins.pgsm.hu/
+paths:
+  /deviceinsurance/v1/whitelist:
+    get:
+      tags:
+          - BlackAndWhite
+      summary: Get stored whitelist
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # query
+        - $ref: '#/components/parameters/sTacCode'
+        - $ref: '#/components/parameters/sMaterialId'
+      responses:
+        '200':
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/oWhitelistElement'
+          description: Success
+        '400':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid data
+          description: Bad request
+        '404':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid tacCode format
+          description: Not found
+        '500':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 503
+                errorDescription: Service is not available
+          description: Server unavailable
+          
+  /deviceinsurance/v1/blacklist/customercheck: 
+    post:
+      tags:
+          - BlackAndWhite
+      summary: Check if a customer is on blacklist
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/oCustomer'
+      responses:
+        '200':
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                properties:
+                  isOnBlacklist:
+                    type: boolean
+                    description: true, if customer is on blacklist
+          description: Success
+        '400':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid data
+          description: Bad request
+        '404':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid tacCode format
+          description: Not found
+        '500':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 503
+                errorDescription: Service is not available
+          description: Server unavailable
+  
+components:
+  parameters:
+    msgcntx_src:
+      name: Msg-Ctx-Src
+      description: 'Name of the source system, the sender party of the message (e.g ApplicationId)'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_srcmodule:
+      name: Msg-Ctx-Src-Module
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_env:
+      name: Msg-Ctx-Env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+    msgcntx_id:
+      name: Msg-Ctx-Id
+      description: UUID of the message like 'f257ba6675cf4921affa5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_corelid:
+      name: Msg-Ctx-Corr-Id
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_userid:
+      name: Msg-Ctx-User-Id
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    sTacCode:
+      name: tacCode
+      required: false
+      in: query
+      description: Tac code. It is required if materialId query param is not set
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 8
+        example: "32930400"
+    sMaterialId:
+      name: materialId
+      required: false
+      in: query
+      description: Material id. It is required if tacCode query param is not set
+      schema:
+        $ref: '#/components/schemas/sSapMaterialId'
+  schemas:
+    sMsgcntx_rrid:
+      type: string
+      minLength: 1
+      maxLength: 40
+    oCustomer:
+      type: object
+      description: Customer object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Name of the customer
+        motherName:
+          type: string
+          description: Name of customer's mother. It is required in case of an individual customer
+        birthDate:
+          type: string
+          format: date
+          description: Date of birth. It is required in case of an individual customer
+        birthPlace:
+          type: string
+          description: Date of place of birth. It is required in case of an individual customer
+        firmRegistryNumber:
+          type: string
+          description: Firm registry number. It is required in case of a non-individual customer
+    oWhitelistElement:
+      type: object
+      description: Whitelist element
+      required: [tacCode, sapMaterialIds]
+      properties:
+        tacCode:
+          type: string
+          minLength: 8
+          maxLength: 8
+          description: tacCode
+          example: "32930400"
+        internalStorageSize:
+          type: number
+          format: int32
+          description: Internal storage capacity
+          example: 32
+        sapMaterialId:
+            $ref: '#/components/schemas/sSapMaterialId'
+        priceBand:
+          $ref: '#/components/schemas/eInsurancePriceBand'
+        deviceMake:
+          type: string
+          description: Manufacturer of the device
+          example: Samsung
+        deviceName:
+          type: string
+          description: Name of the device
+          example: S20
+        retailPrice:
+          type: number
+          format: int32
+          description: Retail Price
+          example: 143299
+    sSapMaterialId:
+      type: string
+      description: SAP material id of the device
+      minLength: 1
+      example: 218736821736821
+    eInsurancePriceBand:
+      type: integer
+      description: Insurance price band enumeration
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+      example: 1
+    oErrorResponse:
+      type: object
+      properties:
+          errorCode:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          errorDescription:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error

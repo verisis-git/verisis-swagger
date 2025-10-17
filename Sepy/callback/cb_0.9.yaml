@@ -1,0 +1,957 @@
+openapi: 3.0.0
+info:
+  version: 'CB_0.9'
+  title: SEsame PaYment manager
+  description: |
+    Sesame Payment Manager (SEPY) callback interface specification
+
+    Release notes:
+
+      *v0.9* 
+        - Add new enum values Other and Barion to BankCardType object
+        - add new parameters called BankCardTypeNum to FundingInformation.BankCard
+        - response can be status 200
+        
+      *v0.8* 
+        - Currency can be only HUF
+        - Total parameters must be integer and can be zero
+
+      *v0.7*:
+        - add RecurrenceId to request
+
+      *v0.6*:
+        - add example
+
+      *v0.5*
+        - rename ErrorCategory to ResponseCategory and change the possible values
+        - rename ResultCode and ResultDescription to ResponseCode and ResponseDescription
+
+      *v0.4*
+        - add ErrorCategory to responses
+        - add FundingSource to common payment response
+
+      v0.3:
+        - add OrderNumber, ResultCode, ResultDescription parameters to the response
+        - change type of the Transaction to array and rename to the Transactions
+        - add RelatedId to the Transaction object
+        - remove RefundedTransaction and CommitedTransaction objects from the response
+        - remove CallbackUrl parameter from the response
+        - delete unused schema definitions
+
+    Host URL depends on the environment you are connecting to.
+
+    General information:
+      - the MIME type of the request sent to the API is defined as application/json
+      - string type is a standard character string. The API uses UTF-8 encoding
+      - date-time values are represented in a string format of the ISO-8601 standard, for example: 2023-12-06T08:35:46Z
+      - time span is a time range value represented in a string format of the ISO-8601 standard, like this: 3.14:15:28 (three days, fourteen hours, fifteen minutes, twenty-eight seconds)
+servers:
+  - url: https://{host_url}/paymentcallback/v1.0/services
+paths:
+  /callback:
+    post:
+      summary: Send a callback request in case of changing the status of the payment transaction
+      parameters:
+        # headers
+        - $ref: '#/components/parameters/Msg-Ctx-Src'
+        - $ref: '#/components/parameters/Msg-Ctx-Src-Module'
+        - $ref: '#/components/parameters/Msg-Ctx-Env'
+        - $ref: '#/components/parameters/Msg-Ctx-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Corr-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-User-Id'
+        - $ref: '#/components/parameters/Msg-Ctx-Build-Number'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallbackRequest'
+            examples:
+              InitialPaymentWithTokenRegistration BankCard Example:
+                $ref: '#/components/examples/InitialPaymentWithTokenRegistrationBCReq'
+              InitialPaymentWithTokenRegistration Barion Balance Example:
+                $ref: '#/components/examples/InitialPaymentWithTokenRegistrationBBReq'
+              Recurring payment Example:
+                $ref: '#/components/examples/MITReq'
+              Refund bankcard payment Example:
+                $ref: '#/components/examples/RefundSucc'
+              Refund barion balance payment Example:
+                $ref: '#/components/examples/RefundBarionBalanceSucc'
+              Partial refund bankcard paymentExample:
+                $ref: '#/components/examples/PartialRefundSucc'
+              Refund unsuccess Example:
+                $ref: '#/components/examples/RefundUnsucc'
+      responses:
+        '200':
+          description: Status change received successfully
+          headers:
+            Msg-Ctx-Rrid:
+              $ref: '#/components/headers/Msg-Ctx-Rrid'
+        '204':
+          description: Status change received successfully
+          headers:
+            Msg-Ctx-Rrid:
+              $ref: '#/components/headers/Msg-Ctx-Rrid'
+        '400':
+          description: Bad request, check the request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error, something went wrong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  headers:
+    Msg-Ctx-Rrid:
+      description: In case of regular responses, this field must contain the ID of the message, which to it answers.
+      required: true
+      schema:
+        type: string
+        example: 53329a61-f5f5-4ad4-aec0-5a68d28b1350
+  parameters:
+    Msg-Ctx-Src:
+      name: Msg-Ctx-Src
+      in: header
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        example: IESB
+    Msg-Ctx-Src-Module:
+      name: Msg-Ctx-Src-Module
+      in: header
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      required: false
+      schema:
+        type: string
+        example: mvesb1
+    Msg-Ctx-Env:
+      name: Msg-Ctx-Env
+      in: header
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2').
+      required: true
+      schema:
+        type: string
+        example: PROD
+    Msg-Ctx-Id:
+      name: Msg-Ctx-Id
+      in: header
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        example: 53329a61-f5f5-4ad4-aec0-5a68d28b1350
+    Msg-Ctx-Corr-Id:
+      name: Msg-Ctx-Corr-Id
+      in: header
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow.
+      required: true
+      schema:
+        type: string
+        example: 3385cbdb-8561-48f6-a671-5e271f486a41B
+    Msg-Ctx-User-Id:
+      name: Msg-Ctx-User-Id
+      in: header
+      description: Optional value of "Yettel login name” of the original user as shown in the global Active Directory. If the identification of the original user is not possible (eg. batch jobs) or the original user is not part of the global user directory (eg. a customer, who is using a frontend system), then a technical user name should be used upon previous agreement.
+      required: false
+      schema:
+        type: string
+        example: AUser
+    Msg-Ctx-Build-Number:
+      name: Msg-Ctx-Build-Number
+      in: header
+      description: It represents the sender application’s build version.
+      required: false
+      schema:
+        type: string
+        example: 14393.693
+
+  schemas:
+    UuidString:
+      type: string
+      format: uuid
+
+    DateTimeString:
+      type: string
+      format: date-time
+      example: "2023-12-07T12:30:00.33Z"
+    
+    Currency:
+      type: string
+      description: |
+        Currency of the payment. Must be supplied in ISO 4217 format.
+      
+        Accepted values:
+        - HUF (Hungarian forint)
+      minLength: 3
+      maxLength: 3
+      example:
+        - "HUF"
+
+    TotalPrice:
+      type: integer
+      minimum: 0
+      description: |
+        Total amount of the transaction. Must be greater than zero.
+        The total amount of the transaction. This is the amount that is charged towards the payer when completing the payment. The final amount of the transactiom. This will overwrite the original amount.
+
+        The allowed number of decimal digits depends on the currency of the payment containing this transaction:
+        - HUF: zero digits
+      example: 1000
+
+    CallbackRequest:
+      type: object
+      required:
+        - PaymentRequestId
+        - PaymentProcessId
+        - ResponseCode
+        - ResponseDescription
+        - ResponseCategory
+      properties:
+        PaymentId:
+          type: string
+          format: guid
+          description: The identifier of the payment in the Barion system.
+          example: "31dfdaff269e4aa0b7a12e1c0cc2f933"
+        PaymentRequestId:
+          type: string
+          description: The identifier of the payment in the shop's system.
+          maxLength: 50
+          example: "12345"
+        PaymentProcessId:
+          type: string
+          description: Unique identifier for the payment process in Payment Manager.
+          example: 2138791529
+        OrderNumber:
+          type: string
+          description: Identifies the order belonging to the payment transaction.
+          maxLength: 100
+          example: "Rendelésszám:Order456,Hiv. szám:2138791529"
+        Status:
+          type: string
+          enum:
+            - Prepared
+            - Started
+            - InProgress
+            - Waiting
+            - Reserved
+            - Authorized
+            - Canceled
+            - Succeeded
+            - Failed
+            - PartiallySucceeded
+            - Expired
+          description: The status of the payment.
+        FundingSource:
+          $ref: '#/components/schemas/FundingSource'
+        FundingInformation:
+          $ref: '#/components/schemas/FundingInformation'
+        RecurrenceType:
+          type: string
+          enum:
+            - OneClickPayment
+            - MerchantInitiatedPayment
+            - RecurringPayment
+          description: The RecurrenceType that defines the type of recurring scenario.
+        RecurrenceId:
+          type: string
+          description: String used to identify a given token payment. Its purpose is determined by the value of the InitiateRecurrence property.Required when executing token payments
+          maxLength: 100
+          example: "Recurrence123"
+        TraceId:
+          type: string
+          description: The Trace Id that identifies the recurring scenario.
+          maxLength: 100
+          example: "Trace123"
+        CreatedAt:
+          $ref: "#/components/schemas/DateTimeString"
+          description: The timestamp showing when the payment was created.
+        CompletedAt:
+          $ref: "#/components/schemas/DateTimeString"
+          description: The timestamp showing when the payment was completed. If the payment is not yet completed, this is empty.
+        Transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentResponseTransaction"
+        Total:
+          $ref: "#/components/schemas/TotalPrice"
+          description: The total amount of the payment at the time of the request. If a reservation was finished with a lower amount, or a previously completed payment was refunded, this can be less than at the time of creation.
+        Currency: 
+          $ref: "#/components/schemas/Currency"
+        FraudRiskScore:
+          type: integer
+          description: A risk score computed by the anti-fraud analysis, between a range of 0 (completely legit) to 100 (certain fraud). Transactions under 10 are usually safe. Transactions with 10 an more, but less than 30 are risky, caution is advised. Transactions with 30 and over are blocked automatically for being almost certainly fraudulent.
+          example:  5
+        ValidUntil:
+          $ref: "#/components/schemas/DateTimeString"
+          description: Timestamp showing the expiration time of the payment time window. The payment must be completed before this elapses.
+        ReservedUntil:
+          $ref: "#/components/schemas/DateTimeString"
+          description: Timestamp showing the expiration time of the reservation time window. The reserved payment must be finished before this elapses. If the payment type is not reservation, this is empty.
+        DelayedCaptureUntil:
+          $ref: "#/components/schemas/DateTimeString"
+          description: Timestamp showing the expiration time of the authorization time window. The authorized payment must be finished before this elapses. If the payment type is not DelayedCapture, this is empty.
+        RedirectUrl:
+          type: string
+          description: The URL (including the payment identifier) where the payer gets (or already got) redirected to after the payment is or was completed or cancelled.
+          maxLength: 2000
+          example: "https://webshop.example.com/Redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933"
+        ResponseCode:
+          type: integer
+          description: Internal problem code
+          minimum: -9999999
+          maximum: 9999999
+        ResponseDescription:
+          type: string
+          description: Short description of the problem
+          maxLength: 128
+        ResponseCategory:
+          $ref: '#/components/schemas/ResponseCategory'
+
+
+    ResponseCategory:
+      type: string
+      description: |
+        The error category of the error.
+        - CardError - card error
+        - SystemError - system error
+        - DataError - data error
+        - Success - success transaction
+      enum: 
+        - CardError
+        - SystemError
+        - DataError
+        - Success
+      example: Success
+
+    FundingSource:
+      type: string
+      description: The funding source that was used to complete the payment. If the payment is not yet completed, this is empty. Can be *Balance*,*BankCard* or *BankTransfer*.
+      example: BankCard
+    FundingInformation:
+      type: object
+      properties:
+        BankCard:
+          $ref: '#/components/schemas/BankCard'
+        AuthorizationCode:
+          type: string
+          description: The authorization code received by the card processing system when executing the payment.
+          example: OK
+        ProcessResult:
+          type: string
+          description: |
+            The result of the last card payment attempt.
+            - Successful: The card transaction was successful.
+            - ProblemWithCard: The card transaction was unsuccessful due to incorrect card number, CVC, or expiry date. The card may be stolen, deleted, disabled, or disabled for online transactions.
+            - LowFunds: The card transaction was unsuccessful due to insufficient funds or reaching limits.
+            - LostOrStolenCard: The credit card has been reported lost or stolen.
+            - Declined: The payment card was declined by the acquirer.
+            - FraudulentTransaction: Potentially fraudulent transaction; the monitoring system declined the transaction.
+            - CardSystemError: The card transaction failed due to a card system error.
+            - ScaSoftDeclined: The payment card did not support SCA at the time of the transaction.
+            - FailedDuringAuthentication: There was an error during the SCA process, and authentication failed. This may not be returned if ChallengePreference was set to "NoChallengeNeeded."
+            - CardNotSupported: The payment card is not supported at the time of the transaction.
+            - Unknown: The bank system did not provide information about the operation, and the result of the process could not be determined.
+          enum:
+            - Successful
+            - ProblemWithCard
+            - LowFunds
+            - LostOrStolenCard
+            - Declined
+            - FraudulentTransaction
+            - CardSystemError
+            - ScaSoftDeclined
+            - FailedDuringAuthentication
+            - CardNotSupported
+            - Unknown
+    BankCard:
+      type: object
+      properties:
+        MaskedPan:
+          type: string
+          description: The last four digits of the card number.
+          example: 0923
+        BankCardType:
+          type: string
+          enum:
+            - Unknown
+            - MasterCard
+            - Visa
+            - AmericanExpress
+            - Electron
+            - Maestro
+            - DinersClub
+            - Discover
+            - Other
+            - Barion
+          description: The type of the bank card (may be empty).
+        BankCardTypeNum:
+          type: number
+          enum:
+            - 0
+            - 10
+            - 20
+            - 30
+            - 40
+            - 50
+            - 60
+            - 70
+            - 80
+            - 100
+            - 999
+          description: The type of the bank card (may be empty).
+        ValidThruYear:
+          type: string
+          description: The 4-digit year part of the card validity date.
+          example: 2025
+        ValidThruMonth:
+          type: string
+          description: The 2-digit month part of the card validity date.
+          example: 09
+
+    TransactionStatus:
+      type: string
+      enum:
+        - Prepared
+        - Started
+        - Succeeded
+        - Timeout
+        - ShopIsDeleted
+        - ShopIsClosed
+        - Rejected
+        - RejectedByShop
+        - Storno
+        - Reserved
+        - Deleted
+        - Expired
+        - Authorized
+        - Reversed
+        - InvalidPaymentRecord
+        - PaymentTimeOut
+        - InvalidPaymentStatus
+        - PaymentSenderOrRecipientIsInvalid
+        - Unknown
+      description: Enumeration of transaction statuses.
+
+    BaseResponseTransaction:
+      type: object
+      properties:
+        TransactionId: 
+          $ref: '#/components/schemas/UuidString'
+          description: The unique identifier of the transaction in the Barion system.
+        POSTransactionId: 
+          type: string
+          description: The unique identifier of the transaction at the shop that started the payment.
+          example: "03e5afa5-42f0-440f-84c4-efa380fa75e4"
+        Status:
+          $ref: '#/components/schemas/TransactionStatus'
+          description: The current status of the transaction.
+
+    TwoStepResponseTransaction:
+      type: object
+      description: It represents a committed transaction associated with a payment.
+      allOf:
+        - $ref: '#/components/schemas/BaseResponseTransaction'
+      properties:
+        TransactionTime: 
+          $ref: '#/components/schemas/DateTimeString'
+          description: The timestamp of the transaction.
+        Currency:
+          $ref: '#/components/schemas/Currency'
+        RelatedId:
+          description: The identifier of the related transaction, if it exists. It is used in case of refund(s) and has the same value as the original payment transaction
+          $ref: '#/components/schemas/UuidString'
+
+    RefundedResponseTransaction:
+      type: object
+      description: It represents a payment transaction that is refunded completely or partially. Such transactions are always associated with a completed payment
+      required:
+        - TransactionId
+        - Total
+        - Status
+      allOf:
+        - $ref: '#/components/schemas/BaseResponseTransaction'
+      properties:
+        Total:
+          type: integer
+          minimum: 0
+          description: The amount of the transaction.
+          example: 100
+        Comment:
+          type: string
+          description: The comment of the transaction set by the shop when the payment was created.
+          example: "Payment transaction comment"
+
+    PaymentResponseTransaction:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseResponseTransaction'
+        - $ref: '#/components/schemas/TwoStepResponseTransaction'
+        - $ref: '#/components/schemas/RefundedResponseTransaction'
+      properties:
+        Payer:
+          $ref: '#/components/schemas/UserInformation'
+          description: The user that paid the transaction.
+        TransactionType:
+          type: string
+          description: The type of the transaction.
+          enum:
+            - Shop
+            - TransferToExistingUser
+            - TransferToTechnicalAccount
+            - Reserve
+            - StornoReserve
+            - CardProcessingFee
+            - GatewayFee
+            - CardProcessingFeeStorno
+            - Unspecified
+            - CardPayment
+            - Refund
+            - RefundToBankCard
+            - StornoUnSuccessfulRefundToBankCard
+            - UnderReview
+            - ReleaseReview
+            - BankTransferPayment
+            - RefundToBankAccount
+            - StornoUnSuccessfulRefundToBankAccount
+            - BankTransferPaymentFee
+            - BarionBalanceProcessingFee
+
+    UserInformation:
+      type: object
+      required:
+        - Email
+      properties:
+        Name:
+          $ref: '#/components/schemas/NameInformation'
+          description: Structure representing the name of the user.
+        Email:
+          type: string
+          format: email
+          description: The e-mail address of the user.
+          example: "user@example.com"
+
+    NameInformation:
+      type: object
+      properties:
+        LoginName:
+          type: string
+          description: The login name of the user. At the moment, this is their e-mail address.
+          example: "user@example.com"
+        FirstName:
+          type: string
+          description: The first name of the user, if applicable.
+          example: "Jakab"
+        LastName:
+          type: string
+          description: The last name of the user, if applicable.
+          example: "Gipsz"
+        OrganizationName:
+          type: string
+          description: The organization name of the user, if applicable.
+          example: "Example org"
+
+    Error:
+      required:
+        - Title
+        - Status
+        - Detail
+        - Code
+      properties:
+        Title:
+          type: string
+          maxLength: 64
+          description: 'A short, human-readable summary of the problem type. It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization.'
+        Status:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: 'The HTTP status code, generated by the origin server for this occurrence of the problem.'
+        Detail:
+          type: string
+          maxLength: 128
+          description: 'Short description of the problem. Always respond with generic error messages to avoid revealing details of the failure unnecessarily.'
+        Code:
+          type: integer
+          minimum: -9999999
+          maximum: 9999999
+          description: 'Only for internal problem code.'
+          
+  examples:
+    InitialPaymentWithTokenRegistrationBCReq:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        OrderNumber: 'Rendelésszám: Order456, Hiv. szám: 2138791529'
+        Status: Reserved
+        FundingSource: BankCard
+        FundingInformation:
+          BankCard:
+            MaskedPan: '5559'
+            BankCardType: Visa
+            ValidThruYear: '2030'
+            ValidThruMonth: '1'
+          AuthorizationCode: j1id35
+          ProcessResult: Successful
+        RecurrenceType: MerchantInitiatedPayment
+        Total: 12000
+        Currency: HUF
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        ValidUntil: '2023-12-07T13:00:00.334+01:00'
+        ReservedUntil: '2024-01-06T12:30:00.334+01:00'
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 03e5afa5-42f0-440f-84c4-efa380fa75e4
+            TransactionId: b099b974ebaaee118bff001dd8b71cc4
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: kalmankelemen332@email.hu
+                    FirstName: Kálmán
+                    LastName: Kelemen
+                Email: kalmankelemen332@email.hu
+            Comment: Onboarding
+            Status: Reserved
+            TransactionType: CardPayment
+          - TransactionId: b199b974ebaaee118bff001dd8b71cc4
+            POSTransactionId: null
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 120
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Status: Reserved
+            TransactionType: CardProcessingFee
+            
+    InitialPaymentWithTokenRegistrationBBReq:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        OrderNumber: 'Rendelésszám: Order456, Hiv. szám: 2138791529'
+        Status: Reserved
+        FundingSource: Balance
+        RecurrenceType: MerchantInitiatedPayment
+        Total: 12000
+        Currency: HUF
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        ValidUntil: '2023-12-07T13:00:00.334+01:00'
+        ReservedUntil: '2024-01-06T12:30:00.334+01:00'
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 03e5afa5-42f0-440f-84c4-efa380fa75e4
+            TransactionId: b099b974ebaaee118bff001dd8b71cc4
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: kalmankelemen332@email.hu
+                    FirstName: Kálmán
+                    LastName: Kelemen
+                Email: kalmankelemen332@email.hu
+            Comment: Onboarding
+            Status: Reserved
+            TransactionType: Reserve
+          - TransactionId: b199b974ebaaee118bff001dd8b71cc4
+            POSTransactionId: null
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 120
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Status: Reserved
+            TransactionType: CardProcessingFee
+
+    MITReq:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '3323RE'
+        PaymentProcessId: '2138791566'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        OrderNumber: 'Hiv. szám: 2138791566'
+        RecurrenceType: MerchantInitiatedPayment
+        Total: 12000
+        Currency: HUF
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 03e5afa5-42f0-440f-84c4-efa380fa75e4
+            
+    RefundSucc:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        OrderNumber: 'Rendelésszám: Order456, Hiv. szám: 2138791529'
+        Status: Succeeded
+        FundingSource: BankCard
+        FundingInformation:
+          BankCard:
+            MaskedPan: '5559'
+            BankCardType: Visa
+            ValidThruYear: '2030'
+            ValidThruMonth: '1'
+          AuthorizationCode: j1id35
+          ProcessResult: Successful
+        RecurrenceType: MerchantInitiatedPayment
+        Total: 0
+        Currency: HUF
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        ValidUntil: '2023-12-07T13:00:00.334+01:00'
+        CompletedAt: '2023-12-21T12:30:00.334+01:00'
+        ReservedUntil: '2024-01-06T12:30:00.334+01:00'
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 03e5afa5-42f0-440f-84c4-efa380fa75e4
+            TransactionId: b099b974ebaaee118bff001dd8b71cc4
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: kalmankelemen332@email.hu
+                    FirstName: Kálmán
+                    LastName: Kelemen
+                Email: kalmankelemen332@email.hu
+            Comment: Onboarding
+            Status: Succeeded
+            TransactionType: CardPayment
+          - TransactionId: b199b974ebaaee118bff001dd8b71cc4
+            POSTransactionId: null
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 120
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Status: Succeeded
+            TransactionType: CardProcessingFee
+          - TransactionId: 9f3b3c182ccfee118c01001dd8b71cc4
+            POSTransactionId: e102580c-a490-47c5-87b6-0090e52aab81
+            TransactionTime: 2023-12-30T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Comment: Refund transaction
+            Status: Succeeded
+            TransactionType: RefundToBankCard
+            RelatedId: b099b974ebaaee118bff001dd8b71cc4
+            
+    RefundBarionBalanceSucc:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        OrderNumber: 'Rendelésszám: Order456, Hiv. szám: 2138791529'
+        Status: Succeeded
+        FundingSource: Balance
+        RecurrenceType: MerchantInitiatedPayment
+        Total: 0
+        Currency: HUF
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        ValidUntil: '2023-12-07T13:00:00.334+01:00'
+        CompletedAt: '2023-12-21T12:30:00.334+01:00'
+        ReservedUntil: '2024-01-06T12:30:00.334+01:00'
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 03e5afa5-42f0-440f-84c4-efa380fa75e4
+            TransactionId: b099b974ebaaee118bff001dd8b71cc4
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: kalmankelemen332@email.hu
+                    FirstName: Kálmán
+                    LastName: Kelemen
+                Email: kalmankelemen332@email.hu
+            Comment: Onboarding
+            Status: Succeeded
+            TransactionType: Shop
+          - TransactionId: 9f3b3c182ccfee118c01001dd8b71cc4
+            POSTransactionId: e102580c-a490-47c5-87b6-0090e52aab81
+            TransactionTime: 2023-12-30T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Comment: Refund transaction
+            Status: Succeeded
+            TransactionType: Refund
+            RelatedId: b099b974ebaaee118bff001dd8b71cc4
+            
+    PartialRefundSucc:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345'
+        PaymentProcessId: '2138791529'
+        ResponseCode: 0
+        ResponseDescription: Success
+        ResponseCategory: Success
+        OrderNumber: 'Rendelésszám: Order456, Hiv. szám: 2138791529'
+        Status: Succeeded
+        FundingSource: BankCard
+        FundingInformation:
+          BankCard:
+            MaskedPan: '5559'
+            BankCardType: Visa
+            ValidThruYear: '2030'
+            ValidThruMonth: '1'
+          AuthorizationCode: j1id35
+          ProcessResult: Successful
+        RecurrenceType: MerchantInitiatedPayment
+        Total: 1199
+        Currency: HUF
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        ValidUntil: '2023-12-07T13:00:00.334+01:00'
+        CompletedAt: '2023-12-21T12:30:00.334+01:00'
+        ReservedUntil: '2024-01-06T12:30:00.334+01:00'
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 03e5afa5-42f0-440f-84c4-efa380fa75e4
+            TransactionId: b099b974ebaaee118bff001dd8b71cc4
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: kalmankelemen332@email.hu
+                    FirstName: Kálmán
+                    LastName: Kelemen
+                Email: kalmankelemen332@email.hu
+            Comment: Onboarding
+            Status: Succeeded
+            TransactionType: CardPayment
+          - TransactionId: b199b974ebaaee118bff001dd8b71cc4
+            POSTransactionId: null
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 120
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Status: Succeeded
+            TransactionType: CardProcessingFee
+          - TransactionId: 9f3b3c182ccfee118c01001dd8b71cc4
+            POSTransactionId: e102580c-a490-47c5-87b6-0090e52aab81
+            TransactionTime: 2023-12-30T12:30:00.356+01:00
+            Total: 10801
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Comment: Partial refund transaction
+            Status: Succeeded
+            TransactionType: RefundToBankCard
+            RelatedId: b099b974ebaaee118bff001dd8b71cc4
+
+    RefundUnsucc:
+      value:
+        PaymentId: 31dfdaff269e4aa0b7a12e1c0cc2f933
+        PaymentRequestId: '12345'
+        PaymentProcessId: '2138791529'
+        ResponseCode: -9999999
+        ResponseDescription: Unsuccess refund
+        ResponseCategory: Success
+        OrderNumber: 'Rendelésszám: Order456, Hiv. szám: 2138791529'
+        Status: Succeeded
+        FundingSource: BankCard
+        FundingInformation:
+          BankCard:
+            MaskedPan: '5559'
+            BankCardType: Visa
+            ValidThruYear: '2030'
+            ValidThruMonth: '1'
+          AuthorizationCode: j1id35
+          ProcessResult: Successful
+        RecurrenceType: MerchantInitiatedPayment
+        Total: 0
+        Currency: HUF
+        CreatedAt: '2023-12-07T12:30:00.334+01:00'
+        ValidUntil: '2023-12-07T13:00:00.334+01:00'
+        CompletedAt: '2023-12-21T12:30:00.334+01:00'
+        ReservedUntil: '2024-01-06T12:30:00.334+01:00'
+        RedirectUrl: https://webshop.yettel.hu/redirect?paymentId=31dfdaff269e4aa0b7a12e1c0cc2f933
+        Transactions:
+          - POSTransactionId: 03e5afa5-42f0-440f-84c4-efa380fa75e4
+            TransactionId: b099b974ebaaee118bff001dd8b71cc4
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: kalmankelemen332@email.hu
+                    FirstName: Kálmán
+                    LastName: Kelemen
+                Email: kalmankelemen332@email.hu
+            Comment: Onboarding
+            Status: Succeeded
+            TransactionType: CardPayment
+          - TransactionId: b199b974ebaaee118bff001dd8b71cc4
+            POSTransactionId: null
+            TransactionTime: 2023-12-07T12:30:00.356+01:00
+            Total: 120
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Status: Succeeded
+            TransactionType: CardProcessingFee
+          - TransactionId: 9f3b3c182ccfee118c01001dd8b71cc4
+            POSTransactionId: e102580c-a490-47c5-87b6-0090e52aab81
+            TransactionTime: 2023-12-30T12:30:00.356+01:00
+            Total: 12000
+            Currency: HUF
+            Payer:
+                Name:
+                    LoginName: shop@yettel.hu
+                    OrganizationName: Yettel
+                Email: shop@yettel.hu
+            Comment: Refund transaction
+            Status: Rejected
+            TransactionType: RefundToBankCard
+            RelatedId: b099b974ebaaee118bff001dd8b71cc4

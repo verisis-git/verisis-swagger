@@ -1,0 +1,2308 @@
+openapi: 3.0.3
+info:
+  title: XTV Gateway Service API
+  version: "0.1"
+  description: >
+    API for creating and managing TV-related services (TVPLATFORM, HBO, RTL, TV2)
+
+paths:
+  /serviceOrder:
+    post:
+      summary: Start provisioning transaction
+      operationId: provisioning
+      parameters:
+      #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - $ref: '#/components/parameters/Msg_ctx_user_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+            examples:
+              tvplatform_only_request:
+                summary: Only TV package order (TVPLATFORM)
+                value:
+                  externalId: trx-1001
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000001111111
+                      service:
+                        id: CS_CMA000000001111111
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: active
+                        serviceSpecification:
+                          id: CFS_TV
+                        serviceCharacteristic:
+                          - { name: coreProductId, value: "21025" }
+              all_services_request:
+                summary: Full service order (TVPLATFORM + HBO + RTL + TV2)
+                value:
+                  externalId: trx-2001
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000001111111
+                      service:
+                        id: CS_CMA000000001111111
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: active
+                        serviceSpecification:
+                          id: CFS_TV
+                        serviceCharacteristic:
+                          - { name: coreProductId, value: "21025" }
+                          - { name: productIdList, value: ["21022","21023","21026"] }
+                    - id: "4"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_STB000000004362873
+                      service:
+                        id: CS_STB000000004362873
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: active
+                        serviceSpecification:
+                          id: CFS_STB
+                        serviceCharacteristic:
+                          - { name: id, value: STB12344 }
+                    - id: "5"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000002222222
+                      service:
+                        id: CS_CMA000000002222222
+                        name: HBO Max
+                        serviceType: HBO
+                        state: active
+                        serviceSpecification:
+                          id: CFS_StreamingService
+                        serviceCharacteristic:
+                          - { name: coreProductId, value: "21023" }
+                    - id: "6"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA00000000333333
+                      service:
+                        id: CS_CMA00000000333333
+                        name: RTL+
+                        serviceType: RTL
+                        state: active
+                        serviceSpecification:
+                          id: CFS_StreamingService
+                        serviceCharacteristic:
+                          - { name: coreProductId, value: "21022" }
+                    - id: "7"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA00000000888888
+                      service:
+                        id: CS_CMA00000000888888
+                        name: TV2 Play Premium
+                        serviceType: TV2
+                        state: active
+                        serviceSpecification:
+                          id: CFS_StreamingService
+                        serviceCharacteristic:
+                          - { name: coreProductId, value: "21026" }
+              tvplatform_change_request:
+                summary: TVPLATFORM package change
+                value:
+                  externalId: trx-1007
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000007777777
+                      service:
+                        id: CS_CMA000000007777777
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: active
+                        serviceSpecification:
+                          id: CFS_TV
+                        serviceCharacteristic:
+                          - name: coreProductId
+                            value:
+                              oldValue: "21025"
+                              newValue: "21024"
+              tvplatform_new_stb_request:
+                summary: Add new STB to existing TV package
+                value:
+                  externalId: trx-1008
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_STB000000004362873
+                      service:
+                        id: CS_STB000000004362873
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: active
+                        serviceSpecification:
+                          id: CFS_STB
+                        serviceCharacteristic:
+                          - { name: id, value: "STB12345" }
+
+              tvplatform_stb_replace_request:
+                summary: TVPLATFORM – Delete 2 STBs + order 1 new STB
+                value:
+                  externalId: trx-1009
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_STB000000004362873
+                      service:
+                        id: CS_STB000000004362873
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: active
+                        serviceSpecification:
+                          id: CFS_STB
+                        serviceCharacteristic:
+                          - { name: id, value: "STB56789" }
+                    - id: "4"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_STB000000004362877
+                      service:
+                        id: CS_STB000000004362877
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: terminated
+                        serviceSpecification:
+                          id: CFS_STB
+                        serviceCharacteristic:
+                          - { name: id, value: "STB12345" }
+                    - id: "5"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_STB000000004362899
+                      service:
+                        id: CS_STB000000004362899
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: terminated
+                        serviceSpecification:
+                          id: CFS_STB
+                        serviceCharacteristic:
+                          - { name: id, value: "STB67890" }
+              tv2_cancellation_request:
+                summary: TV2 cancellation
+                value:
+                  externalId: trx-1010
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000001111111
+                      service:
+                        id: CS_CMA000000001111111
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: active
+                        serviceSpecification:
+                          id: CFS_TV
+                        serviceCharacteristic:
+                          - { name: deleteProductIdList, value: ["21026"] }
+                    - id: "4"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA00000000888888
+                      service:
+                        id: CS_CMA00000000888888
+                        name: TV2 Play Premium
+                        serviceType: TV2
+                        state: terminated
+                        serviceSpecification:
+                          id: CFS_StreamingService
+              hbo_only_request:
+                summary: HBO only order (without TVPLATFORM)
+                value:
+                  externalId: trx-1011
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: add
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA00000000444444
+                      service:
+                        id: CS_CMA00000000444444
+                        name: HBO Max
+                        serviceType: HBO
+                        state: active
+                        serviceSpecification:
+                          id: CFS_StreamingService
+                        serviceCharacteristic:
+                          - { name: coreProductId, value: "21023" }
+              tvplatform_cancellation_request:
+                summary: TVPLATFORM cancellation
+                value:
+                  externalId: trx-1012
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA00000000999999
+                      service:
+                        id: CS_CMA00000000999999
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: terminated
+                        serviceSpecification:
+                          id: CFS_TV
+              tv2_suspend_request:
+                summary: TV2 suspension (suspend)
+                value:
+                  externalId: trx-1014
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA00000000888888
+                      service:
+                        id: CS_CMA00000000888888
+                        name: TV2 Play Premium
+                        serviceType: TV2
+                        state: suspended
+                        serviceSpecification:
+                          id: CFS_StreamingService
+              suspend_all_request:
+                summary: Suspend all services
+                value:
+                  externalId: trx-1015
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000001111111
+                      service:
+                        id: CS_CMA000000001111111
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: suspended
+                        serviceSpecification:
+                          id: CFS_TV
+                    - id: "4"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000002222222
+                      service:
+                        id: CS_CMA000000002222222
+                        name: HBO Max
+                        serviceType: HBO
+                        state: suspended
+                        serviceSpecification:
+                          id: CFS_StreamingService
+                    - id: "5"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000003333333
+                      service:
+                        id: CS_CMA000000003333333
+                        name: RTL+
+                        serviceType: RTL
+                        state: suspended
+                        serviceSpecification:
+                          id: CFS_StreamingService
+                    - id: "6"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000008888888
+                      service:
+                        id: CS_CMA000000008888888
+                        name: TV2 Play Premium
+                        serviceType: TV2
+                        state: suspended
+                        serviceSpecification:
+                          id: CFS_StreamingService
+              resume_all_except_tv2_request:
+                summary: Resume all services except TV2
+                value:
+                  externalId: trx-1016
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000001111111
+                      service:
+                        id: CS_CMA000000001111111
+                        name: TVPLATFORM
+                        serviceType: TVPLATFORM
+                        state: active
+                        serviceSpecification:
+                          id: CFS_TV
+                    - id: "4"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000002222222
+                      service:
+                        id: CS_CMA000000002222222
+                        name: HBO Max
+                        serviceType: HBO
+                        state: active
+                        serviceSpecification:
+                          id: CFS_StreamingService
+                    - id: "5"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000003333333
+                      service:
+                        id: CS_CMA000000003333333
+                        name: RTL+
+                        serviceType: RTL
+                        state: active
+                        serviceSpecification:
+                          id: CFS_StreamingService
+              change_uuid_request:
+                summary: Change UUID
+                value:
+                  externalId: trx-1017
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000009999999
+                      service:
+                        id: CS_CYA000000009999999
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification:
+                          id: CFS_YettelAccount
+                        serviceCharacteristic:
+                          - name: tvId
+                            value:
+                              oldValue: "uuid"
+                              newValue: "new-uuid"
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+              resend_hbo_coupon_request:
+                summary: HBO ottCoupon resend
+                value:
+                  externalId: trx-2010
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_YettelAccount }
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA000000002222222
+                      service:
+                        id: CS_CMA000000002222222
+                        name: HBO Max
+                        serviceType: HBO
+                        state: active
+                        serviceSpecification: { id: CFS_StreamingService }
+                        serviceCharacteristic:
+                          - name: ottCoupon
+                            value:
+                              oldValue: "h46fb-dfswh8"
+                              newValue: "h46fb-dfswh8"
+              swap_rtl_coupon_request:
+                summary: RTL ottCoupon swap
+                value:
+                  externalId: trx-2011
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_YettelAccount }
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                    - id: "3"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CMA00000000333333
+                      service:
+                        id: CS_CMA00000000333333
+                        name: RTL+
+                        serviceType: RTL
+                        state: active
+                        serviceSpecification: { id: CFS_StreamingService }
+                        serviceCharacteristic:
+                          - name: ottCoupon
+                            value:
+                              oldValue: "et34trwerew"
+                              newValue: ""
+              change_msisdn_request:
+                summary: Change msisdn
+                value:
+                  externalId: trx-2012
+                  notificationEndPoint: https://client/async/response
+                  category: tv
+                  orderItem:
+                    - id: "1"
+                      action: noChange
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                      service:
+                        id: CS_CYA000000002169126
+                        name: Customer account
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_YettelAccount }
+                        serviceCharacteristic:
+                          - { name: tvId, value: "uuid" }
+                    - id: "2"
+                      action: modify
+                      href: https://host/ngsf/si/serviceInventoryManagement/service/CS_CPN0000000063723837
+                      service:
+                        id: CS_CPN0000000063723837
+                        name: Customer phone number
+                        serviceType: ACCOUNT
+                        state: active
+                        serviceSpecification: { id: CFS_PhoneNumber }
+                        serviceCharacteristic:
+                          - name: msisdn
+                            value:
+                              oldValue: "36201111111"
+                              newValue: "36209999999"
+
+      responses:
+        "201":
+          description: Task created successfully
+          headers:
+            location:
+              $ref: '#/components/headers/Location'
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '400':
+          description: Bad Request – Invalid input, path or headers
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Authentication Failed – Authorization header missing or invalid
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '405': 
+          description: Method Not Allowed
+          headers:
+            allow:
+              description: (mandatory) Allowed HTTP methods for this endpoint
+              required: true
+              schema:
+                type: string
+                example: "POST, GET"
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '415':
+          description: Unsupported Media Type
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+            accept:
+              $ref: '#/components/headers/Accept'
+        '500':
+          description: Internal Error - retriable
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Service Unavailable
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+
+  /serviceOrder/{xtvgwTrxId}:
+    get:
+      summary: Get a specified transaction
+      operationId: getById
+      parameters:
+      #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - $ref: '#/components/parameters/Msg_ctx_user_id'
+      #path
+        - name: xtvgwTrxId
+          in : path
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{32}$'
+      responses:
+        "200":
+          description: Transaction found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderQuery'
+              examples:
+                tvplatform_only_query:
+                  summary: Successful TV package order (TVPLATFORM)
+                  value:
+                    id: 43429a61f5f54ad4aec05a68d28b1350
+                    externalId: trx-1001
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T11:19:04Z
+                    completionDate: 2025-09-12T11:19:10Z
+                    orderItem:
+                      - id: "1"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:19:10Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                            - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:19:10Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CMA000000001111111
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: active
+                          serviceSpecification:
+                            id: CFS_TV
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21025" }
+                all_services_query:
+                  summary: Partial successful full service order
+                  value:
+                    id: 53429a61f5f54ad4aec05a68d28b9999
+                    externalId: trx-2001
+                    category: tv
+                    state: partial
+                    orderDate: 2025-09-12T11:30:00Z
+                    completionDate: 2025-09-12T11:30:15Z
+                    orderItem:
+                      - id: "1"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CYA000000009999999
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_YettelAccount }
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                            - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: add
+                        state: partial
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "6666", detail: "AddProductId failed" }
+                        service:
+                          id: CS_CMA000000001111111
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: active
+                          serviceSpecification: { id: CFS_TV }
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21025" }
+                            - name: productIdList
+                              value:
+                                  - { id: "21022", status: SUCCESS }
+                                  - { id: "21023", status: SUCCESS }
+                                  - { id: "21026", status: FAILED }
+                      - id: "4"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_STB000000004362873
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: active
+                          serviceSpecification: { id: CFS_STB }
+                          serviceCharacteristic:
+                            - { name: id, value: "STB12344" }
+                      - id: "5"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CMA000000002222222
+                          name: HBO Max
+                          serviceType: HBO
+                          state: active
+                          serviceSpecification: { id: CFS_StreamingService }
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21023" }
+                            - { name: ottCoupon, value: "h46fb-dfswh8" }
+                            - { name: externalStreamingId, value: "ecbd5061-38eb-4b9a-912abb7669dfd9c6" }
+                      - id: "6"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CMA000000003333333
+                          name: RTL+
+                          serviceType: RTL
+                          state: active
+                          serviceSpecification: { id: CFS_StreamingService }
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21022" }
+                            - { name: ottCoupon, value: "et34trwerew" }
+                      - id: "7"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CMA000000008888888
+                          name: TV2 Play Premium
+                          serviceType: TV2
+                          state: active
+                          serviceSpecification: { id: CFS_StreamingService }
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21026" }
+                            - { name: ottCoupon, value: "443245634" }
+                tvplatform_change_query:
+                  summary: Successful TVPLATFORM package change
+                  value:
+                    id: 63429a61f5f54ad4aec05a68d28b7777
+                    externalId: trx-1007
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T11:40:00Z
+                    completionDate: 2025-09-12T11:40:08Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T11:40:08Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000007777777
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: active
+                          serviceSpecification:
+                            id: CFS_TV
+                          serviceCharacteristic:
+                            - name: coreProductId
+                              value:
+                                oldValue: "21025"
+                                newValue: "21024"
+                                status: SUCCESS
+                tvplatform_new_stb_query:
+                  summary: Successful STB addition to existing TVPLATFORM package
+                  value:
+                    id: 73429a61f5f54ad4aec05a68d28b8888
+                    externalId: trx-1008
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T11:50:00Z
+                    completionDate: 2025-09-12T11:50:05Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:50:05Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_STB000000004362873
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: active
+                          serviceSpecification:
+                            id: CFS_STB
+                          serviceCharacteristic:
+                            - name: id
+                              value: "STB12345"
+                tvplatform_stb_replace_query:
+                  summary: STB replacement – 1 new successful, 1 deletion successful, 1 deletion failed
+                  value:
+                    id: 83429a61f5f54ad4aec05a68d28b7777
+                    externalId: trx-1009
+                    category: tv
+                    state: partial
+                    orderDate: 2025-09-12T12:05:00Z
+                    completionDate: 2025-09-12T12:05:07Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T12:05:07Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_STB000000004362873
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: active
+                          serviceSpecification:
+                            id: CFS_STB
+                          serviceCharacteristic:
+                            - { name: id, value: "STB56789" }
+                      - id: "4"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T12:05:07Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_STB000000004362877
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: terminated
+                          serviceSpecification:
+                            id: CFS_STB
+                          serviceCharacteristic:
+                            - { name: id, value: "STB12345" }
+                      - id: "5"
+                        action: modify
+                        state: failed
+                        completionDate: 2025-09-12T12:05:07Z
+                        error: { code: "9999", detail: "STB removal failed" }
+                        service:
+                          id: CS_STB000000004362899
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: terminated
+                          serviceSpecification:
+                            id: CFS_STB
+                          serviceCharacteristic:
+                            - { name: id, value: "STB67890" }
+                tv2_cancellation_query:
+                  summary: TV2 cancellation – successful
+                  value:
+                    id: 93429a61f5f54ad4aec05a68d28b9999
+                    externalId: trx-1010
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T12:15:00Z
+                    completionDate: 2025-09-12T12:15:05Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T12:15:05Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000001111111
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: active
+                          serviceSpecification:
+                            id: CFS_TV
+                          serviceCharacteristic:
+                            - name: deleteProductIdList
+                              value:
+                                - { id: "21026", status: SUCCESS }
+                      - id: "4"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T12:15:05Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA00000000888888
+                          name: TV2 Play Premium
+                          serviceType: TV2
+                          state: terminated
+                          serviceSpecification:
+                            id: CFS_StreamingService
+                hbo_only_query:
+                  summary: HBO only order – successful
+                  value:
+                    id: 73429a61f5f54ad4aec05a68d28b4444
+                    externalId: trx-1011
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T12:30:00Z
+                    completionDate: 2025-09-12T12:30:06Z
+                    orderItem:
+                      - id: "1"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T12:30:06Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T11:30:15Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                            - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: add
+                        state: completed
+                        completionDate: 2025-09-12T12:30:06Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA00000000444444
+                          name: HBO Max
+                          serviceType: HBO
+                          state: active
+                          serviceSpecification:
+                            id: CFS_StreamingService
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21023" }
+                            - { name: ottCoupon, value: "h46fb-dfswh8" }
+                            - { name: externalStreamingId, value: "ecbd5061-38eb-4b9a-912abb7669dfd9c6" }
+                tvplatform_cancellation_query:
+                  summary: TVPLATFORM cancellation – successful
+                  value:
+                    id: 84429a61f5f54ad4aec05a68d28b9999
+                    externalId: trx-1012
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T12:45:00Z
+                    completionDate: 2025-09-12T12:45:05Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T12:45:05Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA00000000999999
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: terminated
+                          serviceSpecification:
+                            id: CFS_TV
+                tv2_suspend_query:
+                  summary: TV2 suspension successful
+                  value:
+                    id: a1429a61f5f54ad4aec05a68d28b5555
+                    externalId: trx-1014
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T13:10:00Z
+                    completionDate: 2025-09-12T13:10:08Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T13:10:08Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA00000000888888
+                          name: TV2 Play Premium
+                          serviceType: TV2
+                          state: suspended
+                          serviceSpecification:
+                            id: CFS_StreamingService
+                suspend_all_query:
+                  summary: All services successfully suspended
+                  value:
+                    id: b1529a61f5f54ad4aec05a68d28b6666
+                    externalId: trx-1015
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T13:20:00Z
+                    completionDate: 2025-09-12T13:20:07Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_YettelAccount }
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T13:20:07Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000001111111
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: suspended
+                          serviceSpecification: { id: CFS_TV }
+                      - id: "4"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T13:20:07Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000002222222
+                          name: HBO Max
+                          serviceType: HBO
+                          state: suspended
+                          serviceSpecification: { id: CFS_StreamingService }
+                      - id: "5"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T13:20:07Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000003333333
+                          name: RTL+
+                          serviceType: RTL
+                          state: suspended
+                          serviceSpecification: { id: CFS_StreamingService }
+                      - id: "6"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T13:20:07Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000008888888
+                          name: TV2 Play Premium
+                          serviceType: TV2
+                          state: suspended
+                          serviceSpecification: { id: CFS_StreamingService }
+                resume_all_except_rtl_query:
+                  summary: Resume all except RTL (RTL remains suspended)
+                  value:
+                    id: d4529a61f5f54ad4aec05a68d28b7777
+                    externalId: trx-1016
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T13:30:00Z
+                    completionDate: 2025-09-12T13:30:06Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_YettelAccount }
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T13:30:06Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000001111111
+                          name: TVPLATFORM
+                          serviceType: TVPLATFORM
+                          state: active
+                          serviceSpecification: { id: CFS_TV }
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21025" }
+                      - id: "4"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T13:30:06Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000002222222
+                          name: HBO Max
+                          serviceType: HBO
+                          state: active
+                          serviceSpecification: { id: CFS_StreamingService }
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21023" }
+                      - id: "5"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T13:30:06Z
+                        error: { code: "0", detail: "RTL intentionally kept suspended" }
+                        service:
+                          id: CS_CMA000000003333333
+                          name: RTL+
+                          serviceType: RTL
+                          state: active
+                          serviceSpecification: { id: CFS_StreamingService }
+                          serviceCharacteristic:
+                            - { name: coreProductId, value: "21022" }
+                change_uuid_query:
+                  summary: Successful change UUID
+                  value:
+                    id: 7aa29a61f5f54ad4aec05a68d28b9999
+                    externalId: trx-1017
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T14:00:00Z
+                    completionDate: 2025-09-12T14:00:02Z
+                    orderItem:
+                      - id: "1"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T14:00:02Z
+                        error:
+                          code: "0"
+                          detail: "UUID changed successfully"
+                        service:
+                          id: CS_CYA000000009999999
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification:
+                            id: CFS_YettelAccount
+                          serviceCharacteristic:
+                            - name: tvId
+                              value:
+                                oldValue: "uuid"
+                                newValue: "new-uuid"
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                          - { name: msisdn, value: "36201111111" }
+                resend_hbo_coupon_query:
+                  summary: Successful HBO ottCoupon resend
+                  value:
+                    id: 43429a61f5f54ad4aec05a68d28b1350
+                    externalId: trx-2010
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T12:01:00Z
+                    completionDate: 2025-09-12T12:01:05Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_YettelAccount }
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                            - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T12:01:05Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA000000002222222
+                          name: HBO Max
+                          serviceType: HBO
+                          state: active
+                          serviceSpecification: { id: CFS_StreamingService }
+                          serviceCharacteristic:
+                            - name: ottCoupon
+                              value:
+                                oldValue: "h46fb-dfswh8"
+                                newValue: "h46fb-dfswh8"
+                swap_rtl_coupon_query:
+                  summary: Successful RTL ottCoupon swap
+                  value:
+                    id: 43429a61f5f54ad4aec05a68d28b1351
+                    externalId: trx-2011
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T12:05:00Z
+                    completionDate: 2025-09-12T12:05:07Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_YettelAccount }
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: noChange
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                            - { name: msisdn, value: "36201111111" }
+                      - id: "3"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T12:05:07Z
+                        error: { code: "0", detail: "Success" }
+                        service:
+                          id: CS_CMA00000000333333
+                          name: RTL+
+                          serviceType: RTL
+                          state: active
+                          serviceSpecification: { id: CFS_StreamingService }
+                          serviceCharacteristic:
+                            - name: ottCoupon
+                              value:
+                                oldValue: "et34trwerew"
+                                newValue: "jjk4o3lo8f3"
+                change_msisdn_query:
+                  summary: Successful change msisdn
+                  value:
+                    id: 43429a61f5f54ad4aec05a68d28b1350
+                    externalId: trx-2012
+                    category: tv
+                    state: completed
+                    orderDate: 2025-09-12T11:40:04Z
+                    completionDate: 2025-09-12T11:40:10Z
+                    orderItem:
+                      - id: "1"
+                        action: noChange
+                        service:
+                          id: CS_CYA000000002169126
+                          name: Customer account
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_YettelAccount }
+                          serviceCharacteristic:
+                            - { name: tvId, value: "uuid" }
+                      - id: "2"
+                        action: modify
+                        state: completed
+                        completionDate: 2025-09-12T11:40:10Z
+                        error: { code: "0", detail: Success }
+                        service:
+                          id: CS_CPN0000000063723837
+                          name: Customer phone number
+                          serviceType: ACCOUNT
+                          state: active
+                          serviceSpecification: { id: CFS_PhoneNumber }
+                          serviceCharacteristic:
+                            - name: msisdn
+                              value:
+                                oldValue: "36201111111"
+                                newValue: "36209999999"
+
+        '400':
+          description: Bad Request – Invalid input, path or headers
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Authentication Failed – Authorization header missing or invalid
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '404':
+          description: Not found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '405': 
+          description: Method Not Allowed
+          headers:
+            allow:
+              description: (mandatory) Allowed HTTP methods for this endpoint
+              required: true
+              schema:
+                type: string
+                example: "POST, GET"
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+
+        '500':
+          description: Internal Error - retriable
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: Service Unavailable
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+
+components:
+  headers:
+    Location:
+      description: (mandatory) The relative path of the newly created order request item
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+        example: "/serviceOrder/43429a61f5f54ad4aec05a68d28b1350"
+    Accept:
+      description: (mandatory) Supported media types
+      required: true
+      schema:
+        type: string
+        enum: [application/json]
+        example: "application/json"
+    Msg_ctx_src:
+      description: (mandatory) Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9-_.]+$'
+        maxLength: 64
+        example: "LIGW"
+    Msg_ctx_src_module:
+      description: (optional) Name of the source system’s module which sent the message. Fill only if suitable
+      required: false
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9-_.]+$'
+        maxLength: 64
+        example: null
+    Msg_ctx_env:
+      description: (mandatory) Identifier of the environment. If the environment is production, use the value 'prod'. Otherwise, use the proper string value which describes the environment (uat|uat8|uat13|uat15|test|tst1|tst2|dev|demo)
+      required: true
+      schema:
+        type: string
+        pattern: '^(prod|uat|uat8|uat13|uat15|test|tst1|tst2|dev|demo)$'
+        example: "prod"
+    Msg_ctx_id:
+      description: (mandatory) In case of regular responses, this field must contain the ID of the message, which to it answers. Messaging infrastructure permits the usage of multiple answers for the same request. The specific service / interface definitions should mark if this capability is used by the actual implementation
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      description: (optional) It represents the sender application’s build version
+      required: false
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9-_.]+$'
+        maxLength: 16
+        example: "3.1.0"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9-_.]+$'
+        example: "SOMA"
+    Msg_ctx_src_module:
+      name: msg-ctx-src-module
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      in: header
+      required: false
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9-_.]+$'
+        maxLength: 64
+        example: "SOMA_1.1"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'prod'. Otherwise, use the proper string value which describes the environment (uat|uat8|uat13|uat15|test|tst1|tst2|dev|demo)
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: '^(prod|uat|uat8|uat13|uat15|test|tst1|tst2|dev|demo)$'
+        example: "prod"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      name: msg-ctx-build-number
+      description: It represents the sender application’s build version
+      in: header
+      required: false
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9-_.]+$'
+        maxLength: 16
+        example: "release_20250516"
+    Msg_ctx_user_id:
+      name: msg-ctx-user-id
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9-_.]+$'
+        example: "oper"
+  schemas:
+    BaseOrder:
+      type: object
+      properties:
+        externalId:
+          type: string
+          description: Client-provided transaction identifier
+        category:
+          type: string
+          description: Optional high-level category of the service (e.g., tv)
+        description:
+          type: string
+          description: Optional description of the operation
+    BaseOrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Client-supplied line id
+        action:
+          type: string
+          description: Action to be performed on the item
+          enum: [add, modify, noChange]
+    BaseService:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the service, service Inventory ID (e.g., CS_CYA000000002169126)
+        serviceSpecification:
+          type: object
+          description: Service specification reference
+          required: [ id ]
+          properties:
+            id:
+              type: string
+              description: CFS specification id (e.g., CFS_YettelAccount, CFS_TV, CFS_StreamingService, CFS_PhoneNumber, CFS_STB)
+        name:
+          type: string
+          description: Human-friendly service name (e.g., "TVPLATFORM", "HBO Max")
+        serviceType:
+          type: string
+          description: Provider id or ACCOUNT in case of the yettel account
+          enum: [HBO, RTL, TV2, ACCOUNT, TVPLATFORM]
+        state:
+          type: string
+          enum: [ active, suspended, terminated ]
+    OrderRequest:
+      required: [externalId, orderItem]
+      allOf:
+      - $ref: '#/components/schemas/BaseOrder'
+      - type: object
+        properties:
+          notificationEndPoint:
+            type: string
+            format: uri
+            description: Callback URL for async responses
+          orderItem:
+            type: array
+            description: A list of service order items to be processed by this operation
+            minItems: 1
+            items:
+              required: [id, action, service]
+              allOf:
+              - $ref: '#/components/schemas/BaseOrderItem'
+              - type: object
+                properties:
+                  service:
+                    description: The service to be acted on by the order item
+                    required: [id, serviceType, href]
+                    allOf:
+                    - $ref: '#/components/schemas/BaseService'
+                    - type: object
+                      properties:
+                        href:
+                          type: string
+                          format: uri
+                          description: Service Inventory href
+                          example: https://host/ngsf/si/serviceInventoryManagement/service/CS_CYA000000002169126
+                        serviceCharacteristic:
+                          type: array
+                          items:
+                            type: object
+                            required: [name, value]
+                            properties:
+                              name:
+                                type: string
+                                description: |
+                                  Name of the characteristic.
+                                  Known names include:
+                                    - msisdn (string)
+                                    - coreProductId (string)
+                                    - tvId (string)
+                                    - productIdList (array of string in request; array of objects with status in callback/get)
+                                    - addProductIdList (only modify, array of string in request; array of objects with status in callback/get)
+                                    - deleteProductIdList (only modify, array of string in request; array of objects with status in callback/get)
+                                    - ottCoupon (string)
+                                    - externalStreamingId (string)
+                              value:
+                                description: Flexible value holder (scalar/object/array)
+                                oneOf:
+                                  - type: string
+                                  - type: number
+                                  - type: integer
+                                  - type: boolean
+                                  - type: array
+                                    items:
+                                      oneOf:
+                                        - type: string
+                                        - $ref: '#/components/schemas/SwapProductDetail'
+                                  - $ref: '#/components/schemas/SwapProductDetail'
+                                  - type: object
+                                    additionalProperties: true
+                              
+    OrderQuery:
+      required: [id,externalId, orderItem]
+      allOf:
+      - $ref: '#/components/schemas/BaseOrder'
+      - type: object
+        properties:
+          id:
+            type: string
+            description: Order id on gw side
+            maxLength: 40
+            example: 43429a61f5f54ad4aec05a68d28b1350
+          href:
+            description: (mandatory) The relative path of the newly created order request item
+            type: string
+            maxLength: 64
+            example: "/serviceOrder/43429a61f5f54ad4aec05a68d28b1350" 
+          state:
+            type: string
+            description: Possible values for the state of the order
+            enum: [acknowledged, inProgress, rejected, cancelled, completed, failed, partial]
+          completionDate:
+            type: string
+            format: date-time
+            description: Effective delivery date amended by the provider
+          orderDate:
+            type: string
+            format: date-time
+          requestDate:
+            type: string
+            format: date-time
+          orderItem:
+            type: array
+            description: A list of service order items to be processed by this operation
+            minItems: 1
+            items:
+              required: [id, action, service]
+              allOf:
+              - $ref: '#/components/schemas/BaseOrderItem'
+              - type: object
+                properties:
+                  state:
+                    type: string
+                    description: Possible values for the state of the order
+                    enum: [acknowledged, inProgress, rejected, cancelled, completed, failed, partial]
+                  completionDate:
+                    type: string
+                    format: date-time
+                    description: Effective delivery date
+                  error:
+                    type: object
+                    required: [code]
+                    properties:
+                      code:
+                        description: Custom application error code for localization and troubleshooting
+                        type: string
+                        example: "9999"
+                      detail:
+                        description: A detailed human-readable explanation of the issue
+                        type: string
+                  service:
+                    description: The service to be acted on by the order item
+                    required: [id, serviceType]
+                    allOf:
+                    - $ref: '#/components/schemas/BaseService'
+                    - type: object
+                      properties:
+                        serviceCharacteristic:
+                          type: array
+                          items:
+                            type: object
+                            required: [name, value]
+                            properties:
+                              name:
+                                type: string
+                                description: |
+                                  Name of the characteristic.
+                                  Known names include:
+                                    - msisdn (string)
+                                    - coreProductId (string)
+                                    - tvId (string)
+                                    - productIdList (array of string in request; array of objects with status in callback/get)
+                                    - addProductIdList (only modify, array of string in request; array of objects with status in callback/get)
+                                    - deleteProductIdList (only modify, array of string in request; array of objects with status in callback/get)
+                                    - ottCoupon (string)
+                                    - externalStreamingId (string)
+                              value:
+                                description: Flexible value holder (scalar/object/array)
+                                oneOf:
+                                  - type: string
+                                  - type: number
+                                  - type: integer
+                                  - type: boolean
+                                  - type: array
+                                    items:
+                                      oneOf:
+                                        - type: string
+                                        - $ref: '#/components/schemas/CharacteristicResult'
+                                        - $ref: '#/components/schemas/SwapProductDetail'
+                                        - $ref: '#/components/schemas/SwapProductResult'
+                                  - $ref: '#/components/schemas/SwapProductResult'
+                                  - type: object
+                                    additionalProperties: true
+    
+    # Request: swap detail
+    SwapProductDetail:
+      type: object
+      required: [oldValue, newValue]
+      properties:
+        oldValue:
+          type: string
+          description: Old product ID
+          example: "21022"
+        newValue:
+          type: string
+          description: New product ID
+          example: "21025"
+
+    # callback/get: swap with status
+    SwapProductResult:
+      allOf:
+        - $ref: '#/components/schemas/SwapProductDetail'
+        - type: object
+          properties:
+            status:
+              type: string
+              enum: [SUCCESS, FAILED, IN_PROGRESS]
+              description: Execution result of the swap
+
+    # callback/get: generic init/add/modify element with status
+    CharacteristicResult:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          description: Identifier of the element (productId)
+        status:
+          type: string
+          enum: [SUCCESS, FAILED, IN_PROGRESS]
+          description: Execution result of this element
+
+    Problem:
+      description: Detailed result for server-side errors
+      type: object
+      required:
+        - title
+        - status
+        - code
+      properties:
+        type:
+          description: A URI identifying the type of the problem (e.g., resource-not-found); defaults to "about:blank"
+          type: string
+          format: uri
+          example: "https://example.com/problems/resource-not-found"
+          default: "about:blank"
+        title:
+          description: A short, human-readable summary of the problem type
+          type: string
+          example: "Internal server error"
+        status:
+          description: HTTP status code
+          type: number
+          example: 500
+        detail:
+          description: A detailed human-readable explanation of the issue
+          type: string
+        instance:
+          description: URI of the problematic resource or endpoint
+          type: string
+          format: uri
+          example: "/serviceOrder/12345"
+        code:
+          description: Custom application error code for localization and troubleshooting
+          type: string
+          example: "1004"
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic

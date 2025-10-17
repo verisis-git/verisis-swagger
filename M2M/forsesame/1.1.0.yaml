@@ -1,0 +1,164 @@
+openapi: '3.0.0'
+info:
+  title: M2M Portal interfaces exposed to Sesame
+  version: '1.1.0'
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/aweimann/M2M_Portal/1.1.0
+  - url: https://be.m2m.pgsm.hu/
+paths:
+  /m2m/v1/job/{trxId}/start:
+    post:
+      tags:
+        - Job operations
+      summary: Start job
+      parameters:
+        - name: trxId
+          in: path
+          required: true
+          description: Sesame trxId
+          schema:
+            type: integer
+            minimum: 1
+            example: 400132514
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      responses:
+        '204':
+          description: OK. (Success, but no response content)
+        '400':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid request data
+          description: Bad request
+        '404':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponse'
+              example: 
+                errorCode: 404
+                errorDescription: Transaction not found
+          description: Object not found
+        '500':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Database error 
+          description: Internal server error
+        '503':
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponseWithDatetime'
+              example: 
+                errorCode: 2002
+                errorDescription: Service temporarily unavailable
+                retryTimeAbs: "2022-12-19T16:39:57-08:00"
+          description: |
+            Service temporarily unavailable
+            
+            There are some specific errorcodes:
+            * 2001 - Retry immediately
+            * 2002 - Retry this job later
+            * 2003 - Service is unavailable for a while
+            
+            *__retryTimeAbs__* and *__retryTimeRel__* parameters are optional in case of error code *__2002__* and *__2003__*
+components:
+  parameters:
+    msgcntx_src:
+      name: msgcntx_src
+      description: 'Name of the source system, the sender party of the message. This is the ApplicationID'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_srcmodule:
+      name: msgcntx_srcmodule
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_env:
+      name: msgcntx_env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+    msgcntx_id:
+      name: msgcntx_id
+      description: UUID of the message like 'f257ba6675cf4921affa5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_corelid:
+      name: msgcntx_corelid
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_userid:
+      name: msgcntx_userid
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+  schemas:
+    errorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: number
+          minimum: 0
+          description: Error code
+        errorDescription:
+          type: string
+          minLength: 0
+          maxLength: 64
+          description: Error description
+    errorResponseWithDatetime:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/errorResponse'
+        - oneOf:
+          - type: object
+            properties:
+              retryTimeAbs:
+                type: string
+                description: The date and time when the retry can run
+                format: date-time
+          - type: object
+            properties:
+              retryTimeRel:
+                type: integer
+                description: Retry delay in sec
+                format: int32

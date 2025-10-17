@@ -1,0 +1,781 @@
+openapi: 3.0.0
+servers:
+  - url: https://{host_url}/xtvgw/user
+info:
+  description: xTV GW User API
+  version: "1.0-merged"
+  title: xTV GW User API
+tags:
+  - name: XtvGw
+paths:
+  /v1/users/{user_uuid}:
+    get:
+      tags:
+        - XtvGw
+      summary: Checks if user_uuid exists in the XTV GW system.
+      description: |
+        There is a result if the service status of the user specified by user_uuid is pre-active or active. In these cases the user exists in the GW. IThe response can be 404 not found if XTV GW does not know the user. It means all xtv services have been deleted or a previously sales process has been cancelled.
+ 
+        This operation is independently of the provider id.
+      operationId: duplicitycheck
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #path
+        - $ref: '#/components/parameters/user_uuid_path'
+      responses:
+        '200':
+          description: User found
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oUser'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+  
+  /v1/reservations:
+    post:
+      tags:
+        - XtvGw
+      summary: Makes a reservation by creating a new XTV GW user
+      description: The user represented by user_uuid will be added to the XTV GW users. The body parameters will also be stored, but the system does not use msisdn and data. These parameters will be sent back in the duplicityCheck response. The data will be available till the user is pre-active. The activate clears it.
+      operationId: reserve
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/oCreate_user'
+        description: User to add
+      responses:
+        '201':
+          description: User created
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oUser'
+        '400':
+          $ref: '#/components/responses/400'
+        '409':
+          $ref: '#/components/responses/409'
+        '500':
+          $ref: '#/components/responses/500'
+  /v1/reservations/{user_uuid}:
+    delete:
+      tags:
+        - XtvGw
+      summary: Clear reservation
+      operationId: clear
+      description: Removes the user_uuid from the XTV GW users. It is allowed if the user has no active XTV service.
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        #path
+        - $ref: '#/components/parameters/user_uuid_path'
+      responses:
+        '204':
+          description: Success delete
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+
+  /v1/user-transactions:
+    get:
+      summary: Get transactions of a user
+      operationId: listtrx
+      tags:
+        - XtvGw
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # query
+        - $ref: '#/components/parameters/user_msisdn'
+        - $ref: '#/components/parameters/user_uuid'
+        - $ref: '#/components/parameters/from_date'
+        - $ref: '#/components/parameters/to_date'
+        - $ref: '#/components/parameters/result'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/count'
+        
+      responses:
+        '200':
+          description: Result found
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+            Count-Reached:
+              description: True if the number of result element equals to count query parameter
+              schema:
+                type: boolean
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/oUser_with_trx'
+                    
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+
+          
+  /v1/users/{user_uuid}/providers/{provider_id}/resend-code:
+    post:
+      summary: Resend the voucher/coupon code
+      tags:
+        - XtvGw
+      operationId: resend
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/user_uuid_path'
+        - $ref: '#/components/parameters/provider_id'
+      
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+          
+  /v1/users/{user_uuid}/providers/{provider_id}/swap-code:
+    post:
+      summary: "Swap the voucher/coupon: revoke the existing and generate a new one"
+      tags:
+        - XtvGw
+      operationId: swap
+      parameters:
+        # header
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+        # path
+        - $ref: '#/components/parameters/user_uuid_path'
+        - $ref: '#/components/parameters/provider_id'
+      
+      responses:
+        '204':
+          description: Success
+          headers:
+            Msg-Ctx-Rrid:
+              description: This must contain the id from the request
+              schema:
+                $ref: '#/components/schemas/sMsgcntx_rrid'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+
+
+components:
+  responses:
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oError_response'
+          example: 
+            error_code: 400
+            error_description: Invalid input
+    '404':
+      description: User not found
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oError_response'
+          example: 
+            error_code: 404
+            error_description: Data not found
+    '405':
+      description: Method not allowed
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oError_response'
+          example: 
+            error_code: 405
+            error_description: Delete operation not allowed
+    '409':
+      description: User already exists
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oError_response'
+          example: 
+            error_code: 409
+            error_description: User already exists
+    '500':
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oError_response'
+          example: 
+            error_code: 500
+            error_description: Internal server error
+      description: Internal server error
+  parameters:
+    msgcntx_src:
+      name: Msg-Ctx-Src
+      description: 'Name of the source system, the sender party of the message (e.g ApplicationId)'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+      example: MIRA
+    msgcntx_srcmodule:
+      name: Msg-Ctx-Src-Module
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+      example: mira_xtv
+    msgcntx_env:
+      name: Msg-Ctx-Env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+      example: UAT15
+    msgcntx_id:
+      name: Msg-Ctx-Id
+      description: UUID of the message like 'f257ba6675cf4921affa5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+      example: f257ba6675cf4921affa5fb06f5ca20e
+    msgcntx_corelid:
+      name: Msg-Ctx-Corr-Id
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+      example: 23asf33JOISA-sad4329
+    msgcntx_userid:
+      name: Msg-Ctx-User-Id
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+      example: teszt.elek
+    user_uuid_path:
+      in: path
+      name: user_uuid
+      description: Uuid of the user account
+      required: true
+      schema:
+        $ref: '#/components/schemas/sUser_uuid'
+      example: 9d16b45c-cb38-4187-a13e-75995dfc0e98
+    user_uuid:
+      in: query
+      name: uuid
+      description: Uuid of the user account (either uuid or msisdn is required)
+      schema:
+        $ref: '#/components/schemas/sUser_uuid'
+      example: 9d16b45c-cb38-4187-a13e-75995dfc0e98
+    user_msisdn:
+      in: query
+      name: msisdn
+      description: MSISDN of the user (either uuid or msisdn is required)
+      schema:
+        $ref: '#/components/schemas/sMsisdn'
+      example: 36201234567
+    from_date:
+      in: query
+      name: from-date
+      description: Start date of the query
+      schema:
+        $ref: '#/components/schemas/date'
+    to_date:
+      in: query
+      name: end-date
+      description: End date of the query
+      schema:
+        $ref: '#/components/schemas/date'
+    result:
+      in: query
+      name: result
+      description: Result of the transaction
+      schema:
+        $ref: '#/components/schemas/sResult'
+      example: ALL
+    offset:
+      in: query
+      name: offset
+      description: Offset starts from 0 value which represents the first element
+      schema:
+        type: integer
+      example: 0
+    count:
+      in: query
+      name: count
+      description: Page size
+      schema:
+        type: integer
+      example: 50
+    provider_id:
+      in: path
+      name: provider_id
+      required: true
+      description: >
+       * `TV2` - TV2 Play Premium
+       
+       * `RTL` - RTL+ Active
+       
+       * `HBO` - HBO Max
+      schema:
+        type: string
+        enum: [TV2,RTL,HBO]
+
+  schemas:
+    date:
+      type: string
+      format: date
+      example: '2022-10-29'
+    timestamp:
+      type: string
+      format: date-time
+      example: '2022-10-29T09:12:33.001Z'
+    sMsgcntx_rrid:
+      type: string
+      minLength: 1
+      maxLength: 40
+      example: 23asf33JOISA-sad4329
+    sUser_uuid:
+      type: string
+      maxLength: 64
+      example: d290f1ee-6c54-4b01-90e6-d701748f0851
+    oUser:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/oCreate_user'
+        - type: object
+          properties:
+            reservation_ts:
+              type: string
+              format: date-time
+              example: '2022-10-29T09:12:33.001Z'
+    oCreate_user:
+      type: object
+      properties:
+        user_uuid:
+          $ref: '#/components/schemas/sUser_uuid'
+        msisdn:
+          type: string
+          example: 36201234567
+        data:
+          type: string
+          example: 'salesman:S1;dealer:D2;élet_értelme:42'
+    sResult:
+      type: string
+      enum:
+        - ALL
+        - SUCCESS
+        - FAILED
+    oUserExtended:
+      type: object
+      description: XTV related data of user. Each parameter can be empty
+      properties:
+        user_uuid:
+          $ref: '#/components/schemas/sUser_uuid'
+        msisdn:
+          $ref: '#/components/schemas/sMsisdn'
+        preactivation_ts:
+          $ref: '#/components/schemas/timestamp'
+        kaltura_user_id:
+          type: string
+          maxLength: 64
+          example: 9d16b45c-cb38-4187-a13e-75995dfc0e98
+        kaltura_ts_create:
+          $ref: '#/components/schemas/timestamp'
+        kaltura_ts_delete:
+          $ref: '#/components/schemas/timestamp'
+        kaltura_status:
+          $ref: '#/components/schemas/sUser_status'
+        providers:
+          type: array
+          items:
+              properties:
+                provider_id:
+                  type: string
+                  enum: [HBO,RTL,TV2]
+                code:
+                  type: string
+                  maxLength: 64
+                  example: gsk8sdwisd87
+                customer_id:
+                  type: string
+                  maxLength: 64
+                  example: 212021234
+                ts_create:
+                  $ref: '#/components/schemas/timestamp'
+                ts_delete:
+                  $ref: '#/components/schemas/timestamp'
+                ts_register:
+                  $ref: '#/components/schemas/timestamp'
+                ts_commit:
+                  $ref: '#/components/schemas/timestamp'
+                status:
+                  $ref: '#/components/schemas/sUser_status'
+    oUser_with_trx:
+      type: object
+      description: XTV related data of user with transactions. 
+      allOf:
+        - $ref: '#/components/schemas/oUserExtended'
+        - type: object
+          properties:
+            transactions:
+              $ref: '#/components/schemas/aTransactions'
+    sUser_status:
+      type: string
+      enum:
+        - NEW
+        - ACTIVE
+        - SUSPENDED
+        - DELETED
+      example: ACTIVE
+    sMsisdn:
+      type: string
+      maxLength: 16
+      example: 36201234567
+    aTransactions:
+     type: array
+     items:
+      $ref: '#/components/schemas/oTransaction'
+    oTransaction:
+      type: object
+      required:
+        - xtvgw_id
+        - request_type
+        - request_ts
+        - trx_ts_start
+        - trx_ts_close
+      properties:
+        external_id:
+          type: string
+          maxLength: 64
+          example: 23asf33JOISA-sad4329
+        xtvgw_id:
+          type: number
+          format: int64
+          example: 400321213
+        source:
+          type: string
+          description: Source system can be NC, MIRA, TSSM
+          maxLength: 64
+          example: NC
+        provider_id:
+          type: string
+          enum: [KALTURA,TV2,RTL,HBO,XGW]
+          description: >
+             * `KALTURA` - Base xtv package
+             
+             * `TV2` - TV2 Play Premium
+             
+             * `RTL` - RTL+ Active
+             
+             * `HBO` - HBO Max
+             
+             * `XGW` - can be used in case of changeCtn and changeUuid
+        request_type:
+          type: string
+          description: |
+            Kaltura request types: create_user, delete_user, modify_user, restore_user, suspend_user, update_uuid, update_msisdn
+          
+            TV2 request types: create_user, validate_user, delete_user, restore_user, suspend_user, resend_voucher, swap_voucher
+            
+            RTL request types: create_user, delete_user, resume_user, suspend_user, resend_coupon, swap_coupon
+            
+            HBO request types: create_user, validate_user, delete_user, resume_user, suspend_user, resend_reg_code, swap_reg_code
+          
+          enum: [create_user,delete_user,modify_user,restore_user,suspend_user,update_uuid,update_msisdn,resend_voucher,swap_voucher,resend_coupon,swap_coupon,resend_reg_code,swap_reg_code,validate_user]
+        request_ts:
+          $ref: '#/components/schemas/timestamp'
+        trx_ts_start:
+          $ref: '#/components/schemas/timestamp'
+        trx_ts_close:
+          $ref: '#/components/schemas/timestamp'
+        user_uuid:
+          $ref: '#/components/schemas/sUser_uuid'
+        msisdn:
+          $ref: '#/components/schemas/sMsisdn'
+        error_code:
+          type: number
+          example: 0
+        error_description:
+          type: string
+          maxLength: 64
+          example: Success transaction
+        email:
+          type: string
+          format: email
+          example: user@mail.hu
+        request_related_data:
+          type: array
+          items:
+            $ref: '#/components/schemas/oRequest_data'
+        workflow_history:
+          type: array
+          items:
+            properties:
+              step_type:
+                type: string
+                description: |
+                  General steps: Send request, Create transaction, Close transaction, Send SMS, Send email, Update SOC parameters
+                  
+                  Kaltura steps: Register customer, Add core product, Add product, Add set-top-box, Delete set-top-box, Delete user, Swap core product, Swap product, Delete product, Delete user pin, Delete set-top-box pin, Suspend user, Update user
+                  
+                  RTL steps: Generate coupon, RTL revoke coupon
+                  
+                  TV2 steps: Generate voucher, Suspend voucher, Revoke voucher, Restore voucher, TV2 register user
+                  
+                  HBO steps: HBO register user
+              request_ts:
+                $ref: '#/components/schemas/timestamp'
+              result:
+                type: string
+                description: Result of the communication (SUCCESS, FAILED)
+                example: SUCCESS
+      example: {"external_id":"23asf33JOISA-sad4329","xtvgw_id":400321213,"source":"NC","provider_id":"KALTURA","request_type":"create_user","request_ts":"2022-11-23T17:09:04.001Z","trx_ts_start":"2022-11-23T17:09:04.111Z","trx_ts_close":"2022-11-23T17:09:14.001Z","user_uuid":"d290f1ee-6c54-4b01-90e6-d701748f0851","msisdn":"36201234567","error_code":1021,"error_description":"Get email address failed","email":"","request_related_data":[{"add_core_product":{"id":"34206","status":"SUCCESS"},"add_products":[{"id":"34210","status":"SUCCESS"},{"id":"34211","status":"SUCCESS"}],"add_settopboxes":[{"id":"1001:1a1b:1234:cd00:10a4:8824:eb05:abc","status":"SUCCESS"},{"id":"1002:1a1b:1234:cd00:10a4:8824:eb05:abc","status":"SUCCESS"}]}],"workflow_history":[{"step_type":"Send request","request_ts":"2022-11-23 17:09:04.001Z","result":"SUCCESS"},{"step_type":"Create transaction","request_ts":"2022-11-23 17:09:04.111Z","result":"SUCCESS"},{"step_type":"Register customer","request_ts":"2022-11-23 17:09:05.001Z","result":"SUCCESS"},{"step_type":"Add core product","request_ts":"2022-11-23 17:09:07.001Z","result":"SUCCESS"},{"step_type":"Add product","request_ts":"2022-11-23 17:09:08.001Z","result":"SUCCESS"},{"step_type":"Add set-top-box","request_ts":"2022-11-23 17:09:11.001Z","result":"SUCCESS"},{"step_type":"Send SMS","request_ts":"2022-11-23 17:09:13.001Z","result":"SUCCESS"},{"step_type":"Close transaction","request_ts":"2022-11-23 17:09:14.001Z","result":"SUCCESS"}]}
+    eStatus:
+      type: string
+      enum: [SUCCESS,FAILED]
+    oRequest_data:
+      type: object
+      anyOf:
+        - type: object
+          properties:
+            add_core_product:
+              $ref: '#/components/schemas/oAdd_core_product'
+        - type: object
+          properties:
+            add_products:
+              $ref: '#/components/schemas/aAdd_products'
+        - type: object
+          properties:
+            add_settopboxes:
+              $ref: '#/components/schemas/aAdd_STBs'
+        - type: object
+          properties:
+            swap_core_product:
+              $ref: '#/components/schemas/oSwap_core_product'
+        - type: object
+          properties:
+            swap_products:
+              $ref: '#/components/schemas/oSwap_products'
+        - type: object
+          properties:
+            del_core_product:
+              $ref: '#/components/schemas/oDel_core_product'
+        - type: object
+          properties:
+            del_products:
+              $ref: '#/components/schemas/oDel_products'
+        - type: object
+          properties:
+            del_settopboxes:
+              $ref: '#/components/schemas/aDel_STBs'
+        - type: object
+          properties:
+            change_uuid:
+              $ref: '#/components/schemas/oChange_uuid'
+        - type: object
+          properties:
+            change_msisdn:
+              $ref: '#/components/schemas/oChange_msisdn'
+        
+    oAdd_core_product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 21321
+        status:
+          $ref: '#/components/schemas/eStatus'
+    aAdd_products:
+      type: array
+      items:
+        properties:
+          id:
+            type: string
+            example: 21321
+          status:
+            $ref: '#/components/schemas/eStatus'
+    aAdd_STBs:
+      type: array
+      items:
+        properties:
+          id:
+            type: string
+            format: mac_address
+            description: MAC address
+            example: 1002:1a1b:1234:cd00:10a4:8824:eb05:abc
+          status:
+            $ref: '#/components/schemas/eStatus'
+    oSwap_core_product:
+      type: object
+      properties:
+        old_id:
+          type: string
+          example: 21321
+        new_id:
+          type: string
+          example: 21322
+        status:
+          $ref: '#/components/schemas/eStatus'
+    oSwap_products:
+      type: array
+      items:
+        properties:
+          old_id:
+            type: string
+            example: 21321
+          new_id:
+            type: string
+            example: 21322
+          status:
+            $ref: '#/components/schemas/eStatus'
+    oDel_core_product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 21321
+        status:
+          $ref: '#/components/schemas/eStatus'
+    oDel_products:
+      type: array
+      items:
+        properties:
+          id:
+            type: string
+            example: 21321
+          status:
+            $ref: '#/components/schemas/eStatus'
+    aDel_STBs:
+      type: array
+      items:
+        properties:
+          id:
+            type: string
+            description: MAC address
+            example: 1002:1a1b:1234:cd00:10a4:8824:eb05:abc
+          status:
+            $ref: '#/components/schemas/eStatus'
+    oChange_uuid:
+      type: object
+      properties:
+        old_uuid:
+          type: string
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        new_uuid:
+          type: string
+          example: fe6e1045-0f54-4d5b-9935-921012616301
+    oChange_msisdn:
+      type: object
+      properties:
+        old_msisdn:
+          type: string
+          example: 36201234567
+        new_msisdn:
+          type: string
+          example: 36209876543
+    oError_response:
+      type: object
+      properties:
+          error_code:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          error_description:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error

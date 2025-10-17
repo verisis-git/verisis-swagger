@@ -9,54 +9,224 @@
           "display": "LIGW",
           "versions": [
             { "v": "2.1.0", "path": "LIGW/ligw_2.1.0.yaml" },
-            { "v": "1.3.0", "path": "LIGW/ligw_1.1.0.yaml" }
+            { "v": "1.1.0", "path": "LIGW/ligw_1.1.0.yaml" }
           ]
         }
       ]
     },
     {
-      "key": "MVapp",
-      "display": "MVapp",
+      "key": "Telekom_Mobilvasarlas",
+      "display": "Telekom Mobilvásárlás",
       "apis": [
         {
           "key": "default",
-          "display": "MVapp",
+          "display": "Telekom_Mobilvasarlas",
           "versions": [
-            { "v": "1.0.0", "path": "MVapp/mvapp_1.0.0.yaml" }
+            { "v": "2.2.0", "path": "MVapp/mvapp_2.2.0.yaml" }
           ]
         }
       ]
     },
     {
-      "key": "xtvgw",
+      "key": "sepy",
+      "display": "Sepy",
+      "apis": [
+        {
+          "key": "sepy",
+          "display": "Sepy API",
+          "versions": [
+            { "v": "1.2.0", "path": "Sepy/sepy/sepy_1.2.0.yaml" },
+            { "v": "1.1.0", "path": "Sepy/sepy/sepy_1.1.0.yaml" }
+          ]
+        },
+        {
+          "key": "callback",
+          "display": "Callback",
+          "versions": [
+            { "v": "0.9", "path": "Sepy/callback/cb_0.9.yaml" }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "VASBE",
+      "display": "VAS backend",
+      "apis": [
+        {
+          "key": "VASBE",
+          "display": "VAS backend API",
+          "versions": [
+            { "v": "1.0.0", "path": "VASBE/vasp/1.0.0.yaml" }
+          ]
+        },
+        {
+          "key": "kafka",
+          "display": "Kafka",
+          "versions": [
+            { "v": "1.0.0", "path": "VASBE/kafka/1.0.0.yaml" }
+          ]
+        },
+        {
+          "key": "ivr_ussd",
+          "display": "IVR/USSD",
+          "versions": [
+            { "v": "1.0.0", "path": "VASBE/ivr_ussd/1.0.0.yaml" }
+          ]
+        },
+		{
+          "key": "product",
+          "display": "Product service",
+          "versions": [
+            { "v": "1.0.4", "path": "VASBE/product/1.0.4.yaml" },
+			{ "v": "1.0.3", "path": "VASBE/product/1.0.3.yaml" }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "TxBS",
+      "display": "TxBS",
+      "apis": [
+        {
+          "key": "default",
+          "display": "TxBS",
+          "versions": [
+            { "v": "3.4.0", "path": "TxBS/3.4.0.yaml" },
+			{ "v": "3.3.0", "path": "TxBS/3.3.0.yaml" },
+			{ "v": "2.2.2", "path": "TxBS/2.2.2.yaml" },
+			{ "v": "1.7.0", "path": "TxBS/1.7.0.yaml" }
+          ]
+        }
+      ]
+    },
+	{
+      "key": "Roxi",
+      "display": "Roxi",
+      "apis": [
+        {
+          "key": "default",
+          "display": "Roxi IP recovery",
+          "versions": [
+            { "v": "1.0.0", "path": "Roxi/1.0.0.yaml" }
+          ]
+        }
+      ]
+    },
+	{
+      "key": "EHT",
+      "display": "EHT",
+      "apis": [
+        {
+          "key": "default",
+          "display": "EHT reconLC",
+          "versions": [
+            { "v": "1.3.0", "path": "EHT/1.3.0.yaml" }
+          ]
+        }
+      ]
+    },
+	{
+      "key": "Sandi",
+      "display": "Sandi",
+      "apis": [
+        {
+          "key": "default",
+          "display": "Sandi Communication API",
+          "versions": [
+            { "v": "1.2.0", "path": "Sandi/1.2.0.yaml" }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "XTVGW",
       "display": "XTVGW",
       "apis": [
+        {
+          "key": "provisioning_grip",
+          "display": "Provisioning GRIP",
+          "versions": [
+            { "v": "0.1", "path": "XTVGW/grip/xtvgw_grip_api_v4.yaml" }
+          ]
+        },
         {
           "key": "userapi",
           "display": "User API",
           "versions": [
-            { "v": "2.0.0", "path": "xtvgw/userapi/2.0.0.yaml" },
-            { "v": "1.0.0", "path": "xtvgw/userapi/1.0.0.yaml" }
-          ]
-        },
-        {
-          "key": "serviceapi",
-          "display": "Service API",
-          "versions": [
-            { "v": "1.5.0", "path": "xtvgw/serviceapi/1.5.0.yaml" }
+            { "v": "1.0.0", "path": "XTVGW/userapi/1.0.0.yaml" }
           ]
         }
       ]
     },
     {
-      "key": "devins",
-      "display": "DevIns",
+      "key": "NSUS",
+      "display": "NSuS",
+      "apis": [
+        {
+          "key": "provisioning",
+          "display": "Provisioning API",
+          "versions": [
+            { "v": "1.0.0", "path": "NSuS/provisioning/1.0.0.yaml" }
+          ]
+        },
+        {
+          "key": "management",
+          "display": "Management API",
+          "versions": [
+            { "v": "1.3.0", "path": "NSuS/management/1.3.0.yaml" }
+          ]
+        }
+      ]
+    },
+	{
+      "key": "Devins",
+      "display": "Devins",
+      "apis": [
+        {
+          "key": "bandwapi",
+          "display": "Black&White API",
+          "versions": [
+            { "v": "1.3.1", "path": "Devins/internal/1.3.1.yaml" }
+          ]
+        },
+        {
+          "key": "inscompany",
+          "display": "API for insurance company",
+          "versions": [
+            { "v": "1.2.0", "path": "Devins/insurance/1.2.yaml" }
+          ]
+        }
+      ]
+    },
+	{
+      "key": "MCSIS",
+      "display": "MCSIS",
       "apis": [
         {
           "key": "default",
-          "display": "DevIns",
+          "display": "MCSIS API",
           "versions": [
-            { "v": "2024-09", "path": "devins/2024-09.yaml" }
+            { "v": "1.2.0", "path": "MCSIS/1.2.0.yaml" }
+          ]
+        }
+      ]
+    },
+	{
+      "key": "M2M",
+      "display": "M2M",
+      "apis": [
+        {
+          "key": "m2msesame",
+          "display": "API for Sesame",
+          "versions": [
+            { "v": "1.1.0", "path": "M2M/forsesame/1.1.0.yaml" }
+          ]
+        },
+        {
+          "key": "m2mportal",
+          "display": "API for M2M portal",
+          "versions": [
+            { "v": "1.1.0", "path": "M2M/form2mp/1.1.0.yaml" }
           ]
         }
       ]

@@ -1,0 +1,758 @@
+openapi: 3.0.0
+info:
+  title: Communication API
+  description: 'This logical swg is created to fulfill the Customer Communication HUB (CCHUB) requirements. This document is the final IF design for drop 2'
+  version: '1.2'
+paths:
+  /communication-message:
+    get:
+      operationId: listSentCommunicationMessages
+      summary: List of communication messages.
+      tags:
+        - communicationMessage
+      parameters:
+        - name: context
+          in: query
+          description: Message context.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 64
+        - name: int-trx-id
+          in: query
+          description: CCHub ID of the POST request.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 64
+        - name: channel
+          in: query
+          description: Message channel.
+          style: form
+          explode: false
+          schema:
+            type: string
+            enum:
+              - SMS
+              - EMAIL
+              - PUSH
+              - INBOX
+        - name: reason
+          in: query
+          description: Communication reason.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 64
+        - name: sender
+          in: query
+          description: Sender of the communication message.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Sender'
+        - name: recipient
+          in: query
+          description: The address of the communication message.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Recipient'
+        - name: app-id
+          in: query
+          description: The initiator application of the communication request.
+          style: form
+          explode: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 40
+        - name: start-date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: 'The start date, must be used together with `end_date`.'
+        - name: end-date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: 'The end date, must be used together with `start_date`.'
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+          description: The start item number for pagination.
+        - name: count
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+          description: The end initiator item number for pagination.
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      responses:
+        '200':
+          description: list of filtered communication messages
+          headers:
+            Count-Reached:
+              description: it defines that the requested number of elements in the query exceeds the response result set (true) or not (false)
+              schema:
+                type: boolean
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommunicationMessage'
+        '204':
+          description: No content
+  /communication-message/send:
+    post:
+      operationId: creates one or more new CommunicationMessage and send it
+      summary: Creates one or more 'CommunicationMessage' and send it
+      tags:
+        - communicationMessage
+      parameters:
+        - name: sync-request
+          in: header
+          schema:
+            type: boolean
+            default: false
+          description: Whether to wait for and return the result in the response.
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommunicationRequest'
+        description: The Communication Message to be created and sent
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunicationRequest'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunicationRequest'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method Not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /incoming-SMS:
+    get:
+      operationId: listIncomingCommunicationMessage
+      summary: List incoming communication (SMS)
+      tags:
+        - incomingSMS
+      parameters:
+        - name: count
+          required: true
+          in: query
+          description: Requested number of resources to be provided in response.
+          schema:
+            type: integer
+            minimum: 1
+        - name: courier_number
+          required: true
+          in: query
+          description: Futarszam.
+          schema:
+            type: string
+            pattern: '^36[0-9]{9}$'
+            example: '36201234567'
+        - name: original_request
+          in: header
+          schema:
+            type: boolean
+            default: true
+          description: It defines that the request was the first initiation with the given msgcntx_id.
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_srcmodule'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+        - $ref: '#/components/parameters/msgcntx_userid'
+      responses:
+        '200':
+          description: CCHUB provide the requested number of incoming communication items.
+          headers:
+            Count-Reached:
+              description: it defines that the requested number of elements in the query exceeds the response result set (true) or not (false)
+              schema:
+                type: boolean
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncomingSMSs'
+        '204':
+          description: No content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method Not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+servers:
+  - url: 'https://api.telenor.hu/CCHUB/communication-management/v1/'
+components:
+  parameters:
+    msgcntx_src:
+      name: msgcntx_src
+      description: 'Name of the source system, the sender party of the message. This is the ApplicationID'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_srcmodule:
+      name: msgcntx_srcmodule
+      description: 'Optional, name of the source system’s module which sent the message'
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+    msgcntx_env:
+      name: msgcntx_env
+      description: 'Identifier of the environment (e.g. UAT, PROD).'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+    msgcntx_id:
+      name: msgcntx_id
+      description: UUID of the message like 'f257ba66-75cf-4921-affa-5fb06f5ca20e'
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_corelid:
+      name: msgcntx_corelid
+      description: UUID that intends to hold a flow (or session) identifier. The flow initiator generates the id.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+    msgcntx_userid:
+      name: msgcntx_userid
+      description: Optional value of the original user that initiated the action.
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+  schemas:
+    CommunicationRequest:
+      type: object
+      description: The communication request itself.
+      properties:
+        intTrxId:
+          type: string
+          description: CCHUB created Unique identifier of the request.
+          minLength: 1
+          maxLength: 64
+        communicationMessages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommunicationMessage'
+        callResult:
+          type: integer
+          description: Resultcode indicating the success or failure of the processed communication request.
+          minimum: -4
+          maximum: 0
+          example: 0
+        callResultMessage:
+          type: string
+          description: Description of the failure result. In case of success it is empty.
+          maxLength: 1000
+    CommunicationMessage:
+      type: object
+      description: 'Communication message means a notification approach in the format of a message which can be dispatched (sent) to the certain user by the system with the content which can be felt and understood by the recipient. The user can be either a final customer or a customer service agent. The message can reach the customer in different interaction channels, including: email, short message, mobile app notification (push).'
+      properties:
+        commId:
+          type: string
+          description: CCHUB created Unique identifier of a Communication Message. In case of POST it must not be sent.
+          maxLength: 64
+          example: JKHSd85S3
+        origId:
+          type: string
+          description: identifier of the Communication Message in the sender side.
+          minLength: 1
+          maxLength: 64
+          example: mess1324
+        context:
+          type: string
+          description: The message context.
+          minLength: 1
+          maxLength: 64
+          example: CTX22
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: Reason for the communication request initiation.
+          example: campaign
+        channel:
+          type: string
+          description: |
+            Defines the delivery channel for the Communication Message.
+             1: SMS
+             2: Email
+             3: Mobile app push notification
+             4: Inbox for mobile app
+          enum:
+            - SMS
+            - EMAIL
+            - PUSH
+            - INBOX
+          example: SMS
+        subject:
+          type: string
+          description: "The title of the message. It is necessary for the email (maxLength: 78) and mobile app push (maxLength: 64)."
+          minLength: 1
+          maxLength: 78
+          example: Lejárt számlatartozás
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommunicationMessageContent'
+          example:
+          - messagePartNum: 1
+            text: 'Percenként csupán 9 Ft-ért telefonálni? Igen! MyMenu csomagunk most egy SMS-sel a tiéd lehet! A megrendeléshez küldj OK-t válaszként 3 napon belül!'
+          - messagePartNum: 2
+            text: 'A csomag egyszeri díja 225 Ft, 25 percet tartalmaz és aktiválástól számítva 7. nap éjfélig használható fel belföldön normál díjas irányba.Üdv: Telenor'
+        deliveryNoteReq:
+          type: boolean
+          description: Delivery note is required or not (channel specific).
+          example: true
+        priority:
+          type: integer
+          format: int32
+          description: The priority of the communication message. Small number means higher priority.
+          minimum: 1
+          maximum: 999
+          example: 5
+        sendTime:
+          type: string
+          format: date-time
+          description: The timestamp of the communication request initiation by the initiator application.
+          example: '2020-02-10T15:13:45.308+01:00'
+        sendTimeComplete:
+          type: string
+          format: date-time
+          description: The time moment of delivering the communication message successfully. If delivery was not successful it should be filled too.
+          example: '2020-02-10T15:14:45.308+01:00'
+        status:
+          type: string
+          description: Status of communication message
+          enum:
+            - CREATED
+            - PROCESSING
+            - DELIVERED
+            - FAILED
+            - SENT
+            - WAITING
+            - ABSORBED
+            - INVALID
+          example: DELIVERED
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        recipient:
+          $ref: '#/components/schemas/Recipient'
+        sender:
+          $ref: '#/components/schemas/Sender'
+        consents:
+          type: array
+          description: |
+            required consent IDs. Available values
+            - noSecret
+            - noSecretAddressFull
+            - noSecretAddressPart
+            - displayInDirectory
+            - informationOnPost
+            - informationOnTelco
+            - useForMarketing
+          items:
+            type: string
+            maxLength: 64
+            example: informationOnTelco
+        contexRelParams:
+          $ref: '#/components/schemas/ContextRelParams'
+        characteristic:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommunicationMessageCharacteristic'
+          example:
+          - name: language
+            value: hungarian
+          - name: param1
+            value: Béla
+    Attachment:
+      type: object
+      description: 'Complements the description of an element (for instance a product) through video, pictures...'
+      properties:
+        description:
+          type: string
+          description: A narrative text describing the content of the attachment
+          maxLength: 64
+          example: Telenor logo
+        href:
+          type: string
+          format: uri
+          maxLength: 256
+          description: Reference of the attachment
+        id:
+          type: string
+          maxLength: 64
+          description: Unique identifier of the attachment
+        mimeType:
+          type: string
+          maxLength: 128
+          description: The mime type of the document as defined in RFC 2045 and RFC 2046 specifications.
+        name:
+          type: string
+          maxLength: 32
+          description: The name of the file
+        path:
+          type: string
+          maxLength: 64
+          description: The path of the attached file
+        size:
+          type: integer
+          description: 'The size of the file (sizeUnit if present indicates the unit, otherwise kilobytes is the default).'
+        sizeUnit:
+          type: string
+          description: 'The unit size for expressing the size of the file (MB,kB...)'
+        url:
+          type: string
+          format: uri
+          maxLength: 256
+          description: 'Uniform Resource Locator, is a web page address (a subset of URI)'
+        validity:
+          $ref: '#/components/schemas/TimePeriod'
+    Recipient:
+      type: object
+      description: Receivers of the communication message. At least 1 element is mandatory to be filled.
+      properties:
+        mobileAppUserId:
+          type: string
+          maxLength: 256
+          description: ID of the mobile app user.
+        email:
+          type: string
+          format: email
+          maxLength: 256
+          description: Receiver email address.
+        ip:
+          type: string
+          pattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+          description: IP address of the receiver.
+        id:
+          type: string
+          maxLength: 40
+          description: ID of the receiver.
+        groupId:
+          type: string
+          maxLength: 64
+          description: 'Customer group service identifier. (eg.: shared data service)'
+        name:
+          type: string
+          maxLength: 128
+          description: Name of the receiver.
+        phoneNumber:
+          type: string
+          description: 'Phone number of the receiver, if the communication type is SMS.'
+          pattern: '^36[0-9]{9}$|^(?!36)[0-9]{10,20}$'
+          example: '36201234567'
+    Sender:
+      type: object
+      description: Sender of the communication message. At least 1 element is mandatory to be filled.
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 256
+          description: Sender address of email.
+        id:
+          type: string
+          maxLength: 40
+          description: ID of the sender.
+        name:
+          type: string
+          maxLength: 128
+          description: Name of the sender.
+        msisdn:
+          type: string
+          description: 'Phone number of the sender, if the communication type is SMS.'
+          pattern: '^(\\+|\\d)[0-9]{1,19}$'
+          example: '36201234567'
+    CommunicationMessageCharacteristic:
+      type: object
+      description: 'This object describe other delivery related parameters and their values (eg.: MPGCode, SMS template name and value). Name should be unique'
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+          description: Content parameter identifier
+        value:
+          type: string
+          description: Content parameter value
+    CommunicationMessageContent:
+      type: object
+      description: 'Key-value pair, which contains the part number of messages and its text. Relevant in case of chain messages.'
+      properties:
+        messagePartNum:
+          type: integer
+          minimum: 1
+          description: Content parameter identifier. It is relevant in case of SMS.
+        text:
+          type: string
+          maxLength: 160
+          description: Content text
+    TimePeriod:
+      type: object
+      description: A base / value business entity used to represent a period of time between two timepoints.
+      properties:
+        startDateTime:
+          type: string
+          format: date-time
+          description: 'An instant of time, starting at the TimePeriod'
+        endDateTime:
+          type: string
+          format: date-time
+          description: 'An instant of time, ending at the TimePeriod.'
+    ContextRelParams:
+      type: object
+      description: Context related parameters.
+      properties:
+        deliveryWindow:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryWindow'
+        retryTimes:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: How many times (pc) it is need to be resend in case of unsuccessful delivery.
+        retryDelay:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          description: How many time (in minutes) should pass after an unsucessful delivery before retry again.
+        validTill:
+          type: string
+          format: date-time
+          description: The relevancy of the communication message.
+        validFrom:
+          type: string
+          format: date-time
+          description: The beginning of the relevancy of the communication message.
+        retentionTime:
+          type: string
+          format: date-time
+          description: The datetime till communication message should be stored.
+    DeliveryWindow:
+      type: object
+      properties:
+        dateCat:
+          type: string
+          description: Category of the date
+          enum:
+            - Workday
+            - Holiday
+            - Weekend
+        periodFrom:
+          type: integer
+          minimum: 0
+          maximum: 23
+          description: Time window start (value in hour)
+          example: 9
+        periodFromMin:
+          type: integer
+          minimum: 0
+          maximum: 59
+          description: Minute part of the Time window start
+          example: 0
+        periodTo:
+          type: integer
+          minimum: 0
+          maximum: 23
+          description: Time window end (value in hour)
+          example: 16
+        periodToMin:
+          type: integer
+          minimum: 0
+          maximum: 59
+          description: Minute part of the Time window end
+          example: 55
+    IncomingSMSs:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 64
+          description: The unique identifier of the received message.
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommunicationMessageContent'
+          example:
+          - messagePartNum: 1
+            text: 'Percenként csupán 9 Ft-ért telefonálni? Igen! MyMenu csomagunk most egy SMS-sel a tiéd lehet! A megrendeléshez küldj OK-t válaszként 3 napon belül!'
+          - messagePartNum: 2
+            text: 'A csomag egyszeri díja 225 Ft, 25 percet tartalmaz és aktiválástól számítva 7. nap éjfélig használható fel belföldön normál díjas irányba.Üdv: Telenor'
+        msisdn:
+          type: string
+          description: Initiator customer MSISDN.
+          pattern: '^36[0-9]{9}$'
+          example: '36201234567'
+        received:
+          type: string
+          format: date-time
+          description: The time moment when CCHUB received the message from the customer.
+    Error:
+      required:
+        - title
+        - status
+        - detail
+        - code
+      properties:
+        title:
+          type: string
+          maxLength: 64
+          description: 'A short, human-readable summary of the problem type. It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization.'
+        status:
+          type: integer
+          minimum: 0
+          maximum: 999
+          description: 'The HTTP status code, generated by the origin server for this occurrence of the problem.'
+        detail:
+          type: string
+          maxLength: 128
+          description: Short description of the problem. Always respond with generic error messages to avoid revealing details of the failure unnecessarily.
+        code:
+          type: integer
+          minimum: -9999999
+          maximum: 9999999
+          description: Only for internal problem code.
