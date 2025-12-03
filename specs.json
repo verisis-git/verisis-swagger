@@ -133,7 +133,8 @@
           "key": "default",
           "display": "Sandi Communication API",
           "versions": [
-            { "v": "1.2.0", "path": "Sandi/1.2.0.yaml" }
+            { "v": "1.2.0", "path": "Sandi/1.2.0.yaml" },
+            { "v": "2.0.0", "path": "Sandi/2.0.0.yaml" }
           ]
         }
       ]
@@ -146,7 +147,8 @@
           "key": "provisioning_grip",
           "display": "Provisioning GRIP",
           "versions": [
-            { "v": "0.1", "path": "XTVGW/grip/xtvgw_grip_api_v4.yaml" }
+            { "v": "0.1-v4", "path": "XTVGW/grip/xtvgw_grip_api_v4.yaml" },
+			{ "v": "0.1-v5", "path": "XTVGW/grip/xtvgw_grip_api_v5.yaml" }
           ]
         },
         {
