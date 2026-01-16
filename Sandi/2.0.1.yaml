@@ -192,7 +192,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result400'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
           headers:
@@ -211,7 +211,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result401'
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
           headers:
@@ -228,7 +228,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '500':
@@ -249,7 +249,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result500'
+                $ref: '#/components/schemas/Error'
         '503':
           description: Service Unavailable
           headers:
@@ -297,11 +297,11 @@ paths:
                 value:
                   - origId: mess1324
                     context: CTX22
-                    description: campaign email
+                    description: campaign sms
                     messageType: SMS
                     sendTime: "2025-10-21T20:59:59.999+01:00"
                     receiver:
-                      phoneNumber: 36201234567
+                      phoneNumber: "36201234567"
                     characteristic: 
                       - {name: "AccountType", value: "PRB"}
                       - {name: "name", value: "Béla"}
@@ -315,7 +315,7 @@ paths:
                     attachment:
                       - {content: "SGVsbG8gV29ybGQh",  mimeType: "text/plain",  name: "text.txt"}
                     receiver:
-                      email: user@example.com
+                      email: "user@example.com"
                     sender:
                       email: "noreply@yettel.hu"
                     characteristic: 
@@ -359,7 +359,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result400'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
           headers:
@@ -378,7 +378,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result401'
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
           headers:
@@ -395,7 +395,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
@@ -414,7 +414,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '500':
@@ -435,7 +435,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result500'
+                $ref: '#/components/schemas/Error'
         '503':
           description: Service Unavailable
           headers:
@@ -530,7 +530,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result400'
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
           headers:
@@ -549,7 +549,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result401'
+                $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden
           headers:
@@ -566,7 +566,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
@@ -585,7 +585,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '500':
@@ -606,7 +606,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Result500'
+                $ref: '#/components/schemas/Error'
         '503':
           description: Service Unavailable
           headers:
@@ -714,7 +714,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '401':
@@ -733,7 +733,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
@@ -752,7 +752,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '404':
@@ -771,7 +771,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
         '500':
@@ -790,7 +790,7 @@ paths:
             msg-ctx-build-number:
               $ref: '#/components/headers/Msg_ctx_build_number'
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
 
@@ -1388,93 +1388,10 @@ components:
           type: string
           format: date-time
           description: The time moment when CCHUB received the message from the customer.
-    Error:
-      required:
-        - title
-        - status
-        - detail
-        - code
-      properties:
-        title:
-          type: string
-          maxLength: 64
-          description: 'A short, human-readable summary of the problem type. It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization.'
-        status:
-          type: integer
-          minimum: 0
-          maximum: 999
-          description: 'The HTTP status code, generated by the origin server for this occurrence of the problem.'
-        detail:
-          type: string
-          maxLength: 128
-          description: Short description of the problem. Always respond with generic error messages to avoid revealing details of the failure unnecessarily.
-        code:
-          type: integer
-          minimum: -9999999
-          maximum: 9999999
-          description: Only for internal problem code.
     Detail:
       description: A human-readable explanation specific to this occurrence of the problem
       type: string
-    Result400:
-      description: "Detailed result for client-side errors"
-      type: object
-      required:
-        - title
-        - status
-        - cause
-      properties:
-        title:
-          description: A short, human-readable summary of the problem type
-          type: string
-          example: "Invalid query parameter"
-        status:
-          description: HTTP status code
-          type: number
-          example: 400
-        cause:
-          description: A machine-readable cause for the problem
-          type: string
-          enum:
-            - INVALID_HEADER
-            - INVALID_BODY
-            - INVALID_API
-            - INVALID_MSG_FORMAT
-            - INVALID_QUERY_PARAM
-            - MANDATORY_IE_INCORRECT
-            - OPTIONAL_IE_INCORRECT
-            - MANDATORY_IE_MISSING
-            - UNSPECIFIED_MSG_FAILURE
-            - BODY_NOT_OBJECT
-            - BODY_INVALID_JSON
-            - BODY_UNSUPPORTED_TYPE
-          example: "MANDATORY_IE_MISSING"
-        detail:
-          $ref: '#/components/schemas/Detail'
-    Result401:
-      description: "Authentication error response"
-      type: object
-      required:
-        - title
-        - status
-        - cause
-      properties:
-        title:
-          description: Human-readable summary of the problem
-          type: string
-          example: "Authentication failed"
-        status:
-          description: HTTP status code
-          type: number
-          example: 401
-        cause:
-          description: Machine-readable error identifier
-          type: string
-          enum: [AUTH_FAILED]
-          example: "AUTH_FAILED"
-        detail:
-          $ref: '#/components/schemas/Detail'
-    Result500:
+    Error:
       description: Basic result object
       type: object
       required:
@@ -1485,7 +1402,6 @@ components:
         title:
           description: A short, human-readable summary of the problem type in case of http status 500
           type: string
-          enum: ["Internal server error"]
           example: "Internal server error"
         status:
           description: The HTTP status code generated by the origin server for this occurrence of the problem
@@ -1494,7 +1410,6 @@ components:
         cause:
           description: A machine-readable application error cause specific to this occurrence of the problem in case of http status 500
           type: string
-          enum: [SERVER_ERROR]
           example: "SERVER_ERROR"
         detail:
           $ref: '#/components/schemas/Detail'
