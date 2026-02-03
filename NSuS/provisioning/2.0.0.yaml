@@ -9,7 +9,7 @@ tags:
   - name: provisioning
 paths: 
   #provisioning
-  /nsus/provision/cas/{ca}/ctns/{ctn}/activateDS:
+  /nsus/provision/cas/{ca}/msisdns/{msisdn}/activate-ds:
     post:
       tags:
         - provisioning
@@ -24,7 +24,7 @@ paths:
         - $ref: '#/components/parameters/Msg_ctx_user_id'
         #path
         - $ref: '#/components/parameters/ca'
-        - $ref: '#/components/parameters/ctn'
+        - $ref: '#/components/parameters/msisdn'
       responses:
         '204':
           description: Success
@@ -47,7 +47,7 @@ paths:
           $ref: '#/components/responses/500'
         '503':
           $ref: '#/components/responses/503'
-  /nsus/provision/cas/{ca}/ctns/{ctn}/deactivateDS:
+  /nsus/provision/cas/{ca}/msisdns/{msisdn}/deactivate-ds:
     post:
       tags:
         - provisioning
@@ -62,7 +62,7 @@ paths:
         - $ref: '#/components/parameters/Msg_ctx_user_id'
         #path
         - $ref: '#/components/parameters/ca'
-        - $ref: '#/components/parameters/ctn'
+        - $ref: '#/components/parameters/msisdn'
       responses:
         '204':
           description: Success
@@ -85,11 +85,11 @@ paths:
           $ref: '#/components/responses/500'
         '503':
           $ref: '#/components/responses/503'
-  /nsus/provision/cas/{ca}/ctns/{ctn}/changeCTN:
+  /nsus/provision/cas/{ca}/msisdns/{msisdn}/change-msisdn:
     post:
       tags:
         - provisioning
-      summary: Change ctn
+      summary: Change msisdn
       parameters:
         # header
         - $ref: '#/components/parameters/Msg_ctx_src'
@@ -100,15 +100,15 @@ paths:
         - $ref: '#/components/parameters/Msg_ctx_user_id'
         #path
         - $ref: '#/components/parameters/ca'
-        - $ref: '#/components/parameters/ctn'
+        - $ref: '#/components/parameters/msisdn'
       requestBody:
         content:
           application/json:
             schema:
               properties:
-                new_ctn:
-                  $ref: '#/components/schemas/sCtn'
-        description: New ctn
+                new_msisdn:
+                  $ref: '#/components/schemas/sMsisdn'
+        description: New msisdn
       responses:
         '204':
           description: Success
@@ -131,11 +131,11 @@ paths:
           $ref: '#/components/responses/500'
         '503':
           $ref: '#/components/responses/503'
-  /nsus/provision/cas/{ca}/ctns/{ctn}/moveCTN:
+  /nsus/provision/cas/{ca}/msisdns/{msisdn}/move-msisdn:
     post:
       tags:
         - provisioning
-      summary: Move ctn
+      summary: Move msisdn
       parameters:
         # header
         - $ref: '#/components/parameters/Msg_ctx_src'
@@ -146,7 +146,7 @@ paths:
         - $ref: '#/components/parameters/Msg_ctx_user_id'
         #path
         - $ref: '#/components/parameters/ca'
-        - $ref: '#/components/parameters/ctn'
+        - $ref: '#/components/parameters/msisdn'
       requestBody:
         content:
           application/json:
@@ -187,7 +187,7 @@ components:
            $ref: '#/components/schemas/oErrorResponse'
           example: 
             error_code: 400
-            error_description: Invalid ctn format
+            error_description: Invalid msisdn format
       description: Bad request
       headers:
         msg-ctx-src:
@@ -392,22 +392,22 @@ components:
         maxLength: 64
         pattern: '^[a-zA-Z0-9-_.]+$'
         example: "oper"
-    ctn:
-      name: ctn
+    msisdn:
+      name: msisdn
       in: path
-      description: Affected CTN. In case of ChangeCTN it is the old ctn
+      description: Affected msisdn. In case of ChangeMsisdn it is the old msisdn
       required: true
       schema:
-        $ref: '#/components/schemas/sCtn'
+        $ref: '#/components/schemas/sMsisdn'
     ca:
       name: ca
       in: path
-      description: Affected CA. In case of MoveCTN it is the old CA
+      description: Affected CA. In case of MoveMsisdn it is the old CA
       required: true
       schema:
         $ref: '#/components/schemas/nCa'
   schemas:
-    sCtn:
+    sMsisdn:
       description: User MSISDN
       type: string
       pattern: '36[0-9]{9}'
