@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: '2.0.0'
+  version: '2.1.0'
   title: Sesame network security interface
   description: >-
     This document describes the interface of the Sesame which implements a
