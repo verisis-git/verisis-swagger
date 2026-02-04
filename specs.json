@@ -170,7 +170,7 @@
           "key": "provisioning",
           "display": "Provisioning API",
           "versions": [
-            { "v": "2.0.0", "path": "NSuS/provisioning/2.0.0.yaml" },
+            { "v": "2.0.0", "path": "NSuS/provisioning/2.2.0.yaml" },
 			{ "v": "1.0.0", "path": "NSuS/provisioning/1.0.0.yaml" }
           ]
         },
