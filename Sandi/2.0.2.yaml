@@ -792,14 +792,14 @@ components:
           example: '2020-02-10T15:13:45.308+01:00'
         content:
           oneOf:
-            - $ref: '#/components/schemas/SmsContent'
+            - $ref: '#/components/schemas/SmsContents'
             - $ref: '#/components/schemas/EmailContent'
             - $ref: '#/components/schemas/PushContent'
             - $ref: '#/components/schemas/InboxContent'
           discriminator:
             propertyName: messageType
             mapping:
-              SMS: '#/components/schemas/SmsContent'
+              SMS: '#/components/schemas/SmsContents'
               EMAIL: '#/components/schemas/EmailContent'
               PUSH: '#/components/schemas/PushContent'
               INBOX: '#/components/schemas/InboxContent'
@@ -1057,20 +1057,22 @@ components:
             - type: array
               items:
                 type: object
-    SmsContent:
+    SmsContents:
       type: array
       items:
-        type: object
-        description: 'Key-value pair, which contains the part number of messages and its text. Relevant in case of chain messages.'
-        properties:
-          messagePartNum:
-            type: integer
-            minimum: 1
-            description: Content parameter identifier. It is relevant in case of SMS.
-          text:
-            type: string
-            maxLength: 160
-            description: Content text
+        $ref: '#/components/schemas/SmsContent'
+    SmsContent:
+      type: object
+      description: 'Key-value pair, which contains the part number of messages and its text. Relevant in case of chain messages.'
+      properties:
+        messagePartNum:
+          type: integer
+          minimum: 1
+          description: Content parameter identifier. It is relevant in case of SMS.
+        text:
+          type: string
+          maxLength: 160
+          description: Content text
     EmailContent:
       type: object
       properties:
@@ -1207,7 +1209,7 @@ components:
           maxLength: 64
           description: The unique identifier of the received message.
         content:
-          $ref: '#/components/schemas/SmsContent'
+          $ref: '#/components/schemas/SmsContents'
         msisdn:
           type: string
           description: Initiator customer MSISDN.
