@@ -135,7 +135,8 @@
           "key": "default",
           "display": "Sandi Communication API",
           "versions": [
-            { "v": "2.0.1", "path": "Sandi/2.0.1.yaml" },
+            { "v": "2.0.2", "path": "Sandi/2.0.2.yaml" },
+			{ "v": "2.0.1", "path": "Sandi/2.0.1.yaml" },
 			{ "v": "1.2.0", "path": "Sandi/1.2.0.yaml" }            
           ]
         }
@@ -211,7 +212,8 @@
           "key": "default",
           "display": "MCSIS API",
           "versions": [
-            { "v": "1.2.0", "path": "MCSIS/1.2.0.yaml" }
+            { "v": "1.3.0", "path": "MCSIS/1.3.0.yaml" },
+			{ "v": "1.2.0", "path": "MCSIS/1.2.0.yaml" }
           ]
         }
       ]
