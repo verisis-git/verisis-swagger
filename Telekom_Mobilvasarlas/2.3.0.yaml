@@ -4115,7 +4115,6 @@ paths:
         - $ref: '#/components/parameters/p_Count'
         - $ref: '#/components/parameters/p_Offset'
         - $ref: '#/components/parameters/p_IncludeBody'
-        - $ref: '#/components/parameters/p_CreateDateTime'
         - $ref: '#/components/parameters/p_NotificationType'
         #header
         - $ref: '#/components/parameters/p_msgcntx_src'
@@ -4604,13 +4603,6 @@ components:
       required: false
       schema:
         type: boolean
-    p_CreateDateTime:
-      name: createDateTime
-      required: false
-      in: query
-      description: Date of crete notification
-      schema:
-        $ref: '#/components/schemas/s_NotificationCreateDateTime'
     p_NotificationType:
       name: type
       in: query
