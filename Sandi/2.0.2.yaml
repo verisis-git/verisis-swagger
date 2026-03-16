@@ -752,6 +752,12 @@ components:
     BaseCommunicationMessage:
       type: object
       description: 'Communication message means a notification approach in the format of a message which can be dispatched (sent) to the certain user by the system with the content which can be felt and understood by the recipient. The user can be either a final customer or a customer service agent. The message can reach the customer in different interaction channels, including: email, short message, mobile app notification (push).'
+      required:
+        - origId
+        - context
+        - messageType
+        - sendTime
+        - receiver
       properties:
         origId:
           type: string
@@ -871,6 +877,9 @@ components:
       allOf:
         - $ref: '#/components/schemas/BaseCommunicationMessage'
         - type: object
+          required:
+            - id
+            - state
           properties:
             id:
               type: string
@@ -1064,17 +1073,35 @@ components:
     SmsContent:
       type: object
       description: 'Key-value pair, which contains the part number of messages and its text. Relevant in case of chain messages.'
+      required: 
+        - messagePartNum
+        - text
       properties:
         messagePartNum:
           type: integer
           minimum: 1
-          description: Content parameter identifier. It is relevant in case of SMS.
+          maximum: 22
+          description: >
+            Sequence number of the SMS part within a concatenated message.
+            Numbering starts from 1.
+            The maximum allowed value depends on the encoding:
+            up to 10 parts for GSM-7 encoded messages and up to 22 parts
+            for UCS-2 encoded messages.
         text:
           type: string
           maxLength: 160
-          description: Content text
+          description: >
+            Text content of the SMS segment.
+            Maximum segment length depends on encoding:
+            - GSM-7: 160 characters for single message, 153 per segment when concatenated
+            - UCS-2: 70 characters for single message, 67 per segment when concatenated
     EmailContent:
       type: object
+      required:
+        - body
+        - characterSetCode
+        - bodyFormat
+        - subject
       properties:
         body:
           type: string
@@ -1097,6 +1124,9 @@ components:
     PushContent:
       type: object
       description: 'Key-value pair, which contains the part number of messages and its text. Relevant in case of chain messages.'
+      required:
+        - title
+        - body
       properties:
         title:
           type: string
@@ -1109,6 +1139,11 @@ components:
     InboxContent:
       type: object
       description: 'Key-value pair, which contains the part number of messages and its text. Relevant in case of chain messages.'
+      required:
+        - messagePartNum
+        - text
+        - content
+        - character
       properties:
         messagePartNum:
           type: integer
@@ -1128,6 +1163,9 @@ components:
     TimePeriod:
       type: object
       description: A base / value business entity used to represent a period of time between two timepoints.
+      required: 
+        - startDateTime
+        - enddateTime
       properties:
         startDateTime:
           type: string
@@ -1169,6 +1207,8 @@ components:
           description: The datetime till communication message should be stored.
     DeliveryWindow:
       type: object
+      required:
+        - dateCategory
       properties:
         dateCategory:
           type: string
@@ -1203,6 +1243,10 @@ components:
           example: 55
     IncomingSMSs:
       type: object
+      required:
+        - id
+        - msisdn
+        - received
       properties:
         id:
           type: string
