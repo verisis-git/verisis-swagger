@@ -22,8 +22,9 @@
           "key": "default",
           "display": "Telekom_Mobilvasarlas",
           "versions": [
+            { "v": "2.4.0", "path": "Telekom_Mobilvasarlas/2.4.0.yaml" },
             { "v": "2.3.0", "path": "Telekom_Mobilvasarlas/2.3.0.yaml" },
-			{ "v": "2.2.0", "path": "Telekom_Mobilvasarlas/2.2.0.yaml" }
+            { "v": "2.2.0", "path": "Telekom_Mobilvasarlas/2.2.0.yaml" }
           ]
         }
       ]

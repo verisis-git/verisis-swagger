@@ -8,7 +8,9 @@ info:
     Add textbook endpoint
     
     2026.04.07 Add exclusiveServiceFee
-  version: '2.3.0'
+    
+    2026.02.18 - Add notifications endpoint
+  version: '2.4.0'
   title: Telekom Mobilvasarlas API
   contact:
     email: aweimann@verisis.hu
@@ -4104,6 +4106,188 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/s_Error'
+  /{userId}/notifications:        
+    get:
+      summary: Query notification
+      tags:
+        - general
+      operationId: getNotifications
+      description: Get the notifications by customer
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        #query
+        - $ref: '#/components/parameters/p_Count'
+        - $ref: '#/components/parameters/p_Offset'
+        - $ref: '#/components/parameters/p_IncludeBody'
+        - $ref: '#/components/parameters/p_NotificationType'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_os'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_vrs'
+        - $ref: '#/components/parameters/p_msgcntx_lang'
+        - $ref: '#/components/parameters/p_msgcntx_token'
+      responses:
+        '200':
+          description: User notifications
+          headers:
+            count-reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/s_NotificationsListResponse'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '503':
+          description: Maintenance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+  /{userId}/notifications/{notificationId}:
+    get:
+      summary: Query notification
+      tags:
+        - general
+      operationId: getNotification
+      description: Get the notification by id
+      parameters:
+        #path
+        - $ref: '#/components/parameters/p_UserIdPath'
+        - $ref: '#/components/parameters/p_NotificationIdPath'
+        #header
+        - $ref: '#/components/parameters/p_msgcntx_src'
+        - $ref: '#/components/parameters/p_msgcntx_id'
+        - $ref: '#/components/parameters/p_msgcntx_os'
+        - $ref: '#/components/parameters/p_msgcntx_ts'
+        - $ref: '#/components/parameters/p_msgcntx_vrs'
+        - $ref: '#/components/parameters/p_msgcntx_lang'
+        - $ref: '#/components/parameters/p_msgcntx_token'
+      responses:
+        '200':
+          description: User notification
+          headers:
+            count-reached:
+              schema:
+                $ref: '#/components/schemas/s_CountReached'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Notification'
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '503':
+          description: Maintenance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+    patch:
+      summary: Modify a notification
+      tags:
+        - general
+      operationId: modifyNotification
+      description: Modify notification specified by its id
+      parameters:
+        #path
+          - $ref: '#/components/parameters/p_UserIdPath'
+          - $ref: '#/components/parameters/p_NotificationIdPath'
+        #header
+          - $ref: '#/components/parameters/p_msgcntx_src'
+          - $ref: '#/components/parameters/p_msgcntx_id'
+          - $ref: '#/components/parameters/p_msgcntx_os'
+          - $ref: '#/components/parameters/p_msgcntx_ts'
+          - $ref: '#/components/parameters/p_msgcntx_vrs'
+          - $ref: '#/components/parameters/p_msgcntx_lang'
+          - $ref: '#/components/parameters/p_msgcntx_token'
+      requestBody:
+        content:
+          application/json:
+           schema:
+              $ref: '#/components/schemas/s_ModifyNotification'
+      responses:
+        '204':
+            description: Modify succesfully
+        '400':
+          description: Invalid input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
+        '503':
+          description: Maintenance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/s_Error'
                 
 components:
   parameters:
@@ -4410,6 +4594,26 @@ components:
       required: false
       schema:
         $ref: '#/components/schemas/s_TransportLineStatus'
+    p_NotificationIdPath:
+      in: path
+      name: notificationId
+      description: Identifier of the notification
+      required: true
+      schema:
+        $ref: '#/components/schemas/s_NotificationId'
+    p_IncludeBody:
+      in: query
+      name: includeBody
+      description: "Determines whether the body field is included as an attribute in each notification object in the response. Default: true"
+      required: false
+      schema:
+        type: boolean
+    p_NotificationType:
+      name: type
+      in: query
+      description: Notification tpye
+      schema:
+        $ref: '#/components/schemas/s_NotificationType'
     p_includeZoneInfo:
       in: query
       name: includeZoneInfo
@@ -4696,6 +4900,9 @@ components:
               tsImageModify: '2023-08-17T09:56:11.950Z'
               tsParamModify: '2023-08-17T09:56:11.950Z'
               altText: "Alternative texts..."
+        unreadNotificationsCount:
+          type: integer
+          example: 3
     s_HighwayTransaction:
       type: object
       description: Highway vignette purchase transaction
@@ -4762,6 +4969,8 @@ components:
       description: Parking info
       properties:
         comfortFee:
+          $ref: '#/components/schemas/s_ParkingFeeInfo'
+        exclusiveServiceFee:
           $ref: '#/components/schemas/s_ParkingFeeInfo'
         specialDates:
           $ref: '#/components/schemas/s_SpecialDates'
@@ -5987,7 +6196,7 @@ components:
           $ref: '#/components/schemas/s_ArrivalStationName'
     s_ProductDescription:
       type: string
-      example: "A bérlet csak érvényes magyar közoktatási diákigazolvánnyal együtt használható, az oktatási azonosítót vagy a diákigazolvány sorszámát a vásárláskor kell megadni. A bérlet a sikeres vásárlást követen 2 perccel érhet el az alkalmazásban. A bérletet az ellenrzést végz személy részére (kérés esetén az általa felmutatott kód beolvasását követen) be kell mutatni  metróállomáson és elsajtós felszállási rendben közleked autóbuszon, trolibuszon a kiragasztott kód beolvasását követen a jegyképet kell bemutatni. A mobiljegy csak aktív internetkapcsolattal vehet igénybe. A bérlet az érvényesség kezdete előtt legfeljebb 30 nappal váltható meg elvételben, nem cserélhet, nem ruházható át, és csak az érvényesség kezdete előtt váltható vissza.Részletek a kedvezmény igénybevételérl a Jegyek és bérletek / Kedvezmények menüpont alatt. CIVTovábbi információ: https://bkk.hu/tomegkozlekedes/jegyek-es-berletek/jegy-es-berletarak/havi-budapestberlet-kozoktatasban-tanuloknak/, https://bkk.hu/mobiljegy/"
+      example: "A bérlet csak érvényes magyar közoktatási diákigazolvánnyal együtt használható, az oktatási azonosítót vagy a diákigazolvány sorszámát a vásárláskor kell megadni. A bérlet a sikeres vásárlást követen 2 perccel érhet el az alkalmazásban. A bérletet az ellenrzést végz személy részére (kérés esetén az általa felmutatott kód beolvasását követen) be kell mutatni – metróállomáson és elsajtós felszállási rendben közleked autóbuszon, trolibuszon a kiragasztott kód beolvasását követen a jegyképet kell bemutatni. A mobiljegy csak aktív internetkapcsolattal vehet igénybe. A bérlet az érvényesség kezdete előtt legfeljebb 30 nappal váltható meg elvételben, nem cserélhet, nem ruházható át, és csak az érvényesség kezdete előtt váltható vissza.Részletek a kedvezmény igénybevételérl a Jegyek és bérletek / Kedvezmények menüpont alatt. CIVTovábbi információ: https://bkk.hu/tomegkozlekedes/jegyek-es-berletek/jegy-es-berletarak/havi-budapestberlet-kozoktatasban-tanuloknak/, https://bkk.hu/mobiljegy/"
     s_ProductShortDescription:
       type: string
       example: "Tetszleges kezdnappal váltható. Érvényes a jelölt kezdnapon 0 órátó (de legkorábban a vásárlás idpontjától) a következ hónap kezdnappal megegyez napon 02 óráig Budapest közigazgatási határán belül az 1-99, 101-299, 900-999, CITY trolibusz, M1, M2, M3, M4, H5, H6, H7, H8, H9, D14 vonalakon, a MÁV-START meghatározott vonatain, a VOLÁN társaságok kijelölt elvárosi járatain és munkanapokon a D2, D11, D12 vonalakon."
@@ -6631,6 +6840,79 @@ components:
         - version
         - lang
         - texts
+    s_NotificationId:
+      type: string
+      description: "Notification id"
+      example: "687fd088-9ce2-440d-9bd4-3a0c1ca5c533"
+    s_NotificationType:
+      type: string
+      enum:
+        - SERVICE
+        - SYSTEM
+    s_NotificationsListResponse:
+      type: object
+      description: Notification list response
+      properties:
+        total:
+          type: integer
+          example: 10
+        unreadCount:
+          type: integer
+          example: 3
+        unreadByType:
+          type: object
+          additionalProperties:
+            type: integer
+          description: "Unread notification count by type, keyed by NotificationType enum."
+          example:
+            SYSTEM: 1
+            SERVICE: 2
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/s_Notification'
+    s_NotificationServiceType:
+      type: string
+      enum:
+        - HIGHWAY
+        - PARKING
+        - GAMBLING
+        - PRODUCT
+        - INSURANCE
+        - INFO
+    s_Notification:
+      properties:
+        id:
+          $ref: '#/components/schemas/s_NotificationId'
+        title:
+          type: string
+        body:
+          type: string
+        type:
+          $ref: '#/components/schemas/s_NotificationType'
+        serviceType:
+          $ref:  '#/components/schemas/s_NotificationServiceType'
+        priority:
+          type: integer
+        read:
+          type: boolean
+          example: false
+        dismissed:
+          type: boolean
+          example: false
+        createdAt:
+          $ref:  '#/components/schemas/s_NotificationCreateDateTime'
+    s_ModifyNotification:
+      properties:
+        read:
+          type: boolean
+          example: false
+        dismissed:
+          type: boolean
+          example: false
+    s_NotificationCreateDateTime:
+      type: string
+      format: date-time
     s_Error:
       required:
         - title
