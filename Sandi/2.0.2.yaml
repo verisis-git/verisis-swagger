@@ -4,9 +4,10 @@ info:
   description: 'This logical swg is created to fulfill the Customer Communication HUB (CCHUB) requirements.'
   version: '2.0.2'
 servers:
-  - url: 'https://api.yettel.hu/CCHUB/communication-management/v2/'
+  - url: "https://api.yettel.hu/cchub/v2"
+
 paths:
-  /communication-messages:
+  /communication-message:
     get:
       operationId: listSentCommunicationMessages
       summary: List of communication messages.
@@ -126,7 +127,6 @@ paths:
             minimum: 0
           description: The end initiator item number for pagination.
         #header
-        - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/Msg_ctx_src'
         - $ref: '#/components/parameters/Msg_ctx_src_module'
         - $ref: '#/components/parameters/Msg_ctx_env'
@@ -278,7 +278,6 @@ paths:
             default: false
           description: Whether to wait for and return the result in the response.
         #header
-        - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/Msg_ctx_src'
         - $ref: '#/components/parameters/Msg_ctx_src_module'
         - $ref: '#/components/parameters/Msg_ctx_env'
@@ -481,7 +480,6 @@ paths:
             default: true
           description: It defines that the request was the first initiation with the given msgcntx_id.
         #header
-        - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/Msg_ctx_src'
         - $ref: '#/components/parameters/Msg_ctx_src_module'
         - $ref: '#/components/parameters/Msg_ctx_env'
@@ -690,16 +688,6 @@ components:
         minLength: 1
         maxLength: 64
         example: "INODE"
-    Authorization:
-      name: authorization
-      description: 'Basic authentication credentials. Format: "Basic {credentials}", where {credentials} is the Base64-encoded string of "username:password".'
-      in: header
-      required: true
-      schema:
-        type: string
-        minLength: 11
-        maxLength: 720
-        example: 'Basic YWRtaW46cGFzc3dvcmQ='
     Msg_ctx_src_module:
       name: msg-ctx-src-module
       description: Optional, name of the source system’s module which sent the message. Fill only if suitable
@@ -798,17 +786,12 @@ components:
           example: '2020-02-10T15:13:45.308+01:00'
         content:
           oneOf:
-            - $ref: '#/components/schemas/SmsContents'
+            - type: array
+              items:
+                $ref: '#/components/schemas/SmsContent'
             - $ref: '#/components/schemas/EmailContent'
             - $ref: '#/components/schemas/PushContent'
             - $ref: '#/components/schemas/InboxContent'
-          discriminator:
-            propertyName: messageType
-            mapping:
-              SMS: '#/components/schemas/SmsContents'
-              EMAIL: '#/components/schemas/EmailContent'
-              PUSH: '#/components/schemas/PushContent'
-              INBOX: '#/components/schemas/InboxContent'
         attachment:
           type: array
           items:
@@ -1066,10 +1049,6 @@ components:
             - type: array
               items:
                 type: object
-    SmsContents:
-      type: array
-      items:
-        $ref: '#/components/schemas/SmsContent'
     SmsContent:
       type: object
       description: 'Key-value pair, which contains the part number of messages and its text. Relevant in case of chain messages.'
@@ -1253,7 +1232,9 @@ components:
           maxLength: 64
           description: The unique identifier of the received message.
         content:
-          $ref: '#/components/schemas/SmsContents'
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsContent'
         msisdn:
           type: string
           description: Initiator customer MSISDN.
