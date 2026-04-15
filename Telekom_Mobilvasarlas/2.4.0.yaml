@@ -4964,6 +4964,9 @@ components:
           $ref: '#/components/schemas/s_Parking'
         costInfo:
           $ref: '#/components/schemas/s_ParkingCostInfo'
+        vehicleAssistancePhoneNumber:
+          type: string
+          description: The phone number to contact for vehicle assistance
     s_ParkingInfo:
       type: object
       description: Parking info
