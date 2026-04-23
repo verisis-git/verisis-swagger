@@ -4973,8 +4973,13 @@ components:
       properties:
         comfortFee:
           $ref: '#/components/schemas/s_ParkingFeeInfo'
+        exclusiveServiceEnabled:
+          type: boolean
         exclusiveServiceFee:
           $ref: '#/components/schemas/s_ParkingFeeInfo'
+        assistantPhoneNumber:
+          type: string
+          description: The phone number to contact for vehicle assistance
         specialDates:
           $ref: '#/components/schemas/s_SpecialDates'
         parkingStopReminder:
