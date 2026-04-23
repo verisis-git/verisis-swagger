@@ -124,6 +124,7 @@
           "key": "default",
           "display": "EHT reconLC",
           "versions": [
+            { "v": "1.4.0", "path": "EHT/1.4.0.yaml" },
             { "v": "1.3.0", "path": "EHT/1.3.0.yaml" }
           ]
         }
@@ -194,14 +195,16 @@
           "key": "bandwapi",
           "display": "Black&White API",
           "versions": [
-            { "v": "1.3.1", "path": "Devins/internal/1.3.1.yaml" }
+            { "v": "1.4.0", "path": "Devins/internal/1.4.0.yaml" },
+			{ "v": "1.3.1", "path": "Devins/internal/1.3.1.yaml" }
           ]
         },
         {
           "key": "inscompany",
           "display": "API for insurance company",
           "versions": [
-            { "v": "1.2.0", "path": "Devins/insurance/1.2.yaml" }
+            { "v": "1.3.0", "path": "Devins/insurance/1.3.0.yaml" },
+			{ "v": "1.2.0", "path": "Devins/insurance/1.2.yaml" }
           ]
         }
       ]

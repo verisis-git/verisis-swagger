@@ -1,0 +1,492 @@
+openapi: '3.0.4'
+info:
+  title: Sesame Device insurance interfaces
+  description: |
+    Interface for uService
+  
+    changelog:
+      
+      v1.4.0: header standardization
+
+      v1.3: Customer object modified: address data are removed
+      
+      v1.3.1: Add retailPrice data to WhitelistElement
+  version: 1.4.0
+servers:
+  - url: https://sesame.devins.pgsm.hu/
+security:
+  - api_key: []  
+paths:
+  /deviceinsurance/v1/whitelist:
+    get:
+      tags:
+          - BlackAndWhite
+      summary: Get stored whitelist
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        # query
+        - $ref: '#/components/parameters/sTacCode'
+        - $ref: '#/components/parameters/sMaterialId'
+      responses:
+        '200':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/oWhitelistElement'
+          description: Success
+        '400':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid data
+          description: Bad request
+        '404':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid tacCode format
+          description: Not found
+        '500':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 503
+                errorDescription: Service is not available
+          description: Server unavailable
+          
+  /deviceinsurance/v1/blacklist/customercheck: 
+    post:
+      tags:
+          - BlackAndWhite
+      summary: Check if a customer is on blacklist
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/oCustomer'
+      responses:
+        '200':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                properties:
+                  isOnBlacklist:
+                    type: boolean
+                    description: true, if customer is on blacklist
+          description: Success
+        '400':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid data
+          description: Bad request
+        '404':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid tacCode format
+          description: Not found
+        '500':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 503
+                errorDescription: Service is not available
+          description: Server unavailable
+  
+components:
+  headers:
+    Msg_ctx_src:
+      description: (mandatory) Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "LIGW"
+    Msg_ctx_src_module:
+      description: (optional) Name of the source system’s module which sent the message. Fill only if suitable
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: null
+    Msg_ctx_env:
+      description: (mandatory) Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        example: "PROD"
+    Msg_ctx_id:
+      description: (mandatory) Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "6b5fae5a-da07-4864-9683-ce55207d06af"
+    Msg_ctx_corr_id:
+      description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      description: (optional) It represents the sender application’s build version
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "3.0.1"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "INODE"
+    Msg_ctx_src_module:
+      name: msg-ctx-src-module
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        example: "INode6 SIP AS"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        example: "PROD"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      name: msg-ctx-build-number
+      description: It represents the sender application’s build version
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "6.0.1-pre"
+    sTacCode:
+      name: tacCode
+      required: false
+      in: query
+      description: Tac code. It is required if materialId query param is not set
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 8
+        example: "32930400"
+    sMaterialId:
+      name: materialId
+      required: false
+      in: query
+      description: Material id. It is required if tacCode query param is not set
+      schema:
+        $ref: '#/components/schemas/sSapMaterialId'
+  schemas:
+    oCustomer:
+      type: object
+      description: Customer object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Name of the customer
+        motherName:
+          type: string
+          description: Name of customer's mother. It is required in case of an individual customer
+        birthDate:
+          type: string
+          format: date
+          description: Date of birth. It is required in case of an individual customer
+        birthPlace:
+          type: string
+          description: Date of place of birth. It is required in case of an individual customer
+        firmRegistryNumber:
+          type: string
+          description: Firm registry number. It is required in case of a non-individual customer
+    oWhitelistElement:
+      type: object
+      description: Whitelist element
+      required: [tacCode, sapMaterialIds]
+      properties:
+        tacCode:
+          type: string
+          minLength: 8
+          maxLength: 8
+          description: tacCode
+          example: "32930400"
+        internalStorageSize:
+          type: number
+          format: int32
+          description: Internal storage capacity
+          example: 32
+        sapMaterialId:
+            $ref: '#/components/schemas/sSapMaterialId'
+        priceBand:
+          $ref: '#/components/schemas/eInsurancePriceBand'
+        deviceMake:
+          type: string
+          description: Manufacturer of the device
+          example: Samsung
+        deviceName:
+          type: string
+          description: Name of the device
+          example: S20
+        retailPrice:
+          type: number
+          format: int32
+          description: Retail Price
+          example: 143299
+    sSapMaterialId:
+      type: string
+      description: SAP material id of the device
+      minLength: 1
+      example: 218736821736821
+    eInsurancePriceBand:
+      type: integer
+      description: Insurance price band enumeration
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+      example: 1
+    oErrorResponse:
+      type: object
+      properties:
+          errorCode:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          errorDescription:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error
+
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: x-api-key
+      in: header

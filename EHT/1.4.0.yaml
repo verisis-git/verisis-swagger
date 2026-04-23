@@ -1,0 +1,981 @@
+openapi: '3.0.4'
+info:
+  description: |
+    EHT reconciliation API
+
+    **v1.4.0**:
+    * header standardization
+  version: '1.4.0'
+  title: Reconciliation API
+servers:
+  - url: https://eht.yettel.hu/ReconLC/1.0.0
+
+security:
+  - api_key: []
+
+tags:
+  - name: lifecycle
+    description: lifecycle events
+  - name: list
+    description: get lifecycle(s)
+
+paths:
+  /reconlcs/{id}:
+    get:
+      tags:
+        - list
+      summary: get details of a particular lifecycle selected by id
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle to be retrieved
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          description: details of a particular lifecycle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lifecycleItem'
+        '400':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          description: Bad request
+        '404':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          description: Not found
+        '500':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          description: Internal server error
+          
+    put:
+      tags:
+        - lifecycle
+      summary: reset a particular lifecycle selected by id
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle to be retrieved
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: request body of lifecycle reset
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lifecycleResetBody'
+      responses:
+        '200':
+          description: lifecycle reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lifecycleItem'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '405':
+          description: Method Not Allowed
+        '500':
+          description: Internal server error
+    patch:
+      tags:
+        - lifecycle
+      summary: change ctn of a particular lifecycle selected by id
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle to be changed
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: request body of ctn change
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lifecycleChangeBody'
+      responses:
+        '200':
+          description: lifecycle changed
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lifecycleItem'
+        '400':
+          description: Bad request
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '404':
+          description: Not found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '500':
+          description: Internal server error
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+    delete:
+      tags:
+        - lifecycle
+      summary: terminate a particular lifecycle selected by id
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle to be terminated
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: lifecycle terminated
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lifecycleTerminateResp'
+        '400':
+          description: Bad request
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '404':
+          description: Not found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '500':
+          description: Internal server error
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+  /reconlcs:
+    get:
+      tags:
+        - list
+      summary: get details of lifecycles selected by ctns
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - name: ctn
+          in: query
+          description: 'ctn of the lifecycle - example: 36201234567,36207654321'
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+            maxItems: 50
+      responses:
+        '200':
+          description: details of selected lifecycles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/lifecycleItem'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - lifecycle
+      summary: create a lifecycle for ctn
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+      requestBody:
+        description: request body of lifecycle creation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/lifecycleCreateBody'
+      responses:
+        '200':
+          description: lifecycle created
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lifecycleItem'
+        '400':
+          description: Bad request
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '500':
+          description: Internal server error
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+  /reconlcs/reconPeriod:
+    get:
+      tags:
+        - list
+      summary: get reconciliation periods of lifecycles selected by ctns
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - name: ctn
+          in: query
+          description: 'ctn of the lifecycle - example: 36201234567,36207654321'
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+            maxItems: 50
+      responses:
+        '200':
+          description: reconciliation periods of selected lifecycles
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/reconPeriodResp'
+        '400':
+          description: Bad request
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '404':
+          description: Not found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '500':
+          description: Internal server error
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+  /reconlcs/{id}/reconPeriod:
+    get:
+      tags:
+        - list
+      summary: get reconciliation period of a particular lifecycle selected by id
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - name: id
+          in: path
+          description: id of reconciliation lifecycle
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: reconciliation period of a particular lifecycle
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/reconPeriodResp'
+        '400':
+          description: Bad request
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '404':
+          description: Not found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '500':
+          description: Internal server error
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+components:
+  headers:
+    Msg_ctx_src:
+      description: (mandatory) Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "LIGW"
+    Msg_ctx_src_module:
+      description: (optional) Name of the source system’s module which sent the message. Fill only if suitable
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: null
+    Msg_ctx_env:
+      description: (mandatory) Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        example: "PROD"
+    Msg_ctx_id:
+      description: (mandatory) Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "6b5fae5a-da07-4864-9683-ce55207d06af"
+    Msg_ctx_corr_id:
+      description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      description: (optional) It represents the sender application’s build version
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "3.0.1"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "INODE"
+    Msg_ctx_src_module:
+      name: msg-ctx-src-module
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        example: "INode6 SIP AS"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        example: "PROD"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      name: msg-ctx-build-number
+      description: It represents the sender application’s build version
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "6.0.1-pre"
+
+  schemas:
+    notifAttrType:
+      type: object
+      required:
+        - initDateTime
+      properties:
+        initDateTime:
+          type: string
+          example: '2017-11-29 12:25:35'
+          description: timestamp of notif event
+    notifItem:
+      type: "object"
+      required:
+        - notifAttr
+        - notifId
+        - notifType
+      properties:
+        notifId:
+          type: number
+          description: id of notification in the lifecycle
+        notifType:
+          type: string
+          enum:
+            - notifSMS
+            - notifIVR
+            - notifEMAIL
+            - notifMAIL
+        notifAttr:
+          oneOf:
+            - $ref: '#/components/schemas/notifSMS'
+            - $ref: '#/components/schemas/notifEMAIL'
+            - $ref: '#/components/schemas/notifIVR'
+            - $ref: '#/components/schemas/notifMAIL'
+          discriminator: notifType
+    notifSMS:
+      allOf:
+        - $ref: '#/components/schemas/notifAttrType'
+        - type: object
+          properties:
+            deliveryDateTime:
+              type: string
+              example: '2017-11-29 12:27:35'
+              description: timestamp of receiving Delivery Report from SMSC
+            result:
+              type: string
+              example: sent
+              description: result of notif event
+              enum:
+                - sent
+                - failed
+                - delivered
+    notifIVR:
+      allOf:
+        - $ref: '#/components/schemas/notifAttrType'
+        - type: object
+          properties:
+            calloutDateTime:
+              type: string
+              example: '2017-11-29 12:27:35'
+              description: timestamp of the last call out
+            calloutAttempt:
+              type: number
+              example: 3
+              description: number of the call out attempts
+            callDuration:
+              type: number
+              example: 45
+              description: duration of the last call out (in sec) - if established
+            result:
+              type: string
+              example: established
+              description: result of notif event
+    notifMAIL:
+      allOf:
+        - $ref: '#/components/schemas/notifAttrType'
+        - type: object
+          properties:
+            result:
+              type: string
+              example: sent
+              description: result of notif event
+              enum:
+                - sent
+                - failed
+    notifEMAIL:
+      allOf:
+        - $ref: '#/components/schemas/notifAttrType'
+        - type: object
+          properties:
+            result:
+              type: string
+              example: sent
+              description: result of notif event
+              enum:
+                - sent
+                - failed
+                - delivered
+    lifecycleItem:
+      type: object
+      required:
+        - beginningDate
+        - ctn
+        - dueDate
+        - endDate
+        - id
+        - productCode
+        - startDate
+      properties:
+        id:
+          type: number
+          example: 4294967295
+          description: id of reconciliation lifecycle
+        ctn:
+          type: string
+          example: '36201234567'
+          description: Customer Telephone Number in international format
+          pattern: 36\d{9}
+        productCode:
+          type: string
+          example: YOLO
+          enum:
+            - PREP
+            - YOLO
+        startDate:
+          type: string
+          format: date
+          example: '2017-10-07'
+          description: date of starting the lifecycle
+        beginningDate:
+          type: string
+          format: date
+          example: '2017-11-02'
+          description: beginning of the reconciliation period
+        dueDate:
+          type: string
+          format: date
+          example: '2017-12-02'
+          description: due date of the reconciliation
+        endDate:
+          type: string
+          format: date
+          example: '2017-12-07'
+          description: deadline of the reconciliation to be done
+        terminationDate:
+          type: string
+          format: date
+          example: '2017-12-07'
+          description: the termination date of the reconciliation lifecycle due to missing reconciliation
+        channelId:
+          type: string
+          example: '1234'
+          description: channel identifier of the reconciliation
+          minLength: 1
+          maxLength: 20
+        reactivationCode:
+          type: number
+          example: 123123
+          description: reactivation code for supporting easy renewal of cancelled subscription
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/notifItem'
+    lifecycleResetBody:
+      type: object
+      required:
+        - ctn
+        - productCode
+      properties:
+        ctn:
+          type: string
+          example: '36201234567'
+          description: Customer Telephone Number in international format
+          pattern: 36\d{9}
+        channelId:
+          type: string
+          example: '1234'
+          description: channel identifier of the reconciliation
+          minLength: 1
+          maxLength: 20
+        startDate:
+          type: string
+          format: date
+          example: '2017-09-29'
+          description: date of starting the lifecycle
+        productCode:
+          type: string
+          example: YOLO
+          enum:
+            - PREP
+            - YOLO
+    lifecycleChangeBody:
+      type: object
+      required:
+        - ctn
+      properties:
+        ctn:
+          type: string
+          example: '36201234567'
+          description: Customer Telephone Number in international format
+          pattern: 36\d{9}
+    lifecycleCreateBody:
+      type: object
+      required:
+        - ctn
+        - productCode
+      properties:
+        ctn:
+          type: string
+          example: '36201234567'
+          description: Customer Telephone Number in international format
+          pattern: 36\d{9}
+        startDate:
+          type: string
+          format: date
+          example: '2017-09-29'
+          description: date of starting the lifecycle
+        productCode:
+          type: string
+          example: YOLO
+          enum:
+            - PREP
+            - YOLO
+    reconPeriodResp:
+      type: object
+      required:
+        - beginningDate
+        - ctn
+        - dueDate
+        - endDate
+        - id
+        - productCode
+      properties:
+        id:
+          type: number
+          example: 4294967295
+          description: id of reconciliation lifecycle
+        ctn:
+          type: string
+          example: '36201234567'
+          description: Customer Telephone Number in international format
+          pattern: 36\d{9}
+        productCode:
+          type: string
+          example: YOLO
+          enum:
+            - PREP
+            - YOLO
+        beginningDate:
+          type: string
+          format: date
+          example: '2017-11-02'
+          description: beginning of the reconciliation period
+        dueDate:
+          type: string
+          format: date
+          example: '2017-12-02'
+          description: due date of the reconciliation
+        endDate:
+          type: string
+          format: date
+          example: '2017-12-07'
+          description: deadline of the reconciliation to be done
+    lifecycleTerminateResp:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: number
+          description: id of terminated reconciliation lifecycle
+
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: x-api-key
+      in: header

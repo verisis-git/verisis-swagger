@@ -378,6 +378,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Error'
+            application/json:
+              schema:
+                type: null
         '403':
           description: Forbidden
           headers:

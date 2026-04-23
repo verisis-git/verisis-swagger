@@ -1,0 +1,652 @@
+openapi: '3.0.4'
+info:
+  title: Telenor Device insurance interface for Insurance company
+  description: |
+    **v1.3**:
+    * header standardization
+
+    **v1.2**:
+    * remove isBroughtIn parameter (boolean)
+    * add broughtIn parameter (string enum)
+
+    **v1.1**:
+    * modify header parameters' name
+
+  version: '1.3.0'
+servers:
+  - url: https://sesame.devins.pgsm.hu/
+
+security:
+  - api_key: []
+  
+paths:
+
+  /deviceinsurance/v1/transactions:
+    get:
+      tags:
+          - Marsh
+      summary: Get transactions
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        # query
+        - $ref: '#/components/parameters/dLastTransferTime'
+        - $ref: '#/components/parameters/iCount'
+        - $ref: '#/components/parameters/iOffset'
+      responses:
+        '200':
+          headers:
+            count-reached:
+              description: True, if the count of the queried data is more or equals than the requested by count header parameter
+              schema:
+                $ref: '#/components/schemas/bCountReached'
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/aTransactions'
+          description: Success
+        '400':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid data
+          description: Bad request
+        '404':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid tacCode format
+          description: Not found
+        '500':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 503
+                errorDescription: Service is not available
+          description: Server unavailable
+          
+  /deviceinsurance/v1/termination:
+    post:
+      tags:
+          - Marsh
+      summary: Initiate delete insuers record(s)
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+      requestBody:
+        description: Termination elements
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/aTermination'
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '400':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid ctn format
+          description: Bad request
+        '500':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 503
+                errorDescription: Service is not available
+          description: Server unavailable
+          
+components:
+  headers:
+    Msg_ctx_src:
+      description: (mandatory) Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "LIGW"
+    Msg_ctx_src_module:
+      description: (optional) Name of the source system’s module which sent the message. Fill only if suitable
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: null
+    Msg_ctx_env:
+      description: (mandatory) Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        example: "PROD"
+    Msg_ctx_id:
+      description: (mandatory) Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "6b5fae5a-da07-4864-9683-ce55207d06af"
+    Msg_ctx_corr_id:
+      description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      description: (optional) It represents the sender application’s build version
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "3.0.1"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: "INODE"
+    Msg_ctx_src_module:
+      name: msg-ctx-src-module
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        example: "INode6 SIP AS"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        example: "PROD"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      name: msg-ctx-build-number
+      description: It represents the sender application’s build version
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "6.0.1-pre"
+    iCount:
+      name: count
+      required: false
+      in: query
+      description: Requested number of resources to be provided in response.
+      schema:
+        type: integer
+        minimum: 1
+    iOffset:
+      name: offset
+      required: false
+      in: query
+      description: Page number. 0 means the first one
+      schema:
+        type: integer
+        minimum: 0
+    dLastTransferTime:
+      name: last_transfer_time
+      required: false
+      in: query
+      description: "Last transfer time. Default: current date - 7 days"
+      schema:
+        type: string
+        format: date-time
+    sTacCode:
+      name: tacCode
+      required: false
+      in: query
+      description: Tac code. It is required if materialId query param is not set
+      schema:
+        type: string
+    sMaterialId:
+      name: materialId
+      required: false
+      in: query
+      description: Material id. It is required if tacCode query param is not set
+      schema:
+        $ref: '#/components/schemas/sSapMaterialId'
+  schemas:
+    bCountReached:
+      type: boolean
+      example: false
+    aTransactions:
+      type: array
+      description: Array of transactions
+      items:
+        $ref: '#/components/schemas/oTransactionElement'
+    oTransactionElement:
+      type: object
+      description: Transaction element
+      required: [contractId, customer, device, salesInfo, insurance, activationDate]
+      properties:
+        contractId:
+          type: string
+          description: Insurance identifier
+        customer:
+          $ref: '#/components/schemas/oCustomer'
+        device:
+          $ref: '#/components/schemas/oDevice'
+        salesInfo:
+          $ref: '#/components/schemas/oSalesInfo'
+        insurance:
+          $ref: '#/components/schemas/oInsurance'
+        activationDate:
+          type: string
+          format: date
+          description: Activation date of the insurance
+        termination:
+          $ref: '#/components/schemas/oTermination'
+        lastModificationDate:
+          type: string
+          format: date
+          description: Last modification date of the insurance
+        isNewDevice:
+          type: boolean
+          description: True if the device is new
+        broughtIn:
+          type: string
+          description: |
+            * notBroughtIn - NONE
+            * broughtInFromTelenor - TELENOR
+            * broughtInFromOther - OTHER
+          enum:
+            - "NONE"
+            - "TELENOR"
+            - "OTHER"
+    oSalesInfo:
+      type: object
+      description: Sales info object
+      properties:
+        channel:
+          $ref: '#/components/schemas/eChannel'
+        system:
+          type: string
+          description: Name of the system
+        dealerCode:
+          type: string
+          description: Dealer code
+        outletCode:
+          type: string
+          description: Outlet code
+        salesmanCode:
+          type: string
+          description: Salesman code
+    eChannel:
+      type: string
+      description: Channel enumeration. It can be Retail or Online
+      enum:
+        - RETAIL
+        - ONLINE
+    aTermination:
+      type: array
+      description: Array of termination elements
+      items:
+        $ref: '#/components/schemas/oTerminationElement'
+    oTerminationElement:
+      type: object
+      description: Termination element
+      required: [contractId, monthlyFee, ownShare]
+      properties:
+        contractId:
+          type: string
+          description: Insurance identifier
+        customer:
+          $ref: '#/components/schemas/oCustomer'
+        device:
+          $ref: '#/components/schemas/oDevice'
+        insurance:
+          $ref: '#/components/schemas/oInsurance'
+        monthlyFee:
+          type: number
+          description: Amount of monthly fee
+        ownShare:
+          type: number
+          description: Amount of share
+        termination:
+          $ref: '#/components/schemas/oTermination'
+        isBlacklisted:
+          type: boolean
+          description: true if the customer has to be on blacklist after the termination. False is the default
+    oCustomer:
+      type: object
+      description: Customer object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Name of the customer
+        country:
+          type: string
+          description: Country part of the address
+        zipCode:
+          type: string
+          description: Zip code part of the address
+        city:
+          type: string
+          description: City part of the address
+        nameOfStreet:
+          type: string
+          description: Name of the street. It is part of the address
+        typeOfStreet:
+          type: string
+          description: Type of the street. It is part of the address. E.g. street
+        houseNumber:
+          type: string
+          description: House number part of the address
+        additionalHouseNumber:
+          type: string
+          description: Additional info for house number. It is part of the address
+        motherName:
+          type: string
+          description: Name of customer's mother. It is required in case of an individual customer
+        birthDate:
+          type: string
+          format: date
+          description: Date of birth. It is required in case of an individual customer
+        birthPlace:
+          type: string
+          description: Date of place of birth. It is required in case of an individual customer
+        firmRegistryNumber:
+          type: string
+          description: Firm registry number. It is required in case of a non-individual customer
+    oDevice:
+      type: object
+      description: Device object
+      properties:
+        imeiNumber:
+          type: string
+          description: IMEI number of the device
+          maxLength: 20
+        serialNumber:
+          type: string
+          description: Serial number of the device
+        deviceMake:
+          type: string
+          description: Manufacturer of the device 
+        deviceName:
+          type: string
+          description: Name of the device
+        materialId:
+          $ref: '#/components/schemas/sSapMaterialId'
+        retailPrice:
+          type: number
+          description: Retail price of the device
+    oInsurance:
+      type: object
+      description: Insurance info object
+      properties:
+        insuranceCompanyName:
+          type: string
+          description: Insurance company name
+        insuranceProductId:
+          type: number
+          description: Insurance product identifier
+        insuranceProductName:
+          type: string
+          description: Insurance product name
+        insurancePriceBand:
+          $ref: '#/components/schemas/eInsurancePriceBand'
+        insuranceGrade:
+          $ref: '#/components/schemas/eInsuranceGrade'
+    oTermination:
+      type: object
+      description: Termination object
+      required: [defaultTerminationDate]
+      properties:
+        terminationDate:
+          type: string
+          format: date
+          description: Date of the termination
+        defaultTerminationDate:
+          type: string
+          format: date
+          description: Default termination date. It is defined in the contract
+        terminationReason:
+          type: string
+          description: Reason of the termination. Free text field
+        terminatingParty:
+          $ref: '#/components/schemas/eTerminator'
+    eInsuranceGrade:
+      type: string
+      description: Insurance grade enumeration
+      enum:
+        - BASIC
+        - MEDIUM
+        - EXTRA
+      example: MEDIUM
+    eTerminator:
+      type: string
+      description: Terminator enumeration
+      enum:
+        - INSURANCECOMPANY
+        - TELENOR
+        - CUSTOMER
+    sSapMaterialId:
+      type: string
+      description: SAP material id of the device
+      example: 218736821736821
+    eInsurancePriceBand:
+      type: integer
+      description: Insurance price band enumeration
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+      example: 1
+    oErrorResponse:
+      type: object
+      properties:
+          errorCode:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          errorDescription:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error
+
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: x-api-key
+      in: header 
