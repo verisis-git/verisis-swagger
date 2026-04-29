@@ -41,7 +41,7 @@ paths:
       responses:
         '200':
           headers:
-            count-reached:
+            Count-Reached:
               description: True, if the count of the queried data is more or equals than the requested by count header parameter
               schema:
                 $ref: '#/components/schemas/bCountReached'
