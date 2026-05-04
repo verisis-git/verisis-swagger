@@ -1,0 +1,257 @@
+openapi: 3.0.4
+servers:
+- description: Test environment
+  url: https:/payamrt-uat.pgsm.hu:1234
+info:
+  description: |
+    The purpose of this documentation is to summarize and specify in detail the Paymar Subscriber change interface.
+
+    **v1.1.0**: Header standardization
+  version: "1.1.0"
+  title: Paymart Subscriber change API
+  contact:
+    email: aweimann@verisis.hu
+security:
+  - x-api-key: [] 
+paths:
+  /api/v1/paymart/subs/change:
+    post:
+      summary: Subscriber change
+      operationId: subscriber-change
+      description: An account/SIM is transferred to another person (ownership change) or a subscriber has cancelled their account and the recycling period is less than the business unit’s churn period.
+      parameters:
+      # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriberChange'
+        description: Subscriber change request
+      responses:
+        "204":
+          description: No content
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        "400":
+          description: Bad Request
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+        "401":
+          description: Authentication Failed
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        "404":
+          description: Not found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+        "500":
+          description: Internal Error - retriable
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+components:
+  headers:
+    Msg_ctx_src:
+      description: (mandatory) Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9-_]+$'
+        example: "SESAME"
+    Msg_ctx_env:
+      description: (mandatory) Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        pattern: '^[a-z0-9-]+$'
+        example: "prod"
+    Msg_ctx_id:
+      description: (mandatory) Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "6b5fae5a-da07-4864-9683-ce55207d06af"
+    Msg_ctx_corr_id:
+      description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9-_]+$'
+        example: "SESAME"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        pattern: '^[a-z0-9-]+$'
+        example: "prod"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_src_module:
+      name: msg-ctx-src-module
+      description: "Optional, name of the source system’s module which sent the message. Fill only if suitable"
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        example: INode6 SIP AS
+    Msg_ctx_build_number:
+      name: msg-ctx-build-number
+      description: It represents the sender application’s build version
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        example: "14393.693"
+  schemas:
+    SubscriberChange:
+      type: object
+      required:
+      - subsId
+      - msisdn
+      properties:
+        subsId:
+          type: number
+          description: Subscriber identity in MCSIS system
+          example: 12345
+        msisdn:
+          type: string
+          pattern: "[0-9]{3,31}"
+          description: MSISDN
+          example: "36201234567"
+        stickyBitDateTime:
+          type: string
+          format: date-time
+          description: sticky bit datetime
+          example: "2025-04-30T13:03:57.300Z"
+    ErrorResult:
+      description: Basic result object
+      type: object
+      required:
+        - title
+        - status
+        - cause
+      properties:
+        title:
+          description: A short, human-readable summary of the problem type in case of http status 500
+          type: string
+          enum: ["Internal server error", "Bad request", "Not found"]
+          example: "Internal server error"
+        status:
+          description: The HTTP status code generated by the origin server for this occurrence of the problem
+          type: number
+          example: 500
+        cause:
+          description: A machine-readable application error cause specific to this occurrence of the problem in case of http status 500
+          type: string
+          enum: [INTERNAL_SERVER_ERROR, BAD_REQUEST]
+          example: "INTERNAL_SERVER_ERROR"
+        detail:
+          description: A human-readable explanation specific to this occurrence of the problem
+          type: string
+          example: "detail"
+  securitySchemes:
+    x-api-key:
+      type: apiKey
+      name: x-api-key
+      in: header
