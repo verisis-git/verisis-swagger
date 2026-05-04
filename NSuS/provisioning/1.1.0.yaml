@@ -1,0 +1,459 @@
+openapi: 3.0.0
+info:
+  version: '1.1.0'
+  title: Sesame network security interface
+  description: >-
+    This document describes the interface of the Sesame which implements a
+    service to provision network and endpoint security features
+    
+    **v1.1.0**: Header standardization
+security:
+  - x-api-key: [] 
+paths: 
+  #provisioning
+  /nsus/provision/bans/{ban}/ctns/{ctn}/activateDS:
+    post:
+      summary: Activate DNS security
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      responses:
+        '204':
+          description: Success
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/deactivateDS:
+    post:
+      summary: Deactivate DNS security
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      responses:
+        '204':
+          description: Success
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/activateEP:
+    post:
+      summary: Activate endpoint security
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                license_count:
+                  $ref: '#/components/schemas/iLicense_count'
+        description: Activate EP sec
+      responses:
+        '204':
+          description: Success
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/deactivateEP:
+    post:
+      summary: Deactivate endpoint security
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                license_count:
+                  $ref: '#/components/schemas/iLicense_count'
+      responses:
+        '204':
+          description: Success
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/changeCTN:
+    post:
+      summary: Change ctn
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                new_ctn:
+                  $ref: '#/components/schemas/sCtn'
+        description: New ctn
+      responses:
+        '204':
+          description: Success
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+  /nsus/provision/bans/{ban}/ctns/{ctn}/moveCTN:
+    post:
+      summary: Move ctn
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        #path
+        - $ref: '#/components/parameters/ban'
+        - $ref: '#/components/parameters/ctn'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                new_ban:
+                  $ref: '#/components/schemas/nBan'
+        description: New ban
+      responses:
+        '204':
+          description: Success
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+
+components:
+  responses:
+    '400':
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 400
+            error_description: Invalid ctn format
+      description: Bad request
+    '401':
+      description: Unauthorized 
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            errorCode: 401
+            errorDescription: Unauthorized
+    '404':
+      description: Returned if any entity was not found.
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 404
+            error_description: Customer not found
+    '500':
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 500
+            error_description: Internal server error
+      description: Internal server error
+    '503':
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/oErrorResponse'
+          example: 
+            error_code: 503
+            error_description: Service is not available
+      description: Server unavailable
+  headers:
+    Msg_ctx_src:
+      description: (mandatory) Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9-_]+$'
+        example: "SESAME"
+    Msg_ctx_env:
+      description: (mandatory) Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        pattern: '^[a-z0-9-]+$'
+        example: "prod"
+    Msg_ctx_id:
+      description: (mandatory) Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "6b5fae5a-da07-4864-9683-ce55207d06af"
+    Msg_ctx_corr_id:
+      description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9-_]+$'
+        example: "SESAME"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        pattern: '^[a-z0-9-]+$'
+        example: "prod"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+    ctn:
+      name: ctn
+      in: path
+      description: Affected CTN. In case of ChangeCTN it is the old ctn
+      required: true
+      schema:
+        $ref: '#/components/schemas/sCtn'
+    ban:
+      name: ban
+      in: path
+      description: Affected BAN. In case of MoveCTN it is the old BAN
+      required: true
+      schema:
+        $ref: '#/components/schemas/nBan'
+  schemas:
+    sCtn:
+      description: User MSISDN
+      type: string
+      pattern: '36[0-9]{9}'
+      example: '36201234567'
+    nBan:
+      description: BAN
+      type: number
+      example: 36184912
+    iLicense_count:
+      type: integer
+      minimum: 0
+      example: 10
+      description: "number of the device to be registrated or canceled"
+    oErrorResponse:
+      type: object
+      properties:
+          error_code:
+            type: number
+            minimum: 0
+            description: Error code
+            example: 2002
+          error_description:
+            type: string
+            minLength: 0
+            maxLength: 64
+            description: Error description
+            example: Retriable error
+  securitySchemes:
+    x-api-key:
+      type: apiKey
+      name: x-api-key
+      in: header

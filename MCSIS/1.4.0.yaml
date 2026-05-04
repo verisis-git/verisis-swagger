@@ -1,38 +1,46 @@
-openapi: '3.0.4'
+openapi: 3.0.0
 info:
-  title: Sesame Device insurance interfaces
   description: |
-    Interface for uService
-  
-    changelog:
-      
-      v1.4.0: header standardization
-
-      v1.3: Customer object modified: address data are removed
-      
-      v1.3.1: Add retailPrice data to WhitelistElement
-  version: 1.4.0
-servers:
-  - url: https://sesame.devins.pgsm.hu/
+    SESAME MCOMMERCE SUBSCRIPTION INFO MANAGER (MCSIS)
+    
+    Api Documentation
+    
+    **v1.2.0**: Header standardization
+  version: '1.4.0'
+  title: MCSIS Api documentation
+servers: 
+  - url: http://localhost:7447
 security:
-  - x-api-key: []  
+  - x-api-key: [] 
 paths:
-  /deviceinsurance/v1/whitelist:
+  /mcsis/subs:
     get:
-      tags:
-          - BlackAndWhite
-      summary: Get stored whitelist
+      summary: getSubsByMsisdn
+      operationId: getSubsByMsisdnUsingGET
       parameters:
         # header
         - $ref: '#/components/parameters/Msg_ctx_src'
         - $ref: '#/components/parameters/Msg_ctx_env'
         - $ref: '#/components/parameters/Msg_ctx_id'
         - $ref: '#/components/parameters/Msg_ctx_corr_id'
-        # query
-        - $ref: '#/components/parameters/sTacCode'
-        - $ref: '#/components/parameters/sMaterialId'
+        - name: msisdn
+          in: query
+          description: msisdn
+          required: true
+          schema:
+            type: string
+        - name: include-imsi
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: >
+            If true, the response includes the IMSI of the SIM card.
+            Default is false.
       responses:
         '200':
+          description: OK
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -45,29 +53,9 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/oWhitelistElement'
-          description: Success
-        '400':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 400
-                errorDescription: Invalid data
-          description: Bad request
+                $ref: '#/components/schemas/Subscriber'
         '401':
+          description: Unauthorized
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -77,15 +65,19 @@ paths:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 401
-                errorDescription: Unauthorized 
-          description: Unauthorized        
+        '403':
+          description: Forbidden
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
         '404':
+          description: Not Found
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -95,56 +87,10 @@ paths:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 400
-                errorDescription: Invalid tacCode format
-          description: Not found
-        '500':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 500
-                errorDescription: Internal server error
-          description: Internal server error
-        '503':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 503
-                errorDescription: Service is not available
-          description: Server unavailable
-          
-  /deviceinsurance/v1/blacklist/customercheck: 
+      deprecated: false
     post:
-      tags:
-          - BlackAndWhite
-      summary: Check if a customer is on blacklist
+      summary: createSubs
+      operationId: createSubsUsingPOST
       parameters:
         # header
         - $ref: '#/components/parameters/Msg_ctx_src'
@@ -152,12 +98,14 @@ paths:
         - $ref: '#/components/parameters/Msg_ctx_id'
         - $ref: '#/components/parameters/Msg_ctx_corr_id'
       requestBody:
+        description: subscriber
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/oCustomer'
+              $ref: '#/components/schemas/BasicSubscriber'
       responses:
         '200':
+          description: OK
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -170,12 +118,9 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  isOnBlacklist:
-                    type: boolean
-                    description: true, if customer is on blacklist
-          description: Success
-        '400':
+                $ref: '#/components/schemas/Subscriber'
+        '201':
+          description: Created
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -185,15 +130,8 @@ paths:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 400
-                errorDescription: Invalid data
-          description: Bad request
         '401':
+          description: Unauthorized
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -203,15 +141,57 @@ paths:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 401
-                errorDescription: Unauthorized 
-          description: Unauthorized 
+        '403':
+          description: Forbidden
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
         '404':
+          description: Not Found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+      deprecated: false
+  /mcsis/subs/{id}:
+    get:
+      summary: getSubsById
+      operationId: getSubsByIdUsingGET
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+        - name: include-imsi
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: >
+            If true, the response includes the IMSI of the SIM card.
+            Default is false.
+      responses:
+        '200':
+          description: OK
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -224,12 +204,65 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 400
-                errorDescription: Invalid tacCode format
-          description: Not found
-        '500':
+                $ref: '#/components/schemas/Subscriber'
+        '401':
+          description: Unauthorized
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '403':
+          description: Forbidden
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '404':
+          description: Not Found
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+      deprecated: false
+    patch:
+      summary: updateSubs
+      operationId: updateSubsUsingPATCH
+      parameters:
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - name: id
+          in: path
+          description: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: basicSubscriber
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicSubscriber'
+      responses:
+        '200':
+          description: OK
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -242,12 +275,9 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 500
-                errorDescription: Internal server error
-          description: Internal server error
-        '503':
+                $ref: '#/components/schemas/Subscriber'
+        '204':
+          description: No Content
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -257,15 +287,29 @@ paths:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 503
-                errorDescription: Service is not available
-          description: Server unavailable
-  
+        '401':
+          description: Unauthorized
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '403':
+          description: Forbidden
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+      deprecated: false
 components:
   headers:
     Msg_ctx_src:
@@ -349,109 +393,89 @@ components:
         maxLength: 40
         pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         example: "3385cbdb-8561-48f6-a671-5e271f486a41"
-    sTacCode:
-      name: tacCode
-      required: false
-      in: query
-      description: Tac code. It is required if materialId query param is not set
-      schema:
-        type: string
-        minLength: 8
-        maxLength: 8
-        example: "32930400"
-    sMaterialId:
-      name: materialId
-      required: false
-      in: query
-      description: Material id. It is required if tacCode query param is not set
-      schema:
-        $ref: '#/components/schemas/sSapMaterialId'
   schemas:
-    oCustomer:
-      type: object
-      description: Customer object
-      required: [name]
-      properties:
-        name:
-          type: string
-          description: Name of the customer
-        motherName:
-          type: string
-          description: Name of customer's mother. It is required in case of an individual customer
-        birthDate:
-          type: string
-          format: date
-          description: Date of birth. It is required in case of an individual customer
-        birthPlace:
-          type: string
-          description: Date of place of birth. It is required in case of an individual customer
-        firmRegistryNumber:
-          type: string
-          description: Firm registry number. It is required in case of a non-individual customer
-    oWhitelistElement:
-      type: object
-      description: Whitelist element
-      required: [tacCode, sapMaterialIds]
-      properties:
-        tacCode:
-          type: string
-          minLength: 8
-          maxLength: 8
-          description: tacCode
-          example: "32930400"
-        internalStorageSize:
-          type: number
-          format: int32
-          description: Internal storage capacity
-          example: 32
-        sapMaterialId:
-            $ref: '#/components/schemas/sSapMaterialId'
-        priceBand:
-          $ref: '#/components/schemas/eInsurancePriceBand'
-        deviceMake:
-          type: string
-          description: Manufacturer of the device
-          example: Samsung
-        deviceName:
-          type: string
-          description: Name of the device
-          example: S20
-        retailPrice:
-          type: number
-          format: int32
-          description: Retail Price
-          example: 143299
-    sSapMaterialId:
-      type: string
-      description: SAP material id of the device
-      minLength: 1
-      example: 218736821736821
-    eInsurancePriceBand:
-      type: integer
-      description: Insurance price band enumeration
-      enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        - 6
-      example: 1
-    oErrorResponse:
+    BasicSubscriber:
       type: object
       properties:
-          errorCode:
-            type: number
-            minimum: 0
-            description: Error code
-            example: 2002
-          errorDescription:
+        adultContentBan:
+          type: boolean
+        blockServiceCategories:
+          type: array
+          example:
+            - GOODS
+          items:
             type: string
-            minLength: 0
-            maxLength: 64
-            description: Error description
-            example: Retriable error
-
+        moSmsBan:
+          type: boolean
+        msisdn:
+          type: string
+          example: 36201234567
+        paymartBan:
+          type: boolean
+        paymartService:
+          type: boolean
+        status:
+          type: string
+          example: ACTIVE
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - SUSPENDED
+        stickyBitDateTime:
+          type: string
+          example: yyyy-MM-dd HH:mm:ss
+      title: BasicSubscriber
+    Subscriber:
+      type: object
+      properties:
+        adultContentBan:
+          type: boolean
+        blockServiceCategories:
+          type: array
+          example:
+            - GOODS
+          items:
+            type: string
+        customerType:
+          type: string
+          enum:
+            - BUSINESS
+            - SELFEMPLOYEE
+            - INDIVIDUAL
+            - UNKNOWN
+        moSmsBan:
+          type: boolean
+        msisdn:
+          type: string
+          example: 36201234567
+        paymartBan:
+          type: boolean
+        paymartService:
+          type: boolean
+        subscriptionType:
+          type: string
+          enum:
+            - PREPAID
+            - POSTPAID
+            - UNKNOWN
+        status:
+          type: string
+          example: ACTIVE
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - SUSPENDED
+        stickyBitDateTime:
+          type: string
+          example: yyyy-MM-dd HH:mm:ss
+        subsId:
+          type: integer
+          format: int64
+        imsi:
+          type: string
+          description: IMSI of the SIM card. Present only when includeImsi=true.
+          example: 216238432983
+      title: Subscriber
   securitySchemes:
     x-api-key:
       type: apiKey

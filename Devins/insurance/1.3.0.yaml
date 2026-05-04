@@ -17,7 +17,7 @@ servers:
   - url: https://sesame.devins.pgsm.hu/
 
 security:
-  - api_key: []
+  - x-api-key: []
   
 paths:
 
@@ -29,11 +29,9 @@ paths:
       parameters:
         #header
         - $ref: '#/components/parameters/Msg_ctx_src'
-        - $ref: '#/components/parameters/Msg_ctx_src_module'
         - $ref: '#/components/parameters/Msg_ctx_env'
         - $ref: '#/components/parameters/Msg_ctx_id'
         - $ref: '#/components/parameters/Msg_ctx_corr_id'
-        - $ref: '#/components/parameters/Msg_ctx_build_number'
         # query
         - $ref: '#/components/parameters/dLastTransferTime'
         - $ref: '#/components/parameters/iCount'
@@ -47,16 +45,12 @@ paths:
                 $ref: '#/components/schemas/bCountReached'
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
           content:
             application/json:
               schema:
@@ -66,16 +60,12 @@ paths:
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
           content:
             application/json:
               schema:
@@ -84,42 +74,52 @@ paths:
                 errorCode: 400
                 errorDescription: Invalid data
           description: Bad request
-        '404':
+        '401':
+          description: Unauthorized 
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 401
+                errorDescription: Unauthorized
+        '404':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
           content:
             application/json:
               schema:
                $ref: '#/components/schemas/oErrorResponse'
               example: 
                 errorCode: 400
-                errorDescription: Invalid tacCode format
+                errorDescription: Not found
           description: Not found
         '500':
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
           content:
             application/json:
               schema:
@@ -132,16 +132,12 @@ paths:
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
           content:
             application/json:
               schema:
@@ -159,11 +155,9 @@ paths:
       parameters:
         #header
         - $ref: '#/components/parameters/Msg_ctx_src'
-        - $ref: '#/components/parameters/Msg_ctx_src_module'
         - $ref: '#/components/parameters/Msg_ctx_env'
         - $ref: '#/components/parameters/Msg_ctx_id'
         - $ref: '#/components/parameters/Msg_ctx_corr_id'
-        - $ref: '#/components/parameters/Msg_ctx_build_number'
       requestBody:
         description: Termination elements
         content:
@@ -176,30 +170,22 @@ paths:
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
         '400':
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
           content:
             application/json:
               schema:
@@ -208,20 +194,34 @@ paths:
                 errorCode: 400
                 errorDescription: Invalid ctn format
           description: Bad request
-        '500':
+        '401':
+          description: Unauthorized 
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/oErrorResponse'
+              example: 
+                errorCode: 401
+                errorDescription: Unauthorized
+        '500':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
           content:
             application/json:
               schema:
@@ -234,16 +234,12 @@ paths:
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-src-module:
-              $ref: '#/components/headers/Msg_ctx_src_module'
             msg-ctx-env:
               $ref: '#/components/headers/Msg_ctx_env'
             msg-ctx-id:
               $ref: '#/components/headers/Msg_ctx_id'
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
-            msg-ctx-build-number:
-              $ref: '#/components/headers/Msg_ctx_build_number'
           content:
             application/json:
               schema:
@@ -262,15 +258,8 @@ components:
         type: string
         minLength: 1
         maxLength: 64
-        example: "LIGW"
-    Msg_ctx_src_module:
-      description: (optional) Name of the source system’s module which sent the message. Fill only if suitable
-      required: false
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 64
-        example: null
+        pattern: '^[a-zA-Z0-9-_]+$'
+        example: "SESAME"
     Msg_ctx_env:
       description: (mandatory) Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
       required: true
@@ -278,7 +267,8 @@ components:
         type: string
         minLength: 1
         maxLength: 32
-        example: "PROD"
+        pattern: '^[a-z0-9-]+$'
+        example: "prod"
     Msg_ctx_id:
       description: (mandatory) Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
       required: true
@@ -286,6 +276,7 @@ components:
         type: string
         minLength: 1
         maxLength: 40
+        pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         example: "6b5fae5a-da07-4864-9683-ce55207d06af"
     Msg_ctx_corr_id:
       description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
@@ -294,14 +285,8 @@ components:
         type: string
         minLength: 1
         maxLength: 40
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         example: "3385cbdb-8561-48f6-a671-5e271f486a41"
-    Msg_ctx_build_number:
-      description: (optional) It represents the sender application’s build version
-      required: false
-      schema:
-        type: string
-        maxLength: 16
-        example: "3.0.1"
   parameters:
     Msg_ctx_src:
       name: msg-ctx-src
@@ -312,16 +297,8 @@ components:
         type: string
         minLength: 1
         maxLength: 64
-        example: "INODE"
-    Msg_ctx_src_module:
-      name: msg-ctx-src-module
-      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
-      in: header
-      required: false
-      schema:
-        type: string
-        maxLength: 64
-        example: "INode6 SIP AS"
+        pattern: '^[a-zA-Z0-9-_]+$'
+        example: "SESAME"
     Msg_ctx_env:
       name: msg-ctx-env
       description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
@@ -331,7 +308,8 @@ components:
         type: string
         minLength: 1
         maxLength: 32
-        example: "PROD"
+        pattern: '^[a-z0-9-]+$'
+        example: "prod"
     Msg_ctx_id:
       name: msg-ctx-id
       description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
@@ -341,6 +319,7 @@ components:
         type: string
         minLength: 1
         maxLength: 40
+        pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
     Msg_ctx_corr_id:
       name: msg-ctx-corr-id
@@ -351,16 +330,8 @@ components:
         type: string
         minLength: 1
         maxLength: 40
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         example: "3385cbdb-8561-48f6-a671-5e271f486a41"
-    Msg_ctx_build_number:
-      name: msg-ctx-build-number
-      description: It represents the sender application’s build version
-      in: header
-      required: false
-      schema:
-        type: string
-        maxLength: 16
-        example: "6.0.1-pre"
     iCount:
       name: count
       required: false
@@ -646,7 +617,7 @@ components:
             example: Retriable error
 
   securitySchemes:
-    api_key:
+    x-api-key:
       type: apiKey
       name: x-api-key
       in: header 

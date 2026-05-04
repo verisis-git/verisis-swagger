@@ -1,0 +1,262 @@
+openapi: '3.0.0'
+info:
+  title: M2M Portal interfaces exposed to Sesame
+  version: '1.2.0'
+  description: |
+    **v1.2.0**: Header standardization
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/aweimann/M2M_Portal/1.1.0
+  - url: https://be.m2m.pgsm.hu/
+security:
+  - x-api-key: [] 
+paths:
+  /m2m/v1/job/{trxId}/start:
+    post:
+      tags:
+        - Job operations
+      summary: Start job
+      parameters:
+        - name: trxId
+          in: path
+          required: true
+          description: Sesame trxId
+          schema:
+            type: integer
+            minimum: 1
+            example: 400132514
+        # header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+      responses:
+        '204':
+          description: OK. (Success, but no response content)
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+        '400':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponse'
+              example: 
+                errorCode: 400
+                errorDescription: Invalid request data
+          description: Bad request
+        '401':
+          description: Unauthorized 
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponse'
+              example: 
+                errorCode: 401
+                errorDescription: Unauthorized 
+        '404':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponse'
+              example: 
+                errorCode: 404
+                errorDescription: Transaction not found
+          description: Object not found
+        '500':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponse'
+              example: 
+                errorCode: 500
+                errorDescription: Database error 
+          description: Internal server error
+        '503':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponseWithDatetime'
+              example: 
+                errorCode: 2002
+                errorDescription: Service temporarily unavailable
+                retryTimeAbs: "2022-12-19T16:39:57-08:00"
+          description: |
+            Service temporarily unavailable
+            
+            There are some specific errorcodes:
+            * 2001 - Retry immediately
+            * 2002 - Retry this job later
+            * 2003 - Service is unavailable for a while
+            
+            *__retryTimeAbs__* and *__retryTimeRel__* parameters are optional in case of error code *__2002__* and *__2003__*
+components:
+  headers:
+    Msg_ctx_src:
+      description: (mandatory) Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9-_]+$'
+        example: "SESAME"
+    Msg_ctx_env:
+      description: (mandatory) Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        pattern: '^[a-z0-9-]+$'
+        example: "prod"
+    Msg_ctx_id:
+      description: (mandatory) Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "6b5fae5a-da07-4864-9683-ce55207d06af"
+    Msg_ctx_corr_id:
+      description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9-_]+$'
+        example: "SESAME"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        pattern: '^[a-z0-9-]+$'
+        example: "prod"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        example: "3385cbdb-8561-48f6-a671-5e271f486a41"
+  schemas:
+    errorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: number
+          minimum: 0
+          description: Error code
+        errorDescription:
+          type: string
+          minLength: 0
+          maxLength: 64
+          description: Error description
+    errorResponseWithDatetime:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/errorResponse'
+        - oneOf:
+          - type: object
+            properties:
+              retryTimeAbs:
+                type: string
+                description: The date and time when the retry can run
+                format: date-time
+          - type: object
+            properties:
+              retryTimeRel:
+                type: integer
+                description: Retry delay in sec
+                format: int32
+  securitySchemes:
+    x-api-key:
+      type: apiKey
+      name: x-api-key
+      in: header

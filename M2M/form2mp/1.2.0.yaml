@@ -1,161 +1,30 @@
-openapi: '3.0.4'
+openapi: '3.0.2'
 info:
-  title: Sesame Device insurance interfaces
+  title: Sesame interfaces exposed to M2M Portal
+  version: '1.2.0'
   description: |
-    Interface for uService
-  
-    changelog:
-      
-      v1.4.0: header standardization
-
-      v1.3: Customer object modified: address data are removed
-      
-      v1.3.1: Add retailPrice data to WhitelistElement
-  version: 1.4.0
+    **v1.2.0**: Header standardization
 servers:
-  - url: https://sesame.devins.pgsm.hu/
+  - url: https://sesame.m2m.pgsm.hu/
 security:
-  - x-api-key: []  
+  - x-api-key: []
 paths:
-  /deviceinsurance/v1/whitelist:
-    get:
-      tags:
-          - BlackAndWhite
-      summary: Get stored whitelist
-      parameters:
-        # header
-        - $ref: '#/components/parameters/Msg_ctx_src'
-        - $ref: '#/components/parameters/Msg_ctx_env'
-        - $ref: '#/components/parameters/Msg_ctx_id'
-        - $ref: '#/components/parameters/Msg_ctx_corr_id'
-        # query
-        - $ref: '#/components/parameters/sTacCode'
-        - $ref: '#/components/parameters/sMaterialId'
-      responses:
-        '200':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/oWhitelistElement'
-          description: Success
-        '400':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 400
-                errorDescription: Invalid data
-          description: Bad request
-        '401':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 401
-                errorDescription: Unauthorized 
-          description: Unauthorized        
-        '404':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 400
-                errorDescription: Invalid tacCode format
-          description: Not found
-        '500':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 500
-                errorDescription: Internal server error
-          description: Internal server error
-        '503':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 503
-                errorDescription: Service is not available
-          description: Server unavailable
-          
-  /deviceinsurance/v1/blacklist/customercheck: 
+  /m2msesame/v1/job/upload:
     post:
       tags:
-          - BlackAndWhite
-      summary: Check if a customer is on blacklist
+          - Job operations
+      summary: Initiate bulk job create
       parameters:
-        # header
-        - $ref: '#/components/parameters/Msg_ctx_src'
-        - $ref: '#/components/parameters/Msg_ctx_env'
-        - $ref: '#/components/parameters/Msg_ctx_id'
-        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
       requestBody:
+        description: M2M Job list
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/oCustomer'
+            schema: 
+              $ref: '#/components/schemas/JobList'
       responses:
         '200':
           headers:
@@ -170,11 +39,8 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  isOnBlacklist:
-                    type: boolean
-                    description: true, if customer is on blacklist
-          description: Success
+               $ref: '#/components/schemas/jobRequestResult'
+          description: OK
         '400':
           headers:
             msg-ctx-src:
@@ -186,14 +52,15 @@ paths:
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
           content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 400
-                errorDescription: Invalid data
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 400
+                  errorDescription: Invalid startTime format
           description: Bad request
         '401':
+          description: Unauthorized 
           headers:
             msg-ctx-src:
               $ref: '#/components/headers/Msg_ctx_src'
@@ -206,29 +73,10 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/oErrorResponse'
+               $ref: '#/components/schemas/errorResponse'
               example: 
                 errorCode: 401
-                errorDescription: Unauthorized 
-          description: Unauthorized 
-        '404':
-          headers:
-            msg-ctx-src:
-              $ref: '#/components/headers/Msg_ctx_src'
-            msg-ctx-env:
-              $ref: '#/components/headers/Msg_ctx_env'
-            msg-ctx-id:
-              $ref: '#/components/headers/Msg_ctx_id'
-            msg-ctx-corr-id:
-              $ref: '#/components/headers/Msg_ctx_corr_id'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 400
-                errorDescription: Invalid tacCode format
-          description: Not found
+                errorDescription: Unauthorized
         '500':
           headers:
             msg-ctx-src:
@@ -240,12 +88,12 @@ paths:
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
           content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/oErrorResponse'
-              example: 
-                errorCode: 500
-                errorDescription: Internal server error
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 500
+                  errorDescription: Internal server error
           description: Internal server error
         '503':
           headers:
@@ -258,14 +106,117 @@ paths:
             msg-ctx-corr-id:
               $ref: '#/components/headers/Msg_ctx_corr_id'
           content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 503
+                  errorDescription: Server is not available.
+          description: Server unavailable
+  /m2msesame/v1/job/delete:
+    post:
+      tags:
+          - Job operations
+      summary: Initiate bulk job delete
+      parameters:
+        - $ref: '#/components/parameters/msgcntx_src'
+        - $ref: '#/components/parameters/msgcntx_id'
+        - $ref: '#/components/parameters/msgcntx_env'
+        - $ref: '#/components/parameters/msgcntx_corelid'
+      requestBody:
+        description: Job Transaction ids
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/JobDeleteList'
+      responses:
+        '200':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
             application/json:
               schema:
-               $ref: '#/components/schemas/oErrorResponse'
+               $ref: '#/components/schemas/jobDeleteRequestResult'
+          description: Deleted
+        '400':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 400
+                  errorDescription: Invalid request data
+          description: Bad request
+        '401':
+          description: Unauthorized 
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/errorResponse'
               example: 
-                errorCode: 503
-                errorDescription: Service is not available
+                errorCode: 401
+                errorDescription: Unauthorized
+        '500':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 500
+                  errorDescription: Internal server error
+          description: Internal server error
+        '503':
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+          content:
+              application/json:
+                schema:
+                 $ref: '#/components/schemas/errorResponse'
+                example: 
+                  errorCode: 503
+                  errorDescription: Server is not available
           description: Server unavailable
-  
 components:
   headers:
     Msg_ctx_src:
@@ -305,7 +256,7 @@ components:
         pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         example: "3385cbdb-8561-48f6-a671-5e271f486a41"
   parameters:
-    Msg_ctx_src:
+    msgcntx_src:
       name: msg-ctx-src
       description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
       in: header
@@ -316,7 +267,7 @@ components:
         maxLength: 64
         pattern: '^[a-zA-Z0-9-_]+$'
         example: "SESAME"
-    Msg_ctx_env:
+    msgcntx_env:
       name: msg-ctx-env
       description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
       in: header
@@ -327,7 +278,7 @@ components:
         maxLength: 32
         pattern: '^[a-z0-9-]+$'
         example: "prod"
-    Msg_ctx_id:
+    msgcntx_id:
       name: msg-ctx-id
       description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
       in: header
@@ -338,7 +289,7 @@ components:
         maxLength: 40
         pattern: '^[0-9a-f]{16}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         example: "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
-    Msg_ctx_corr_id:
+    msgcntx_corelid:
       name: msg-ctx-corr-id
       description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
       in: header
@@ -349,95 +300,48 @@ components:
         maxLength: 40
         pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         example: "3385cbdb-8561-48f6-a671-5e271f486a41"
-    sTacCode:
-      name: tacCode
-      required: false
-      in: query
-      description: Tac code. It is required if materialId query param is not set
-      schema:
-        type: string
-        minLength: 8
-        maxLength: 8
-        example: "32930400"
-    sMaterialId:
-      name: materialId
-      required: false
-      in: query
-      description: Material id. It is required if tacCode query param is not set
-      schema:
-        $ref: '#/components/schemas/sSapMaterialId'
   schemas:
-    oCustomer:
+    JobList:
+      type: array
+      description: Array of jobs
+      items:
+        $ref: '#/components/schemas/Job'
+    Job:
       type: object
-      description: Customer object
-      required: [name]
+      required: [jobId,startTime]
       properties:
-        name:
+        jobId:
           type: string
-          description: Name of the customer
-        motherName:
+          minLength: 1
+          maxLength: 32
+          description: M2M id of the job
+          example: 1123
+        type:
           type: string
-          description: Name of customer's mother. It is required in case of an individual customer
-        birthDate:
+          minLength: 1
+          maxLength: 32
+          description: Type of the job
+          example: ROAMING
+        startTime:
           type: string
-          format: date
-          description: Date of birth. It is required in case of an individual customer
-        birthPlace:
-          type: string
-          description: Date of place of birth. It is required in case of an individual customer
-        firmRegistryNumber:
-          type: string
-          description: Firm registry number. It is required in case of a non-individual customer
-    oWhitelistElement:
-      type: object
-      description: Whitelist element
-      required: [tacCode, sapMaterialIds]
-      properties:
-        tacCode:
-          type: string
-          minLength: 8
-          maxLength: 8
-          description: tacCode
-          example: "32930400"
-        internalStorageSize:
+          format: date-time
+          description: Start time of the job
+        ban:
+          description: BAN
           type: number
-          format: int32
-          description: Internal storage capacity
-          example: 32
-        sapMaterialId:
-            $ref: '#/components/schemas/sSapMaterialId'
-        priceBand:
-          $ref: '#/components/schemas/eInsurancePriceBand'
-        deviceMake:
-          type: string
-          description: Manufacturer of the device
-          example: Samsung
-        deviceName:
-          type: string
-          description: Name of the device
-          example: S20
-        retailPrice:
-          type: number
-          format: int32
-          description: Retail Price
-          example: 143299
-    sSapMaterialId:
-      type: string
-      description: SAP material id of the device
-      minLength: 1
-      example: 218736821736821
-    eInsurancePriceBand:
-      type: integer
-      description: Insurance price band enumeration
-      enum:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        - 6
-      example: 1
-    oErrorResponse:
+          example: 36184912    
+    JobDeleteList:
+      type: array
+      description: List of jobIds will be deleted
+      items:
+        properties:
+          trxId:
+            type: integer
+            format: int64
+            minimum: 1
+            description: Sesame trx id
+            example: 4000123211
+    errorResponse:
       type: object
       properties:
           errorCode:
@@ -451,7 +355,57 @@ components:
             maxLength: 64
             description: Error description
             example: Retriable error
-
+    jobRequestResult:
+      type: array
+      description: List of job trx results 
+      items:
+        $ref: '#/components/schemas/singleJobResult'
+    singleJobResult:
+      type: object
+      description: Result of a single job 
+      properties:
+        jobId:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: M2M id of the job
+          example: 1123
+        trxId:
+            type: integer
+            minimum: 1
+            format: int64
+            description: Sesame trx id
+            example: 4000123211
+        trxStatus:
+          type: string
+          description: Single trx status
+          enum:
+            - ACCEPTED
+            - FAILED
+            - INVALID
+          example: ACCEPTED
+    jobDeleteRequestResult:
+      type: array
+      description: List of delete job results 
+      items:
+        $ref: '#/components/schemas/singleJobDeleteResult'
+    singleJobDeleteResult:
+      type: object
+      description: Result of a single delete job 
+      properties:
+        trxId:
+            type: integer
+            minimum: 1
+            description: Sesame trx id
+            example: 4000123211
+        trxStatus:
+          type: string
+          description: Single delete status
+          enum:
+            - DELETED
+            - FAILED
+            - NOTFOUND
+          example: DELETED
   securitySchemes:
     x-api-key:
       type: apiKey
