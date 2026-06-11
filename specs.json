@@ -261,6 +261,32 @@
           ]
         }
       ]
+    },
+	{
+      "key": "Clara",
+      "display": "Clara",
+      "apis": [
+        {
+          "key": "default",
+          "display": "Clara - coupon lifecycle",
+          "versions": [
+            { "v": "1.0.0", "path": "Clara/couponBox.yaml" }
+          ]
+        }
+      ]
+    },
+	{
+      "key": "ECF",
+      "display": "ECF",
+      "apis": [
+        {
+          "key": "default",
+          "display": "Easy rider REST API",
+          "versions": [
+            { "v": "1.0.0", "path": "ECF/er-v1.0.0.yaml" }
+          ]
+        }
+      ]
     }
   ]
 }

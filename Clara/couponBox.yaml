@@ -1,0 +1,1773 @@
+openapi: 3.1.0
+info:
+  title: CLARA Promotion API
+  description: 'This logical swg is created to fulfill the Promotion service requirements. Promotion service API manages promotions, activations, and usage lifecycle. Initial version focuses to MGM campaigns.'
+  version: '1.0.0'
+servers:
+  - url: 'https://api.yettel.hu/promotion-service/v1'
+paths:
+  /promotions:
+    get:
+      summary: List promotions matching filter criteria
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #query
+        - name: profile-type
+          in: query
+          description: "Filter by customer profile type (e.g., prepaid, postpaid)."
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+            examples:
+              - "postpaid"
+        - name: soc
+          in: query
+          description: "Filter by one or more Service Offering Codes (SOCs). Multiple values can be provided."
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 64
+        - name: general
+          in: query
+          description: "Filter by offer type. True for general offers, false for targeted ones."
+          required: false
+          schema:
+            type: boolean
+        - name: user-id
+          in: query
+          description: "The unique identifier of the customer to get personalized offers for."
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+        - name: display-category
+          in: query
+          description: "Filter by one or more UI display categories (e.g., fashion, food)."
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: start-date-after
+          in: query
+          description: "Filter promotions that start after this date and time (ISO 8601 format)."
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: end-date-before
+          in: query
+          description: "Filter promotions that end before this date and time (ISO 8601 format)."
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/Count'
+      responses:
+        '200':
+          description: list of filtered promotions, sorted by priority
+          headers:
+            count-reached:
+              description: it defines that the requested number of elements in the query exceeds the response result set (true) or not (false)
+              schema:
+                type: boolean
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                  - $ref: '#/components/schemas/Promotion'
+                  - type: object
+                    properties:
+                      has_activation:
+                        type: boolean
+                        description: True if the requesting user already has an active activation (code) for this promotion.
+                      activation_summary:
+                        type: object
+                        description: Compact summary of the user's existing activation, if any.
+                        properties:
+                          code:
+                            type: string
+                            description: The personal coupon code.
+                          remaining_usages:
+                            type: integer
+                            description: How many more times this code can be used.
+                          status:
+                            $ref: '#/components/schemas/ActivationStatus'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/activations:
+    get:
+      summary: "List all activations (personal coupons) for a user (across all promotions)"
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #query
+        - name: user-id
+          in: query
+          description: "User whose activations to retrieve"
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+      responses:
+        '200':
+          description: "Existing activations (coupons) for this user."
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PromotionActivation'
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}:
+    get:
+      summary: Retrieval of an existing promotion by identifier
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+      responses:
+        '200':
+          description: Promotion detail
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Promotion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404': # promo id not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/usage-info:
+    get:
+      summary: Get usage statistics for a promotion.
+      description: "Returns counters for activations (assigned codes) and total redemptions."
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+      responses:
+        '200':
+          description: Usage statistics
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageInfo'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404': # promo id not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/activations:
+    get:
+      summary: "Get personal coupons for a promotion."
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+        #query
+        - name: user-id
+          in: query
+          description: "Filter to a specific user's activation."
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+        - name: code
+          in: query
+          schema:
+            type: string
+            examples:
+              - "JAKAB20"
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/Count'
+      responses:
+        '200':
+          description: "List of activations"
+          headers:
+            count-reached:
+              description: it defines that the requested number of elements in the query exceeds the response result set (true) or not (false)
+              schema:
+                type: boolean
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PromotionActivation'
+        '204': # no activations
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404': # promo id not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/activations/{activation-id}:
+    get:
+      summary: "Get a specific activation/coupon by id"
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+        - $ref: '#/components/parameters/ActivationId'
+      responses:
+        '200':
+          description: "Activation/coupon detail"
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionActivation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/activations/{activation-id}/usages:
+    get:
+      summary: "List all redemptions (invites) for an activation code."
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+        - $ref: '#/components/parameters/ActivationId'
+        #query
+        - name: status
+          in: query
+          description: "Filter by status list."
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: user-id
+          in: query
+          description: "Filter by redeeming user ID / entity ID"
+          required: false
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/Count'
+      responses:
+        '200':
+          description: "A paginated list of usages and total counts."
+          headers:
+            count-reached:
+              description: it defines that the requested number of elements in the query exceeds the response result set (true) or not (false)
+              schema:
+                type: boolean
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsageResponse'
+        '204': # no results
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404': # path not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/activations/{activation-id}/usages/{usage-id}:
+    get:
+      summary: "Get a usage / redemption (invite) by id"
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+        - $ref: '#/components/parameters/ActivationId'
+        - $ref: '#/components/parameters/UsageId'
+      responses:
+        '200':
+          description: "Usage detail"
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionUsageDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/claim:
+    post:
+      summary: "Claim or generate a personal coupon for a promotion."
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "Request body for claiming an activation with `code` or with a specific `activation_id`"
+              required:
+                - user
+              properties:
+                user:
+                  description: "The user who claims the coupon."
+                  $ref: '#/components/schemas/UserContext'
+                code:
+                  type: string
+                  description: "Coupon code to claim"
+                  examples:
+                    - "JAKAB20"
+                activation_id:
+                  type: integer
+                  format: int64
+      responses:
+        '200':
+          description: "Coupon already exists for this user."
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionActivation'
+        '201':
+          description: "New personal coupon successfully created."
+          headers:
+            location:
+              $ref: '#/components/headers/Location'
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionActivation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/validate:
+    post:
+      summary: Validate a coupon code without redeeming it
+      description: "Checks eligibility, usage limits, and status for a specific code and user context."
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidationRequest'
+      responses:
+        '200':
+          description: "Validation result"
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/activations/{activation-id}/reserve:
+    post:
+      summary: "Reserve a usage slot (e.g. adding to cart)."
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+        - $ref: '#/components/parameters/ActivationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  description: "The user who is using the coupon."
+                  $ref: '#/components/schemas/UserContext'
+      responses:
+        '201':
+          description: "Usage created, slot reserved"
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionUsageDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/usages/{usage-id}/complete:
+    post:
+      summary: Mark the usage as completed after a successful purchase
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+        - $ref: '#/components/parameters/UsageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  description: "The user who is using the coupon."
+                  $ref: '#/components/schemas/UserContext'
+      responses:
+        '204':
+          description: "Usage transitioned to OrderCompleted."
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/usages/{usage-id}/cancel:
+    post:
+      summary: Cancel a reserved usage (order abandoned or cancelled)
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+        - $ref: '#/components/parameters/UsageId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  description: "The user who is using the coupon."
+                  $ref: '#/components/schemas/UserContext'
+      responses:
+        '204':
+          description: "Usage transitioned to Cancelled."
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /promotions/{promo-id}/usages/{usage-id}/reward-claim:
+    post:
+      summary: "Claim reward after a fulfilled invitation (end of lifecycle)"
+      parameters:
+        #header
+        - $ref: '#/components/parameters/Msg_ctx_src'
+        - $ref: '#/components/parameters/Msg_ctx_src_module'
+        - $ref: '#/components/parameters/Msg_ctx_env'
+        - $ref: '#/components/parameters/Msg_ctx_id'
+        - $ref: '#/components/parameters/Msg_ctx_corr_id'
+        - $ref: '#/components/parameters/Msg_ctx_build_number'
+        #path
+        - $ref: '#/components/parameters/PromoId'
+        - $ref: '#/components/parameters/UsageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  description: "The user who owns the coupon."
+                  $ref: '#/components/schemas/UserContext'
+      responses:
+        '200':
+          description: "Usage transitioned to RewardClaimed."
+          headers:
+            msg-ctx-src:
+              $ref: '#/components/headers/Msg_ctx_src'
+            msg-ctx-src-module:
+              $ref: '#/components/headers/Msg_ctx_src_module'
+            msg-ctx-env:
+              $ref: '#/components/headers/Msg_ctx_env'
+            msg-ctx-id:
+              $ref: '#/components/headers/Msg_ctx_id'
+            msg-ctx-corr-id:
+              $ref: '#/components/headers/Msg_ctx_corr_id'
+            msg-ctx-build-number:
+              $ref: '#/components/headers/Msg_ctx_build_number'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionUsageDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+components:
+  headers:
+    Location:
+      description: (mandatory) The id of the newly created object
+      required: true
+      schema:
+        type: integer
+        format: int64
+        examples:
+          - 234208
+    Msg_ctx_src:
+      description: (mandatory) Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        examples:
+          - "LIGW"
+    Msg_ctx_src_module:
+      description: (optional) Name of the source system’s module which sent the message. Fill only if suitable
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        examples:
+          - null
+    Msg_ctx_env:
+      description: (mandatory) Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        examples:
+          - "PROD"
+    Msg_ctx_id:
+      description: (mandatory) Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        examples:
+          - "6b5fae5a-da07-4864-9683-ce55207d06af"
+    Msg_ctx_corr_id:
+      description: (mandatory) It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        examples:
+          - "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      description: (optional) It represents the sender application’s build version
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        examples:
+          - "3.0.1"
+  parameters:
+    Msg_ctx_src:
+      name: msg-ctx-src
+      description: Name of the source system, the sender party of the message. This is used primarily for gathering information on services usage. The name should contain a human-readable name of the application
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        examples:
+          - "INODE"
+    Msg_ctx_src_module:
+      name: msg-ctx-src-module
+      description: Optional, name of the source system’s module which sent the message. Fill only if suitable
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        examples:
+          - "INode6 SIP AS"
+    Msg_ctx_env:
+      name: msg-ctx-env
+      description: Identifier of the environment. If the environment is production, use the value 'PROD'. Otherwise, use any string value which describes the environment (eg. 'UAT2')
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 32
+        examples:
+          - "PROD"
+    Msg_ctx_id:
+      name: msg-ctx-id
+      description: Unique identifier of the message. The calling party must guarantee this being a unique identifier (UUID, GUID, etc.)
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        examples:
+          - "53329a61-f5f5-4ad4-aec0-5a68d28b1350"
+    Msg_ctx_corr_id:
+      name: msg-ctx-corr-id
+      description: It intends to hold a flow (or session) identifier. The flow initiator generates the id, any other party should copy the received id into all subsequent messages/calls inside the flow. Ids should be unique for each and every flow
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 40
+        examples:
+          - "3385cbdb-8561-48f6-a671-5e271f486a41"
+    Msg_ctx_build_number:
+      name: msg-ctx-build-number
+      description: It represents the sender application’s build version
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 16
+        examples:
+          - "6.0.1-pre"
+    PromoId:
+      name: promo-id
+      in: path
+      description: Unique identifier of the promotion.
+      required: true
+      schema:
+        type: integer
+        format: int64
+    ActivationId:
+      name: activation-id
+      in: path
+      description: Unique identifier of the activation (personal coupon).
+      required: true
+      schema:
+        type: integer
+        format: int64
+    UsageId:
+      name: usage-id
+      in: path
+      description: Unique identifier of the usage record.
+      required: true
+      schema:
+        type: integer
+        format: int64
+    Offset:
+      name: offset
+      in: query
+      description: The number of items to skip before starting to collect the result set (pagination).
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Count:
+      name: count
+      in: query
+      description: The maximum number of items to return (page size).
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+  responses:
+    NoContent:
+      description: No content
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-src-module:
+          $ref: '#/components/headers/Msg_ctx_src_module'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+        msg-ctx-build-number:
+          $ref: '#/components/headers/Msg_ctx_build_number'
+
+    BadRequest:
+      description: Bad Request
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-src-module:
+          $ref: '#/components/headers/Msg_ctx_src_module'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+        msg-ctx-build-number:
+          $ref: '#/components/headers/Msg_ctx_build_number'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-src-module:
+          $ref: '#/components/headers/Msg_ctx_src_module'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+        msg-ctx-build-number:
+          $ref: '#/components/headers/Msg_ctx_build_number'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-src-module:
+          $ref: '#/components/headers/Msg_ctx_src_module'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+        msg-ctx-build-number:
+          $ref: '#/components/headers/Msg_ctx_build_number'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Not Found
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-src-module:
+          $ref: '#/components/headers/Msg_ctx_src_module'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+        msg-ctx-build-number:
+          $ref: '#/components/headers/Msg_ctx_build_number'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalError:
+      description: Internal Server Error
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-src-module:
+          $ref: '#/components/headers/Msg_ctx_src_module'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+        msg-ctx-build-number:
+          $ref: '#/components/headers/Msg_ctx_build_number'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ServiceUnavailable:
+      description: Service Unavailable
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-src-module:
+          $ref: '#/components/headers/Msg_ctx_src_module'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+        msg-ctx-build-number:
+          $ref: '#/components/headers/Msg_ctx_build_number'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    UserContext:
+      type: object
+      description: >
+        Identifies the customer performing or owning an action.
+        `id` is the primary identifier. The remaining fields are optional technically, but msisdn is mandatory in case of claim, complete and reward claim operations.
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: "Primary user ID used for ownership of activations/usages. It is recommended to use MSISDN if the caller has it. Reserve can also be initiated for a unique order id."
+          maxLength: 64
+          examples:
+            - "36201234567"
+        msisdn:
+          type: string
+          description: "Mobile number in E.164/international format without '+' prefix, if available."
+          examples:
+            - "36201234567"
+        ban:
+          type: string
+          description: "Billing account number."
+          examples:
+            - "ban123"
+        ca:
+          type: string
+          description: "Customer account identifier."
+          examples:
+            - "ca123"
+        profile_type:
+          type: string
+          description: "Customer segment at claim time (e.g. prepaid, postpaid, yolo)."
+          maxLength: 45
+          examples:
+            - "postpaid"
+        soc:
+          type: array
+          items:
+            type: string
+            description: "Service Offering Code active at claim time."
+            maxLength: 45
+            examples:
+                - "DR20GB"
+                - "PRIME26"
+
+    ActivationStatus:
+      type: string
+      description: >
+        Lifecycle status of an activation (personal coupon).
+        - `active`: code is valid and can be used
+        - `disabled`: manually disabled by admin
+        - `used`: redemption options have run out and will not be reactivated
+        - `expired`: expired
+      enum:
+        - active
+        - disabled
+        - used
+        - expired
+
+    UsageStatus:
+      type: string
+      description: >
+        Lifecycle status of a single usage (invite/redemption).
+        - `reserved`: usage slot created (e.g. item in cart)
+        - `orderCompleted`: order successfully completed
+        - `conditionsFulfilled`: conditions fulfilled (e.g. order placed), reward pending
+        - `rewardClaimed`: reward successfully claimed — terminal state
+        - `cancelled`: usage cancelled by user — terminal state
+        - `disabled`: usage cancelled by admin — terminal state
+        - `timeout`: usage expired without progression — terminal state
+        - `conditionsTimeout`: conditions window elapsed — terminal state
+        - `rewardExpired`: reward claim window elapsed — terminal state
+      enum:
+        - reserved
+        - orderCompleted
+        - conditionsFulfilled
+        - rewardClaimed
+        - cancelled
+        - disabled
+        - timeout
+        - conditionsTimeout
+        - rewardExpired
+
+    ReactivateTimeType:
+      type: string
+      description: "Unit of the reactivation cooldown period."
+      enum:
+        - hour
+        - day
+        - week
+        - month
+        - year
+
+    Localization:
+      type: object
+      additionalProperties: false
+      properties:
+        language:
+          $ref: '#/components/schemas/Language'
+        value:
+          type: string
+          description: "Localized text value."
+          maxLength: 255
+
+    Language:
+      type: string
+      description: "Language code of the localized value (e.g., hu, en). BCP 47 / ISO 639-1 language code."
+      maxLength: 3
+      examples: 
+        - "hu"
+        - "en"
+        - "cs"
+
+    Category:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          description: "Category key used for grouping/filtering (stable technical identifier, e.g., fashion, food)."
+          maxLength: 45
+          examples:
+            - 'fashion'
+            - 'food'
+            - 'entertainment'
+            - 'tool'
+        name:
+          type: array
+          description: "Localized category name(s)."
+          items:
+            $ref: '#/components/schemas/Localization'
+      examples:
+        - type: 'fashion'
+          name:
+            - language: 'hu'
+              value: 'Divat'
+            - language: 'en'
+              value: 'Fashion'
+
+    Brand:
+      type: object
+      additionalProperties: false
+      required: [id]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: "Unique identifier of the brand."
+        logo:
+          type: string
+          format: byte
+          description: "Brand logo encoded as base64 (RFC 4648)."
+          examples:
+            - 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGKyiTwGCAAA//8COAFeEWn1dwAAAABJRU5ErkJggg=='
+        category:
+          type: array
+          description: "List of categories the brand belongs to (used for grouping and filtering)."
+          items: 
+            $ref: '#/components/schemas/Category'
+        name:
+          type: array
+          description: "Localized brand name(s). One entry per language."
+          items:
+            $ref: '#/components/schemas/Localization'
+          examples:
+            -
+              - language: 'hu'
+                value: 'Márka neve'
+        description:
+          type: array
+          description: "Localized brand description(s). One entry per language."
+          items:
+            $ref: '#/components/schemas/Localization'
+          examples:
+            -
+              - language: 'hu'
+                value: 'Bővebb leírás'
+
+    Promotion:
+      type: object
+      required:
+        - id
+        - brand
+        - activate_type
+        - start_date
+        - type
+        - priority
+        - display_category
+        - code_limit
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: "Unique identifier of the promotion definition."
+        brand:
+          $ref: '#/components/schemas/Brand'
+          description: "Brand to which this promotion belongs."
+        short_description:
+          type: array
+          description: "Localized short marketing description shown in lists/cards."
+          items:
+            $ref: '#/components/schemas/Localization'
+          examples:
+            -
+              - language: 'hu'
+                value: 'Rövid leírás'
+              - language: 'en'
+                value: 'Short description'
+        long_description:
+          type: array
+          description: "Localized detailed description shown on the promotion details page."
+          items:
+            $ref: '#/components/schemas/Localization'
+          examples:
+            - 
+              - language: 'hu'
+                value: 'Bővebb leírás'
+              - language: 'en'
+                value: 'Long description'
+        activate_description:
+          type: array
+          description: "Localized instructions on how to activate/redeem the promotion."
+          items:
+            $ref: '#/components/schemas/Localization'
+          examples:
+            - 
+              - language: 'hu'
+                value: 'Aktiválás menete'
+              - language: 'en'
+                value: 'Redemption instruction'
+        activate_type:
+          type: string
+          maxLength: 45
+          description: "How/where the promotion can be redeemed (e.g., online, in-store, both)."
+          examples:
+            - online
+            - local
+        start_date:
+          type: string
+          format: date-time
+          description: "Start date and time when the promotion becomes valid."
+          examples:
+            - '2020-02-10T15:13:45.308+01:00'
+        end_date:
+          type: string
+          format: date-time
+          description: "End date and time when the promotion stops being valid. If omitted, the promotion is valid until revoked."
+          examples:
+            - '2020-02-10T15:13:45.308+01:00'
+        link:
+          type: string
+          description: "Link to get more info (brand link or coupon link)"
+          maxLength: 255
+          examples:
+            - 'https://brand.page/promotion'
+        general:
+          type: boolean
+          default: false
+          description: "If true, the promotion is a general offer, open to all (not targeted/segmented)." 
+        segmentation:
+          type: array
+          description: "Targeting rules defining which customer profiles / SOCs are eligible for the promotion."
+          items:
+            type: object
+            additionalProperties: false
+            description: "A single targeting rule. Both fields are optional - an empty rule matches all."
+            properties:
+              profile_type:
+                type: string
+                description: "Customer profile segment key (e.g., prepaid, postpaid, yolo)."
+                maxLength: 45
+                examples:
+                  - 'prepaid'
+                  - 'postpaid'
+                  - 'yolo'
+              soc:
+                type: string
+                description: "Service Offering Code (SOC) required for eligibility."
+                maxLength: 45
+                examples:
+                  - 'DR20GB'
+                  - 'JELOL10'
+          examples:
+            - 
+              - profile_type: 'postpaid'
+                soc: 'DR20GB'
+              - profile_type: 'yolo'
+              - soc: 'SOC1231'
+        priority:
+          type: integer
+          description: "Sorting priority used by clients; lower value means higher priority."
+          format: int32
+          examples:
+            - 10
+        display_category:
+          type: string
+          maxLength: 45
+          description: "UI category used for grouping the promotion in the client."
+        display_mode:
+          type: string
+          description: "Client display mode hint (controls how the coupon is presented in the UI)."
+          maxLength: 45
+          examples:
+            - 'qr'
+            - 'code'
+            - 'link'
+        type:
+          type: string
+          maxLength: 45
+          description: >
+            Code distribution strategy:
+            - `single_code`: one shared code for all users
+            - `multi_code_pool`: pre-generated pool
+            - `multi_code_generated`: codes generated on demand
+            - `no_code`: no code needed, automatic
+          enum:
+            - single_code
+            - multi_code_pool
+            - multi_code_generated
+            - no_code
+        code_pattern:
+          type: string
+          maxLength: 255
+          description: "Shared coupon code used when type=single_coupon. For multi_coupon, codes are managed separately."
+          examples:
+            - 'JAKAB20'
+            - '^(?=.{8}$)[A-Za-z]+[0-9]+$'
+        usage_limit:
+          type: integer
+          format: int32
+          description: "Maximum number of redemptions allowed per user. (-1 = unlimited, 1 = single use)"
+          examples:
+            - 6
+        code_limit:
+          type: integer
+          format: int32
+          description: >
+            Meaning depends on `type`:
+            - single_code: max total redemptions (with shared code)
+            - multi_code_pool: pool size (total codes available)
+            - multi_code_generated: max codes to generate
+            - no_code: total redemptions allowed
+          examples:
+            - 50
+            - -1
+        reactivate_time_value:
+          type: integer
+          format: int32
+          description: "Cooldown period value before the same user can activate/redeem the same promotion again."
+          examples:
+            - 42000
+            - 1
+        reactivate_time_type:
+          $ref: '#/components/schemas/ReactivateTimeType'
+        ts_next_reactivation:
+          type: string
+          format: date-time
+          description: "Next date when the promotion's usage limit resets for all activations"
+          examples:
+            - '2026-01-01T00:00:01.000+02:00'
+        price_type:
+          type: string
+          description: "Price value type (e.g., percent, huf, piece)."
+          maxLength: 45
+          examples:
+            - 'percent'
+        price_value:
+          type: number
+          description: "Price value expressed according to price_type (e.g., 20 for 20% if price_type=percent)."
+          examples:
+            - 20
+        lifecycle_type:
+          type: string
+          description: "The lifecycle logic applied to a promotion (e.g. MGM). It defines the rules for use and after redemption."
+          enum:
+            - 'mgm'
+            - 'basic'
+          examples:
+            - 'mgm'
+
+    PromotionActivation:
+      type: object
+      additionalProperties: false
+      required: [id, code, ts_generated]
+      description: "A personal coupon details"
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        promotion_id:
+          type: integer
+          format: int64
+        code:
+          type: string
+          description: "The personal coupon code."
+          maxLength: 255
+        user:
+          $ref: '#/components/schemas/UserContext'
+        status:
+          $ref: '#/components/schemas/ActivationStatus'
+        usage_info:
+          type: object
+          properties:
+            remaining_usages:
+              type: integer
+              description: "How many times this code can still be used (based on usage_limit)."
+            total_usages:
+              type: integer
+              description: "Total usages recorded against this activation."
+            ts_reactivation:
+              type: string
+              format: date-time
+              description: "The next date when the usage limit resets (same as promotions.ts_next_reactivation)."
+        ts_generated:
+          type: string
+          format: date-time
+
+    UsageInfo:
+      type: object
+      additionalProperties: false
+      required:
+        - total_activations
+        - total_usages
+      properties:
+        total_activations:
+          type: integer
+          description: "Number of codes assigned to users (where user.id is not null)."
+          examples:
+            - 150
+        total_usages:
+          type: integer
+          description: "Total number of actual usages (redemptions) recorded."
+          examples: 
+            - 85
+        remaining_activations:
+          type: integer
+          description: "Calculated remaining capacity based on code_limit."
+          examples:
+            - 850
+
+    PaginatedUsageResponse:
+      type: object
+      properties:
+        total_count:
+          type: integer
+          description: "Total number of usages recorded for this activation."
+          examples:
+            - 156
+        usage_limit:
+          type: integer
+          description: "The maximum allowed usages from the promotion definition."
+          examples:
+            - 1000
+        usage_info::
+          type: object
+          properties:
+            remaining_usages:
+              type: integer
+              description: "Remaining redemptions for this activation (e.g., 2/6)."
+              examples:
+                - 2
+            usage_limit:
+              type: integer
+              description: "The maximum slot from the promotion definition."
+              examples:
+                - 6
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromotionUsageDetail'
+
+    PromotionUsageDetail:
+      type: object
+      escription: "A single usage record - one invite / one redemption attempt."
+      required:
+        - id
+        - promotion_activation_id
+        - status
+        - ts_created
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        promotion_activation_id:
+          type: integer
+          format: int64
+        redeeming_user:
+          description: "The invited user who is redeeming the code."
+          $ref: '#/components/schemas/UserContext'
+        status:
+          $ref: '#/components/schemas/UsageStatus'
+        ts_created:
+          type: string
+          format: date-time
+          description: "Timestamp of the redemption."
+        ts_timeout:
+          type: string
+          format: date-time
+          description: "Date until this usage can be in this status."
+
+    ValidationRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          maxLength: 255
+          examples:
+            - "JAKAB20"
+        user:
+          $ref: '#/components/schemas/UserContext'
+
+    ValidationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          description: "True if the code can be redeemed right now."
+        promotion_id:
+          type: integer
+          format: int64
+          description: "Unique identifier of the promotion definition."
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - CODE_NOT_FOUND
+                - LIMIT_REACHED
+                - NOT_ELIGIBLE
+                - EXPIRED
+                - COOLDOWN_ACTIVE
+                - UNKNOWN
+            message:
+              type: string
+              description: "Error message."
+        usage_info:
+          type: object
+          properties:
+            remaining_usages:
+              type: integer
+              description: "Remaining redemptions for this activation (e.g., 2/6)."
+              examples:
+                - 2
+            usage_limit:
+              type: integer
+              description: "The maximum slot from the promotion definition."
+              examples:
+                - 6
+
+    Detail:
+      description: A human-readable explanation specific to this occurrence of the problem
+      type: string
+    Error:
+      description: Basic result object
+      type: object
+      required:
+        - title
+        - status
+        - cause
+      properties:
+        title:
+          description: A short, human-readable summary of the problem type in case of http status 500
+          type: string
+          examples:
+            - "Internal server error"
+        status:
+          description: The HTTP status code generated by the origin server for this occurrence of the problem
+          type: number
+          examples:
+            - 500
+        cause:
+          description: A machine-readable application error cause specific to this occurrence of the problem in case of http status 500
+          type: string
+          examples:
+            - "SERVER_ERROR"
+        detail:
+          $ref: '#/components/schemas/Detail'

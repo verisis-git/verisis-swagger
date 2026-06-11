@@ -1,0 +1,2153 @@
+openapi: 3.0.3
+info:
+  title: ECF MobileApp REST API
+  version: 1.0.0
+  description: 'Initial consolidated OpenAPI 3.0.3 contract draft for the ECF MobileApp REST API.
+
+
+    This contract is a consensus-building working draft. Unknown JSON request properties are ignored by the backend for forward compatibility. The formal v1.0.0 change list will be finalized before approval submission.'
+servers:
+- url: https://ecf-api.example.hu/mobileapp/v1
+  description: Placeholder production server
+tags:
+- name: Application
+  description: Application version, upgrade, and planned-outage information
+- name: UserManagement
+  description: User login, token, Airship push data, and session management
+- name: Parking
+  description: Parking transactions, parking start/stop, history, and parking information
+- name: Vignette
+  description: Highway vignette purchase and history
+- name: Vehicle
+  description: Vehicle management
+paths:
+  /app/info:
+    get:
+      tags:
+      - Application
+      operationId: getAppInfo
+      summary: Get application status and version information
+      description: Returns mobile-application upgrade information and an optional planned outage window. This bootstrap endpoint
+        is intentionally available before login so that a client can display a forced-upgrade or maintenance message even
+        when no user session exists.
+      parameters:
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      responses:
+        '200':
+          description: Application information
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppInfoData'
+              example:
+                hasNewVersion: true
+                forceUpgrade: true
+                newVersion: '2.0.0'
+                notification: Telepítsd az új verziót, hogy használhasd a Mobiljegyet
+                outageStart: '2026-04-04T22:00:00.000Z'
+                outageEnd: '2026-04-04T23:00:00.000Z'
+                outageMessage: Karbantartást végzünk, gyere vissza később
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/login:
+    post:
+      tags:
+      - UserManagement
+      operationId: userLogin
+      summary: Start login or registration
+      description: Starts login/registration by MSISDN and initiates delivery of a new eight-character alphanumeric OTP. The
+        OTP is valid for three minutes. To request a new OTP, the client calls this operation again with the same MSISDN already
+        known by the client; the backend creates a new loginId and OTP and invalidates the previous unfinished login flow
+        for the same account/device. Only one login flow may be active for an account/device pair.
+      parameters:
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              msisdn: '36201234567'
+      responses:
+        '201':
+          description: Login flow initialized
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginInitData'
+              example:
+                userId: '100200'
+                loginId: 20260603001
+                loginExpiry: '2026-06-03T12:03:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/{userId}/login/{loginId}:
+    post:
+      tags:
+      - UserManagement
+      operationId: verifyLoginOtp
+      summary: Verify login OTP
+      description: Finalizes login by verifying the eight-character alphanumeric OTP and issues the session and refresh tokens.
+        This endpoint is intentionally unauthenticated because it creates the session. The OTP is valid for three minutes
+        and a maximum of three failed verification attempts is allowed for a login flow.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/loginId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerificationRequest'
+            example:
+              code: A7B9C2D4
+      responses:
+        '200':
+          description: Session created
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSessionData'
+              example:
+                userId: '100200'
+                sessionToken: ey...token_data...
+                tokenExpiry: '2026-06-03T14:00:00Z'
+                refreshToken: refresh...data...
+                refreshTokenExpiry: '2026-06-06T12:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/{userId}/refresh:
+    post:
+      tags:
+      - UserManagement
+      operationId: refreshToken
+      summary: Refresh session token
+      description: Refreshes the session token. Both the msgcntx_token header and the request-body refreshToken are mandatory.
+        The session token may already be expired. The backend validates account/device binding and the refresh token. A successful
+        refresh issues a new two-hour session token and rotates the refresh token; the previous refresh token becomes invalid.
+        A refresh token is valid for at most 72 hours from its current issue time. Reuse of an already rotated refresh token
+        revokes the token family for the affected account/device session and requires a new login. Multiple concurrently active
+        session families are allowed; refresh affects only the family identified by the presented session and refresh tokens.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSessionData'
+              example:
+                userId: '100200'
+                sessionToken: ey...new_token_data...
+                tokenExpiry: '2026-06-03T16:00:00Z'
+                refreshToken: refresh...rotated_data...
+                refreshTokenExpiry: '2026-06-06T14:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/{userId}/logout:
+    post:
+      tags:
+      - UserManagement
+      operationId: userLogout
+      summary: Logout
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Logout processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AckData'
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+      description: Logs out the current session. The backend immediately invalidates the presented session token and the complete
+        refresh-token family belonging to that session. Other concurrently active sessions for the account, whether on the
+        same or another device, remain valid.
+  /user/{userId}/push-registration:
+    post:
+      tags:
+      - UserManagement
+      operationId: registerPushData
+      summary: Register Airship push data
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AirshipRegistrationRequest'
+            example:
+              channelId: "8f650728-5959-4c44-89c7-4c1dba5e2890"
+              namedUser: "DXL által kódolt MSISDN"
+              platform: "ANDROID"
+      responses:
+        '200':
+          description: Airship push registration stored
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AckData'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+      description: >
+        Creates or replaces the Airship registration associated with the authenticated user and the msgcntx_src application installation.
+        The registration contains the Airship channel ID, the DXL-encoded MSISDN used as named user, and the client platform.
+  /user/{userId}/transactions/parking:
+    get:
+      tags:
+      - Parking
+      operationId: getParkingHistory
+      summary: Get parking history
+      description: Returns active/relevant and archived parking transactions with count/offset pagination. A user may have
+        zero, one, or multiple active parking transactions. The client determines active parking from each item's `parkingDetails.status`
+        and `parkingDetails.isFinished` values; there is no separate active-parking endpoint.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/count'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Parking transactions
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+            count-reached:
+              $ref: '#/components/headers/count-reached'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParkingHistoryData'
+              example:
+                - msisdn: '36201234567'
+                  ecfId: 12434264
+                  nmfrId: 6SHD86SAD6
+                  trxStart: '2026-06-05T20:22:21.728Z'
+                  trxEnd: '2026-06-05T20:22:21.728Z'
+                  parkingDetails:
+                    status: STOPPED
+                    startTime: '2026-06-05T20:22:21.728Z'
+                    endTime: '2026-06-05T20:22:21.728Z'
+                    expectedEndTime: '2026-06-05T20:22:21.728Z'
+                    chargeEndTime: '2026-06-05T20:22:21.728Z'
+                    vehicle:
+                      licensePlateNumber: LYNGMYRZO
+                      countryCode: XCI
+                      category: CAR
+                      name: name
+                    isFinished: true
+                    zoneInfo:
+                      zoneName: string
+                      zoneTarif: string
+                      isEstimatedTarif: true
+                      isFixTicketZone: true
+                      zoneType: ONSITE
+                      zoneCode: stri
+                      zoneTarifMultiplier: 3500
+                      city: string
+                    isRecurring: true
+                  costInfo:
+                    parkingCost: 3500
+                    comfortFee: 3500
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+    post:
+      tags:
+      - Parking
+      operationId: startParkingSession
+      summary: Start parking session
+      description: 'Starts a parking transaction immediately or, when startTime is supplied, schedules it for later. The selected
+        zoneCode and zone data determine the service type: OFFSITE means OP, isFixTicketZone=true means TP, otherwise SSP.
+        parkingLength is optional. The request contains no mp PIN or separate idempotency key; msgcntx_id is used for correlation
+        and deduplication.'
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartParkingRequest'
+            example:
+              zoneCode: BP-0112
+              vehicle:
+                licensePlateNumber: ABC123
+                countryCode: HUN
+                category: CAR
+              parkingLength: 60
+              isRecurring: false
+              startTime: '2026-06-06T08:00:00.000Z'
+      responses:
+        '201':
+          description: Parking created
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParkingTransaction'
+              example:
+                msisdn: '36201234567'
+                ecfId: 12434264
+                nmfrId: 6SHD86SAD6
+                trxStart: '2026-06-05T20:22:21.728Z'
+                trxEnd: '2026-06-05T20:22:21.728Z'
+                parkingDetails:
+                  status: STOPPED
+                  startTime: '2026-06-05T20:22:21.728Z'
+                  endTime: '2026-06-05T20:22:21.728Z'
+                  expectedEndTime: '2026-06-05T20:22:21.728Z'
+                  chargeEndTime: '2026-06-05T20:22:21.728Z'
+                  vehicle:
+                    licensePlateNumber: LYNGMYRZO
+                    countryCode: XCI
+                    category: CAR
+                    name: name
+                  isFinished: true
+                  zoneInfo:
+                    zoneName: string
+                    zoneTarif: string
+                    isEstimatedTarif: true
+                    isFixTicketZone: true
+                    zoneType: ONSITE
+                    zoneCode: stri
+                    zoneTarifMultiplier: 3500
+                    city: string
+                  isRecurring: true
+                costInfo:
+                  parkingCost: 3500
+                  comfortFee: 3500
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/{userId}/transactions/parking/{id}:
+    get:
+      tags:
+      - Parking
+      operationId: getParkingTransactionById
+      summary: Get parking transaction by id
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/transactionId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Parking transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParkingTransaction'
+              example:
+                msisdn: '36201234567'
+                ecfId: 12434264
+                nmfrId: 6SHD86SAD6
+                trxStart: '2026-06-05T20:22:21.728Z'
+                trxEnd: '2026-06-05T20:22:21.728Z'
+                parkingDetails:
+                  status: STOPPED
+                  startTime: '2026-06-05T20:22:21.728Z'
+                  endTime: '2026-06-05T20:22:21.728Z'
+                  expectedEndTime: '2026-06-05T20:22:21.728Z'
+                  chargeEndTime: '2026-06-05T20:22:21.728Z'
+                  vehicle:
+                    licensePlateNumber: LYNGMYRZO
+                    countryCode: XCI
+                    category: CAR
+                    name: name
+                  isFinished: true
+                  zoneInfo:
+                    zoneName: string
+                    zoneTarif: string
+                    isEstimatedTarif: true
+                    isFixTicketZone: true
+                    zoneType: ONSITE
+                    zoneCode: stri
+                    zoneTarifMultiplier: 3500
+                    city: string
+                  isRecurring: true
+                costInfo:
+                  parkingCost: 3500
+                  comfortFee: 3500
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+    delete:
+      tags:
+      - Parking
+      operationId: stopParkingSession
+      summary: Stop parking session
+      description: Stops an open parking transaction. Repeating the stop for an already closed transaction returns 404 Not
+        Found. DELETE is retained as the contract operation.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/transactionId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Parking stopped
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParkingTransaction'
+              example:
+                msisdn: '36201234567'
+                ecfId: 12434264
+                nmfrId: 6SHD86SAD6
+                trxStart: '2026-06-05T20:22:21.728Z'
+                trxEnd: '2026-06-05T20:22:21.728Z'
+                parkingDetails:
+                  status: STOPPED
+                  startTime: '2026-06-05T20:22:21.728Z'
+                  endTime: '2026-06-05T20:22:21.728Z'
+                  expectedEndTime: '2026-06-05T20:22:21.728Z'
+                  chargeEndTime: '2026-06-05T20:22:21.728Z'
+                  vehicle:
+                    licensePlateNumber: LYNGMYRZO
+                    countryCode: XCI
+                    category: CAR
+                    name: name
+                  isFinished: true
+                  zoneInfo:
+                    zoneName: string
+                    zoneTarif: string
+                    isEstimatedTarif: true
+                    isFixTicketZone: true
+                    zoneType: ONSITE
+                    zoneCode: stri
+                    zoneTarifMultiplier: 3500
+                    city: string
+                  isRecurring: true
+                costInfo:
+                  parkingCost: 3500
+                  comfortFee: 3500
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /parking/info:
+    get:
+      tags:
+      - Parking
+      operationId: getParkingInfo
+      summary: Get parking configuration and zone database
+      description: Returns parking bootstrap configuration and, when requested/needed, the parking-zone database as a base64-encoded
+        ZIP archive in zoneInfo. The client may send its known zone_version and control payload inclusion with includeZoneInfo.
+      parameters:
+      - $ref: '#/components/parameters/includeZoneInfo'
+      - $ref: '#/components/parameters/zone_version'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Parking information
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParkingInfoData'
+              example:
+                zoneVersion: '1780480800000'
+                zoneInfo: UEsDBBQAAAAIACWrxVxDv6ajBAAAAAIAAAASAAAAem9uZS1kYXRhYmFzZS5qc29uq64FAFBLAQIUAxQAAAAIACWrxVxDv6ajBAAAAAIAAAASAAAAAAAAAAAAAACAAQAAAAB6b25lLWRhdGFiYXNlLmpzb25QSwUGAAAAAAEAAQBAAAAANAAAAAAA
+                parkingStopReminder:
+                  timeThresholdSec: 300
+                  enterThresholdMeter: 100
+                comfortFee:
+                  startStopParking: 115.0
+                  ticketParking: 115.0
+                  offsiteParking: 115.0
+                specialDates:
+                  extraWorkdays:
+                  - '2026-12-12'
+                  extraFreedays:
+                  - '2026-12-24'
+                  extraHolidays:
+                  - '2026-08-20'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/{userId}/transactions/highway:
+    get:
+      tags:
+      - Vignette
+      operationId: getVignetteHistory
+      summary: Get vignette history
+      description: Returns highway-vignette transactions with count/offset pagination and optional vehicle filtering.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/count'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/licensePlateNumberQuery'
+      - $ref: '#/components/parameters/countryCodeQuery'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Vignette transactions
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+            count-reached:
+              $ref: '#/components/headers/count-reached'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VignetteHistoryData'
+              example:
+                - msisdn: '36201234567'
+                  ecfId: 12434264
+                  nmfrId: 6SHD86SAD6
+                  trxStart: '2026-06-05T20:35:00.958Z'
+                  trxEnd: '2026-06-05T20:35:00.958Z'
+                  highwayVignette:
+                    vignetteNumber: string
+                    validityStart: '2026-06-05T20:35:00.958Z'
+                    validityEnd: '2026-06-05T20:35:00.958Z'
+                    vehicle:
+                      licensePlateNumber: MGW0
+                      countryCode: I
+                      category: CAR
+                      name: name
+                    vignetteCategory: D1M
+                    vignetteType: WEEK
+                  costInfo:
+                    highwayVignetteCost: 3500
+                    comfortFee: 3500
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+    post:
+      tags:
+      - Vignette
+      operationId: purchaseVignette
+      summary: Purchase highway vignette
+      description: Purchases a highway vignette. The backend calculates the official vignette category from vehicle.category
+        and vignetteType. The request contains no mp PIN and no separate idempotency key; msgcntx_id is used.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VignettePurchaseRequest'
+            example:
+              validityStart: '2026-06-05T20:35:00.958Z'
+              vehicle:
+                licensePlateNumber: ABC123
+                countryCode: HUN
+                category: CAR
+              vignetteType: WEEK
+      responses:
+        '201':
+          description: Vignette purchased
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VignetteTransaction'
+              example:
+                msisdn: '36201234567'
+                ecfId: 12434264
+                nmfrId: 6SHD86SAD6
+                trxStart: '2026-06-05T20:35:00.958Z'
+                trxEnd: '2026-06-05T20:35:00.958Z'
+                highwayVignette:
+                  vignetteNumber: string
+                  validityStart: '2026-06-05T20:35:00.958Z'
+                  validityEnd: '2026-06-05T20:35:00.958Z'
+                  vehicle:
+                    licensePlateNumber: MGW0
+                    countryCode: I
+                    category: CAR
+                    name: name
+                  vignetteCategory: D1M
+                  vignetteType: WEEK
+                costInfo:
+                  highwayVignetteCost: 3500
+                  comfortFee: 3500
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/{userId}/transactions/highway/{id}:
+    get:
+      tags:
+      - Vignette
+      operationId: getVignetteTransactionById
+      summary: Get vignette transaction by id
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/transactionId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Vignette transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VignetteTransaction'
+              example:
+                msisdn: '36201234567'
+                ecfId: 12434264
+                nmfrId: 6SHD86SAD6
+                trxStart: '2026-06-05T20:35:00.958Z'
+                trxEnd: '2026-06-05T20:35:00.958Z'
+                highwayVignette:
+                  vignetteNumber: string
+                  validityStart: '2026-06-05T20:35:00.958Z'
+                  validityEnd: '2026-06-05T20:35:00.958Z'
+                  vehicle:
+                    licensePlateNumber: MGW0
+                    countryCode: I
+                    category: CAR
+                    name: name
+                  vignetteCategory: D1M
+                  vignetteType: WEEK
+                costInfo:
+                  highwayVignetteCost: 3500
+                  comfortFee: 3500
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /highway/info:
+    get:
+      tags:
+      - Vignette
+      operationId: getHighwayInfo
+      summary: Get available highway vignette information
+      description: Returns currently available vignette products, prices and relevant purchase periods.
+      parameters:
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Highway vignette information
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HighwayInfoData'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/{userId}/vehicle:
+    get:
+      tags:
+      - Vehicle
+      operationId: getVehicles
+      summary: List vehicles
+      description: SOAP replacement for GetVehicle.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Vehicles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleListData'
+              example:
+                vehicles:
+                - vehicleId: 1001
+                  countryCode: HUN
+                  category: CAR
+                  serviceType: ALL
+                  isDefault: true
+                  name: My Car
+                  licensePlateNumber: ABC123
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+    post:
+      tags:
+      - Vehicle
+      operationId: addVehicle
+      summary: Add vehicle
+      description: Adds a saved vehicle. No maximum vehicle count is imposed by this contract.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleRequest'
+      responses:
+        '201':
+          description: Vehicle added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+  /user/{userId}/vehicle/{vehicleId}:
+    patch:
+      tags:
+      - Vehicle
+      operationId: updateVehicle
+      summary: Update vehicle
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/vehicleId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehiclePatchRequest'
+      responses:
+        '200':
+          description: Vehicle updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+      description: Partially updates a saved vehicle. licensePlateNumber, countryCode, category, name and isDefault are patchable.
+        vehicleId and serviceType are immutable. The request must contain at least one supported property; an empty or unknown-only
+        body returns 400 Bad Request.
+    delete:
+      tags:
+      - Vehicle
+      operationId: deleteVehicle
+      summary: Delete vehicle
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/vehicleId'
+      - $ref: '#/components/parameters/msgcntx_src'
+      - $ref: '#/components/parameters/msgcntx_id'
+      - $ref: '#/components/parameters/msgcntx_env'
+      - $ref: '#/components/parameters/msgcntx_ts'
+      - $ref: '#/components/parameters/msgcntx_vrs'
+      - $ref: '#/components/parameters/msgcntx_lang'
+      - $ref: '#/components/parameters/msgcntx_token'
+      responses:
+        '200':
+          description: Vehicle deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AckData'
+          headers:
+            msgcntx_id:
+              $ref: '#/components/headers/msgcntx_id'
+        '400':
+          $ref: '#/components/responses/BadRequestEnvelope'
+        '401':
+          $ref: '#/components/responses/UnauthorizedEnvelope'
+        '403':
+          $ref: '#/components/responses/ForbiddenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundEnvelope'
+        '409':
+          $ref: '#/components/responses/ConflictEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalErrorEnvelope'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableEnvelope'
+      description: Soft-deletes the saved vehicle. Parking and vignette transactions store copied vehicle snapshots rather
+        than a vehicleId reference, therefore existing transaction data is unaffected. The response does not return a newly
+        selected default vehicle. Whether deletion of the current default is allowed and which remaining vehicle becomes default
+        are backend rules.
+components:
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: ECF account identifier.
+      schema:
+        $ref: '#/components/schemas/AccountId'
+    loginId:
+      name: loginId
+      in: path
+      required: true
+      description: Database primary key of the login flow.
+      schema:
+        $ref: '#/components/schemas/LoginId'
+    vehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/VehicleId'
+    transactionId:
+      name: id
+      in: path
+      required: true
+      description: Database primary key of the ECF transaction.
+      schema:
+        $ref: '#/components/schemas/TransactionId'
+    count:
+      name: count
+      in: query
+      required: false
+      description: Requested page size.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 20
+    offset:
+      name: offset
+      in: query
+      required: false
+      description: Zero-based result offset.
+      schema:
+        type: integer
+        format: int64
+        minimum: 0
+        default: 0
+    licensePlateNumberQuery:
+      name: licensePlateNumber
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/LicensePlateNumber'
+    countryCodeQuery:
+      name: countryCode
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/CountryCode'
+    includeZoneInfo:
+      name: includeZoneInfo
+      in: query
+      required: false
+      description: Whether the response should include the base64-encoded ZIP archive containing the zone database file.
+      schema:
+        type: boolean
+        default: false
+    zone_version:
+      name: zone_version
+      in: header
+      required: false
+      description: Client-known parking zone dataset version as an epoch timestamp encoded as a decimal string.
+      schema:
+        $ref: '#/components/schemas/ZoneVersion'
+    msgcntx_src:
+      name: msgcntx_src
+      in: header
+      required: true
+      description: Stable client device identifier; this is the device identifier used for session binding.
+      schema:
+        type: string
+        maxLength: 46
+    msgcntx_id:
+      name: msgcntx_id
+      in: header
+      required: true
+      description: Request correlation and idempotency identifier. No separate request-body idempotency key is used. The backend
+        may also use the identifier together with msgcntx_ts and device/session context to detect replayed state-changing
+        requests.
+      schema:
+        $ref: '#/components/schemas/MobileAppReqId'
+    msgcntx_env:
+      name: msgcntx_env
+      in: header
+      required: true
+      description: Client operating system and OS version, for example Android 14 or iOS 19.0.
+      schema:
+        type: string
+        maxLength: 64
+        example: Android 14
+    msgcntx_ts:
+      name: msgcntx_ts
+      in: header
+      required: true
+      description: Request timestamp in ISO-8601 date-time format.
+      schema:
+        $ref: '#/components/schemas/Timestamp'
+    msgcntx_vrs:
+      name: msgcntx_vrs
+      in: header
+      required: true
+      description: Mobile application version.
+      schema:
+        $ref: '#/components/schemas/Version'
+    msgcntx_lang:
+      name: msgcntx_lang
+      in: header
+      required: true
+      description: Client language.
+      schema:
+        $ref: '#/components/schemas/Language'
+    msgcntx_token:
+      name: msgcntx_token
+      in: header
+      required: true
+      description: Device-bound ECF session token. Required for every operation except the two login operations and GET /app/info.
+        The planned session-token TTL is two hours. On the refresh operation the token may already be expired, but it must
+        belong to the same account and msgcntx_src device context as the refresh token.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 2048
+  responses:
+    BadRequestEnvelope:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseEnvelope'
+      headers:
+        msgcntx_id:
+          $ref: '#/components/headers/msgcntx_id'
+    UnauthorizedEnvelope:
+      description: Authentication failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseEnvelope'
+      headers:
+        msgcntx_id:
+          $ref: '#/components/headers/msgcntx_id'
+    ForbiddenEnvelope:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseEnvelope'
+      headers:
+        msgcntx_id:
+          $ref: '#/components/headers/msgcntx_id'
+    NotFoundEnvelope:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseEnvelope'
+      headers:
+        msgcntx_id:
+          $ref: '#/components/headers/msgcntx_id'
+    ConflictEnvelope:
+      description: Business conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseEnvelope'
+      headers:
+        msgcntx_id:
+          $ref: '#/components/headers/msgcntx_id'
+    InternalErrorEnvelope:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseEnvelope'
+      headers:
+        msgcntx_id:
+          $ref: '#/components/headers/msgcntx_id'
+    ServiceUnavailableEnvelope:
+      description: Service unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseEnvelope'
+      headers:
+        msgcntx_id:
+          $ref: '#/components/headers/msgcntx_id'
+  schemas:
+    MSISDN:
+      type: string
+      minLength: 11
+      maxLength: 11
+      example: '36201234567'
+    LicensePlateNumber:
+      type: string
+      minLength: 3
+      maxLength: 15
+      example: ABC123
+    ZoneCode:
+      type: string
+      example: BP-0112
+    Language:
+      type: string
+      pattern: ^[A-Z]{1,4}$
+      minLength: 1
+      maxLength: 4
+      example: HU
+    Version:
+      type: string
+      minLength: 3
+      maxLength: 8
+      example: 2.1.0
+    MobileAppReqId:
+      type: string
+      maxLength: 40
+      example: req-20260603-000001
+    CountryCode:
+      type: string
+      maxLength: 3
+      example: HUN
+    MoneyAmount:
+      type: number
+      format: double
+      example: 600.0
+      description: Monetary amount represented as a double because external systems may return fractional decimal values.
+        Currency and rounding rules are defined by the corresponding business context.
+    Timestamp:
+      type: string
+      format: date-time
+    VehicleCategory:
+      type: string
+      enum:
+      - CAR
+      - CAR8
+      - BUS
+      - MOTOR
+      - VAN
+      - TRAIL
+      description: Supported vehicle categories. TRUCK is intentionally not supported.
+    ServiceType:
+      type: string
+      enum:
+      - PARKING
+      - HIGHWAY_VIGNETTE
+      - ALL
+      description: Service applicability of the vehicle.
+    VignetteCategory:
+      type: string
+      enum:
+      - D1M
+      - D1
+      - D2
+      - B2
+      - U
+      description: Official highway vignette category calculated by the backend.
+    VignetteType:
+      type: string
+      enum:
+      - DAY
+      - WEEK
+      - MONTH
+      - YEAR
+      - YEAR_11
+      - YEAR_12
+      - YEAR_13
+      - YEAR_14
+      - YEAR_15
+      - YEAR_16
+      - YEAR_17
+      - YEAR_18
+      - YEAR_19
+      - YEAR_20
+      - YEAR_21
+      - YEAR_22
+      - YEAR_23
+      - YEAR_24
+      - YEAR_25
+      - YEAR_26
+      - YEAR_27
+      - YEAR_28
+      - YEAR_29
+      - YEAR_30
+    ZoneType:
+      type: string
+      enum:
+      - ONSITE
+      - OFFSITE
+    ParkingStatus:
+      type: string
+      enum:
+      - PREPARED
+      - RUNNING
+      - STOPPED
+      - CANCELLED
+      - EXPIRED
+      - FAILED
+      - FINISHED
+    Platform:
+      type: string
+      enum:
+      - ANDROID
+      - IOS
+    ErrorResponseEnvelope:
+      type: object
+      required:
+      - errorCode
+      properties:
+        errorCode:
+          type: integer
+          example: 409
+        errorDescription:
+          type: string
+          maxLength: 127
+          example: Conflict
+        message:
+          type: string
+          example: The requested operation conflicts with the current resource state.
+      description: Common error body. The request correlation identifier is returned in the `msgcntx_id` response header and
+        is intentionally not duplicated in the JSON body.
+    AckData:
+      type: object
+      properties:
+        acknowledged:
+          type: boolean
+          example: true
+    VehicleCore:
+      type: object
+      required:
+      - licensePlateNumber
+      - countryCode
+      - category
+      - serviceType
+      properties:
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+        category:
+          $ref: '#/components/schemas/VehicleCategory'
+        serviceType:
+          $ref: '#/components/schemas/ServiceType'
+        name:
+          type: string
+          maxLength: 40
+          nullable: true
+          description: User-defined vehicle name displayed by the client.
+        isDefault:
+          type: boolean
+          default: false
+          description: Whether this is the single global default vehicle for the userId. At most one saved vehicle may have
+            `isDefault=true`; setting a new default clears the previous one.
+        licensePlateNumber:
+          $ref: '#/components/schemas/LicensePlateNumber'
+      description: Saved-vehicle public model. serviceType is part of saved-vehicle create/read responses but is immutable
+        after creation. Transaction requests use TransactionVehicle and transaction responses use VehicleSnapshot.
+    Vehicle:
+      allOf:
+      - $ref: '#/components/schemas/VehicleCore'
+      - type: object
+        required:
+        - vehicleId
+        properties:
+          vehicleId:
+            $ref: '#/components/schemas/VehicleId'
+    ParkingCostInfo:
+      type: object
+      properties:
+        expectedParkingCost:
+          $ref: '#/components/schemas/MoneyAmount'
+        expectedComfortFee:
+          allOf:
+          - $ref: '#/components/schemas/MoneyAmount'
+          deprecated: true
+          description: Deprecated; always returned as 0 due to legal abolition.
+        expectedDiscountedParkingCost:
+          allOf:
+          - $ref: '#/components/schemas/MoneyAmount'
+          nullable: true
+          type: number
+          format: double
+        expectedDiscountedComfortFee:
+          allOf:
+          - $ref: '#/components/schemas/MoneyAmount'
+          deprecated: true
+          nullable: true
+          description: Deprecated; always returned as 0 due to legal abolition.
+          type: number
+          format: double
+        parkingCost:
+          $ref: '#/components/schemas/MoneyAmount'
+        comfortFee:
+          $ref: '#/components/schemas/MoneyAmount'
+        discountedParkingCost:
+          allOf:
+          - $ref: '#/components/schemas/MoneyAmount'
+          nullable: true
+          type: number
+          format: double
+        discountedComfortFee:
+          allOf:
+          - $ref: '#/components/schemas/MoneyAmount'
+          deprecated: true
+          nullable: true
+          description: Deprecated; always returned as 0 due to legal abolition.
+          type: number
+          format: double
+      required:
+      - parkingCost
+      - comfortFee
+    ParkingTransaction:
+      allOf:
+      - $ref: '#/components/schemas/BaseTransactionResponse'
+      - type: object
+        required:
+        - parkingDetails
+        properties:
+          parkingDetails:
+            $ref: '#/components/schemas/ParkingDetails'
+          costInfo:
+            $ref: '#/components/schemas/ParkingCostInfo'
+    VignetteCostInfo:
+      type: object
+      properties:
+        highwayVignetteCost:
+          $ref: '#/components/schemas/MoneyAmount'
+        comfortFee:
+          $ref: '#/components/schemas/MoneyAmount'
+        discountedHighwayVignetteCost:
+          $ref: '#/components/schemas/MoneyAmount'
+        discountedComfortFee:
+          allOf:
+          - $ref: '#/components/schemas/MoneyAmount'
+          deprecated: true
+          description: Deprecated; always returned as 0 due to legal abolition.
+      required:
+      - highwayVignetteCost
+      - comfortFee
+    VignetteDetails:
+      type: object
+      properties:
+        vignetteNumber:
+          type: string
+          minLength: 4
+          maxLength: 21
+        validityStart:
+          $ref: '#/components/schemas/Timestamp'
+        validityEnd:
+          $ref: '#/components/schemas/Timestamp'
+        vehicle:
+          $ref: '#/components/schemas/VehicleSnapshot'
+        vignetteCategory:
+          $ref: '#/components/schemas/VignetteCategory'
+        vignetteType:
+          $ref: '#/components/schemas/VignetteType'
+      required:
+      - vignetteNumber
+      - validityStart
+      - validityEnd
+      - vehicle
+      - vignetteCategory
+      - vignetteType
+    VignetteTransaction:
+      allOf:
+      - $ref: '#/components/schemas/BaseTransactionResponse'
+      - type: object
+        required:
+        - highwayVignette
+        - costInfo
+        properties:
+          highwayVignette:
+            $ref: '#/components/schemas/VignetteDetails'
+          costInfo:
+            $ref: '#/components/schemas/VignetteCostInfo'
+          notifText:
+            type: string
+            nullable: true
+          discountNotifText:
+            type: string
+            nullable: true
+          status:
+            type: string
+            enum:
+            - PREPARED
+            - FINISHED
+            - FAILED
+    LoginRequest:
+      type: object
+      required:
+      - msisdn
+      properties:
+        msisdn:
+          $ref: '#/components/schemas/MSISDN'
+    OtpVerificationRequest:
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          type: string
+          minLength: 8
+          maxLength: 8
+          pattern: ^[A-Za-z0-9]{8}$
+          example: A7B9C2D4
+          description: Eight-character alphanumeric one-time password.
+    RefreshRequest:
+      type: object
+      required:
+      - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          maxLength: 512
+          description: Current single-use refresh token. A token that has already been rotated is rejected and triggers revocation
+            of the affected token family.
+      description: Refresh-token payload. The token is bound to the account, msgcntx_src device and session family. A successful
+        refresh rotates both session and refresh credentials.
+    AirshipRegistrationRequest:
+      type: object
+      description: Stores or replaces the push data for the msgcntx_src device and client platform.
+      required:
+        - channelId
+        - namedUser
+        - platform
+      properties:
+        channelId:
+          type: string
+          maxLength: 255
+          description: The channel ID created by the Airship SDK for this application installation.
+        namedUser:
+          type: string
+          maxLength: 255
+          description: >
+            The userId encoded by the DXL Crypto service, which the application registered as the Airship named user ID.
+        platform:
+          $ref: '#/components/schemas/Platform'
+    VehicleRequest:
+      allOf:
+      - $ref: '#/components/schemas/VehicleCore'
+    VehiclePatchRequest:
+      type: object
+      properties:
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+        category:
+          $ref: '#/components/schemas/VehicleCategory'
+        name:
+          type: string
+          maxLength: 40
+          nullable: true
+        isDefault:
+          type: boolean
+        licensePlateNumber:
+          $ref: '#/components/schemas/LicensePlateNumber'
+      anyOf:
+      - required:
+        - countryCode
+      - required:
+        - category
+      - required:
+        - name
+      - required:
+        - isDefault
+      - required:
+        - licensePlateNumber
+      description: Partial saved-vehicle update. Every saved-vehicle field except vehicleId and serviceType is patchable.
+        The body must contain at least one supported property; an empty body or a body containing only unknown properties
+        is a bad request. Unknown properties accompanying a supported property are ignored by the backend.
+    StartParkingRequest:
+      type: object
+      required:
+      - zoneCode
+      - vehicle
+      description: 'Starts parking for the selected zone. An optional startTime schedules the parking for a later ISO 8601
+        date-time; when omitted, parking starts immediately. The zoneCode and its zone data determine SSP, TP, or OP: OFFSITE
+        means OP, isFixTicketZone=true means TP, otherwise SSP. No separate parking service type field is sent. parkingLength
+        is optional.'
+      properties:
+        startTime:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          nullable: true
+          description: Optional requested parking start time. When present, the backend schedules the parking for this future
+            ISO 8601 date-time; when omitted, parking starts immediately.
+          type: string
+          format: date-time
+        vehicle:
+          $ref: '#/components/schemas/TransactionVehicle'
+        parkingLength:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Optional requested parking length in minutes.
+        zoneCode:
+          $ref: '#/components/schemas/ZoneCode'
+        smsNotifRequired:
+          type: boolean
+        pushNotifRequired:
+          type: boolean
+        isRecurring:
+          type: boolean
+          default: false
+          description: Whether the user wants the parking transaction to be recurring.
+    VignettePurchaseRequest:
+      type: object
+      required:
+      - validityStart
+      - vehicle
+      - vignetteType
+      description: The backend calculates vignetteCategory from vehicle.category and vignetteType.
+      properties:
+        validityStart:
+          $ref: '#/components/schemas/Timestamp'
+        vehicle:
+          $ref: '#/components/schemas/TransactionVehicle'
+        vignetteType:
+          $ref: '#/components/schemas/VignetteType'
+        smsNotifRequired:
+          type: boolean
+        pushNotifRequired:
+          type: boolean
+    LoginInitData:
+      type: object
+      required:
+      - userId
+      - loginId
+      - loginExpiry
+      properties:
+        userId:
+          $ref: '#/components/schemas/AccountId'
+        loginId:
+          $ref: '#/components/schemas/LoginId'
+        loginExpiry:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          description: OTP expiry timestamp, three minutes after the OTP was issued.
+    UserSessionData:
+      type: object
+      required:
+      - userId
+      - sessionToken
+      - tokenExpiry
+      - refreshToken
+      - refreshTokenExpiry
+      properties:
+        userId:
+          $ref: '#/components/schemas/AccountId'
+        refreshToken:
+          type: string
+          maxLength: 512
+          description: Single-use rotating refresh token. Each successful refresh returns a new value and invalidates the
+            previous value.
+        sessionToken:
+          type: string
+          description: Device-bound session token with a planned TTL of two hours.
+        tokenExpiry:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          description: Expiry timestamp of the session token; planned TTL is two hours.
+        refreshTokenExpiry:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          description: Expiry timestamp of the refresh token; planned TTL is 72 hours.
+    ParkingHistoryData:
+      type: array
+      items:
+        $ref: '#/components/schemas/ParkingTransaction'
+    VignetteHistoryData:
+      type: array
+      items:
+        $ref: '#/components/schemas/VignetteTransaction'
+    VehicleListData:
+      type: object
+      properties:
+        vehicles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vehicle'
+    AccountId:
+      type: string
+      maxLength: 46
+      description: Textual ECF account identifier.
+      example: '100200'
+    NmfrTransactionId:
+      type: string
+      maxLength: 128
+      description: Transaction identifier received from the external NMFR system.
+      example: NMFR-20260603-000123
+    LoginId:
+      type: integer
+      format: int64
+      minimum: 1
+      description: Database primary key of a login flow.
+      example: 20260603001
+    VehicleId:
+      type: integer
+      format: int64
+      minimum: 1
+      description: Database primary key of a saved vehicle.
+      example: 1001
+    TransactionId:
+      type: integer
+      format: int64
+      minimum: 1
+      description: Database primary key of a parking or highway transaction.
+      example: 20260603003
+    ZoneVersion:
+      type: string
+      pattern: ^[0-9]+$
+      description: Parking zone dataset version represented as an epoch timestamp encoded as a string.
+      example: '1780480800000'
+    BaseTransactionResponse:
+      type: object
+      required:
+      - ecfId
+      - msisdn
+      - trxStart
+      properties:
+        msisdn:
+          $ref: '#/components/schemas/MSISDN'
+        ecfId:
+          $ref: '#/components/schemas/TransactionId'
+        nmfrId:
+          allOf:
+          - $ref: '#/components/schemas/NmfrTransactionId'
+          nullable: true
+          type: string
+        trxStart:
+          $ref: '#/components/schemas/Timestamp'
+        trxEnd:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          nullable: true
+          type: string
+          format: date-time
+    TransactionVehicle:
+      type: object
+      required:
+      - licensePlateNumber
+      - countryCode
+      - category
+      description: Vehicle data supplied for a transaction. The backend copies the relevant values into the transaction; the
+        transaction does not reference a saved vehicle by vehicleId.
+      properties:
+        licensePlateNumber:
+          $ref: '#/components/schemas/LicensePlateNumber'
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+        category:
+          $ref: '#/components/schemas/VehicleCategory'
+    VehicleSnapshot:
+      allOf:
+      - $ref: '#/components/schemas/TransactionVehicle'
+      - type: object
+        description: Immutable vehicle snapshot stored with a parking or vignette transaction. Deleting or changing the saved
+          vehicle does not alter existing transaction data.
+        properties:
+          name:
+            type: string
+            maxLength: 40
+            nullable: true
+            description: Vehicle name copied into the immutable transaction snapshot.
+    ParkingComfortFee:
+      type: object
+      required:
+      - startStopParking
+      - ticketParking
+      - offsiteParking
+      description: Configured comfort-fee values by parking service type.
+      properties:
+        startStopParking:
+          type: number
+          format: double
+          description: Comfort fee for SSP (start-stop parking).
+        ticketParking:
+          type: number
+          format: double
+          description: Comfort fee for TP (ticket parking).
+        offsiteParking:
+          type: number
+          format: double
+          description: Comfort fee for OP (offsite parking).
+    ParkingStopReminder:
+      type: object
+      required:
+      - timeThresholdSec
+      - enterThresholdMeter
+      description: Client thresholds used for parking stop reminders.
+      properties:
+        timeThresholdSec:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Time threshold in seconds used by the parking stop reminder logic.
+        enterThresholdMeter:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Distance threshold in meters used by the parking stop reminder logic.
+    ParkingInfoData:
+      type: object
+      properties:
+        comfortFee:
+          $ref: '#/components/schemas/ParkingComfortFee'
+        specialDates:
+          $ref: '#/components/schemas/ParkingSpecialDates'
+        parkingStopReminder:
+          $ref: '#/components/schemas/ParkingStopReminder'
+        zoneInfo:
+          type: string
+          format: byte
+          nullable: true
+          description: Base64-encoded ZIP archive containing the parking-zone database file. It may be omitted or null when
+            the client already has the current zoneVersion or includeZoneInfo=false.
+        zoneVersion:
+          $ref: '#/components/schemas/ZoneVersion'
+      required:
+      - comfortFee
+      - parkingStopReminder
+      - zoneVersion
+      - specialDates
+      description: Parking bootstrap information. The zone database is delivered as a base64-encoded ZIP archive in zoneInfo,
+        together with version, comfort-fee and parking-stop-reminder configuration.
+    PeriodRange:
+      type: object
+      properties:
+        start:
+          $ref: '#/components/schemas/Timestamp'
+        end:
+          $ref: '#/components/schemas/Timestamp'
+    CountyPeriod:
+      allOf:
+      - $ref: '#/components/schemas/PeriodRange'
+      - type: object
+        properties:
+          notification:
+            type: string
+    HighwayVignetteInfo:
+      type: object
+      required:
+      - vehicleCategory
+      - vignetteType
+      - cost
+      properties:
+        vehicleCategory:
+          $ref: '#/components/schemas/VehicleCategory'
+        vignetteType:
+          $ref: '#/components/schemas/VignetteType'
+        cost:
+          $ref: '#/components/schemas/MoneyAmount'
+        comfortFee:
+          $ref: '#/components/schemas/MoneyAmount'
+    FutureHighwayVignetteInfo:
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/Timestamp'
+        highwayVignettes:
+          type: array
+          items:
+            $ref: '#/components/schemas/HighwayVignetteInfo'
+    HighwayInfoData:
+      type: object
+      properties:
+        preemptionPeriod:
+          $ref: '#/components/schemas/PeriodRange'
+        countyPeriod:
+          $ref: '#/components/schemas/CountyPeriod'
+        highwayVignettes:
+          type: array
+          items:
+            $ref: '#/components/schemas/HighwayVignetteInfo'
+        costChange:
+          $ref: '#/components/schemas/FutureHighwayVignetteInfo'
+    ZoneInfo:
+      type: object
+      required:
+      - zoneName
+      - zoneTarif
+      - isEstimatedTarif
+      - isFixTicketZone
+      - zoneType
+      - zoneCode
+      - zoneTarifMultiplier
+      - city
+      properties:
+        zoneName:
+          type: string
+          maxLength: 100
+        zoneTarif:
+          type: string
+          description: Human-readable tariff value or tariff representation supplied by the zone source.
+        isEstimatedTarif:
+          type: boolean
+        isFixTicketZone:
+          type: boolean
+        zoneType:
+          $ref: '#/components/schemas/ZoneType'
+        zoneCode:
+          $ref: '#/components/schemas/ZoneCode'
+        zoneTarifMultiplier:
+          type: number
+          format: double
+        city:
+          type: string
+          maxLength: 100
+      description: 'Zone snapshot stored with the parking transaction. Parking service type is derived from these values:
+        zoneType=OFFSITE means OP; otherwise isFixTicketZone=true means TP; otherwise SSP.'
+    ParkingDetails:
+      type: object
+      required:
+      - status
+      - startTime
+      - vehicle
+      - isFinished
+      - zoneInfo
+      - isRecurring
+      properties:
+        status:
+          $ref: '#/components/schemas/ParkingStatus'
+        startTime:
+          $ref: '#/components/schemas/Timestamp'
+        endTime:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          nullable: true
+          type: string
+          format: date-time
+        expectedEndTime:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          nullable: true
+          type: string
+          format: date-time
+        chargeEndTime:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          nullable: true
+          type: string
+          format: date-time
+        vehicle:
+          $ref: '#/components/schemas/VehicleSnapshot'
+        isFinished:
+          type: boolean
+        zoneInfo:
+          $ref: '#/components/schemas/ZoneInfo'
+        isRecurring:
+          type: boolean
+          description: Whether the user configured this parking transaction as recurring.
+    ParkingSpecialDates:
+      type: object
+      required:
+      - extraWorkdays
+      - extraFreedays
+      - extraHolidays
+      description: Special calendar dates affecting parking operation. Each list may be empty.
+      properties:
+        extraWorkdays:
+          type: array
+          uniqueItems: true
+          description: Dates that are treated as working days in addition to the normal calendar.
+          items:
+            type: string
+            format: date
+        extraFreedays:
+          type: array
+          uniqueItems: true
+          description: Dates that are treated as free days in addition to the normal calendar.
+          items:
+            type: string
+            format: date
+        extraHolidays:
+          type: array
+          uniqueItems: true
+          description: Additional holiday dates relevant to parking rules.
+          items:
+            type: string
+            format: date
+    AppInfoData:
+      type: object
+      required:
+      - hasNewVersion
+      - forceUpgrade
+      description: Mobile-application bootstrap status. Version-related fields may be omitted when hasNewVersion=false. Outage-related
+        fields may be omitted when no outage is planned.
+      properties:
+        hasNewVersion:
+          type: boolean
+          description: Whether a newer application version is available.
+        forceUpgrade:
+          type: boolean
+          description: Whether the client must upgrade before continuing to use the application.
+        newVersion:
+          allOf:
+          - $ref: '#/components/schemas/Version'
+          nullable: true
+          description: Latest available application version.
+          type: string
+        notification:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Localized client-facing upgrade notification.
+        outageStart:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          nullable: true
+          description: Planned outage start time.
+          type: string
+          format: date-time
+        outageEnd:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          nullable: true
+          description: Planned outage end time.
+          type: string
+          format: date-time
+        outageMessage:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Localized client-facing maintenance or outage message.
+  headers:
+    msgcntx_id:
+      description: Echo of the request msgcntx_id correlation/idempotency identifier.
+      schema:
+        $ref: '#/components/schemas/MobileAppReqId'
+    count-reached:
+      description: Pagination boundary indicator returned by list endpoints.
+      schema:
+        type: boolean
