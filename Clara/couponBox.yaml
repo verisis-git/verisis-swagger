@@ -5,6 +5,8 @@ info:
   version: '1.0.0'
 servers:
   - url: 'https://api.yettel.hu/promotion-service/v1'
+security:
+  - x-api-key: [] 
 paths:
   /promotions:
     get:
@@ -101,25 +103,7 @@ paths:
               schema:
                 type: array
                 items:
-                  allOf:
-                  - $ref: '#/components/schemas/Promotion'
-                  - type: object
-                    properties:
-                      has_activation:
-                        type: boolean
-                        description: True if the requesting user already has an active activation (code) for this promotion.
-                      activation_summary:
-                        type: object
-                        description: Compact summary of the user's existing activation, if any.
-                        properties:
-                          code:
-                            type: string
-                            description: The personal coupon code.
-                          remaining_usages:
-                            type: integer
-                            description: How many more times this code can be used.
-                          status:
-                            $ref: '#/components/schemas/ActivationStatus'
+                  $ref: '#/components/schemas/PromotionWithActivationSummaryFlat'
         '204':
           $ref: '#/components/responses/NoContent'
         '400':
@@ -267,7 +251,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UsageInfo'
+                $ref: '#/components/schemas/PromotionUsageInfo'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -452,7 +436,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedUsageResponse'
+                $ref: '#/components/schemas/PaginatedActivationUsageResponse'
         '204': # no results
           $ref: '#/components/responses/NoContent'
         '400':
@@ -502,7 +486,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PromotionUsageDetail'
+                $ref: '#/components/schemas/ActivationUsageDetail'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -534,22 +518,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              description: "Request body for claiming an activation with `code` or with a specific `activation_id`"
-              required:
-                - user
-              properties:
-                user:
-                  description: "The user who claims the coupon."
-                  $ref: '#/components/schemas/UserContext'
-                code:
-                  type: string
-                  description: "Coupon code to claim"
-                  examples:
-                    - "JAKAB20"
-                activation_id:
-                  type: integer
-                  format: int64
+              $ref: '#/components/schemas/ClaimRequest'
       responses:
         '200':
           description: "Coupon already exists for this user."
@@ -674,12 +643,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [user]
-              properties:
-                user:
-                  description: "The user who is using the coupon."
-                  $ref: '#/components/schemas/UserContext'
+              $ref: '#/components/schemas/ReserveRequest'
       responses:
         '201':
           description: "Usage created, slot reserved"
@@ -699,7 +663,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PromotionUsageDetail'
+                $ref: '#/components/schemas/ActivationUsageDetail'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -732,12 +696,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [user]
-              properties:
-                user:
-                  description: "The user who is using the coupon."
-                  $ref: '#/components/schemas/UserContext'
+              $ref: '#/components/schemas/CompleteRequest'
       responses:
         '204':
           description: "Usage transitioned to OrderCompleted."
@@ -786,12 +745,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [user]
-              properties:
-                user:
-                  description: "The user who is using the coupon."
-                  $ref: '#/components/schemas/UserContext'
+              $ref: '#/components/schemas/CancelRequest'
       responses:
         '204':
           description: "Usage transitioned to Cancelled."
@@ -840,12 +794,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [user]
-              properties:
-                user:
-                  description: "The user who owns the coupon."
-                  $ref: '#/components/schemas/UserContext'
+              $ref: '#/components/schemas/RewardClaimRequest'
       responses:
         '200':
           description: "Usage transitioned to RewardClaimed."
@@ -865,7 +814,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PromotionUsageDetail'
+                $ref: '#/components/schemas/ActivationUsageDetail'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1187,6 +1136,106 @@ components:
             $ref: '#/components/schemas/Error'
 
   schemas:
+
+    ActivationSummary:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          description: "The personal coupon code."
+        remaining_usages:
+          type: integer
+          description: "How many more times this code can be used."
+        status:
+          $ref: '#/components/schemas/ActivationStatus'
+
+    PromotionWithActivationSummaryFlat:
+      allOf:
+        - $ref: '#/components/schemas/Promotion'
+        - type: object
+          additionalProperties: false
+          properties:
+            has_activation:
+              type: boolean
+              description: "True if the requesting user already has an active activation (code) for this promotion."
+            activation_summary:
+              type: array
+              items:
+                $ref: '#/components/schemas/ActivationSummary'
+
+    ClaimRequest:
+      type: object
+      description: "Request body for claiming an activation with code or with a specific activation_id"
+      required:
+        - user
+      properties:
+        user:
+          description: "The user who claims the coupon."
+          $ref: '#/components/schemas/UserContext'
+        code:
+          type: string
+          description: "Coupon code to claim"
+          examples:
+            - "JAKAB20"
+        activation_id:
+          type: integer
+          format: int64
+
+    CompleteRequest:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          description: "The user who is using the coupon."
+          $ref: '#/components/schemas/UserContext'
+
+    CancelRequest:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          description: "The user who is using the coupon."
+          $ref: '#/components/schemas/UserContext'
+
+    RewardClaimRequest:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          description: "The user who owns the coupon."
+          $ref: '#/components/schemas/UserContext'
+        expiration_date:
+          type: string
+          format: date
+          description: "Expiration date to be set on the reward SOC, if applicable. The same value is also used as the usage timeout; while a usage with this timeout exists, claiming another reward is blocked."
+
+    ReserveRequest:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          description: "The user who is using the coupon."
+          $ref: '#/components/schemas/UserContext'
+
+    Segmentation:
+      type: object
+      additionalProperties: false
+      description: "A single targeting rule. Both fields are optional - an empty rule matches all."
+      properties:
+        profileType:
+          type: string
+          description: "Customer profile segment key (e.g., prepaid, postpaid, yolo)."
+          maxLength: 45
+        soc:
+          type: string
+          description: "Service Offering Code (SOC) required for eligibility."
+          maxLength: 45
+
     UserContext:
       type: object
       description: >
@@ -1453,25 +1502,7 @@ components:
           type: array
           description: "Targeting rules defining which customer profiles / SOCs are eligible for the promotion."
           items:
-            type: object
-            additionalProperties: false
-            description: "A single targeting rule. Both fields are optional - an empty rule matches all."
-            properties:
-              profile_type:
-                type: string
-                description: "Customer profile segment key (e.g., prepaid, postpaid, yolo)."
-                maxLength: 45
-                examples:
-                  - 'prepaid'
-                  - 'postpaid'
-                  - 'yolo'
-              soc:
-                type: string
-                description: "Service Offering Code (SOC) required for eligibility."
-                maxLength: 45
-                examples:
-                  - 'DR20GB'
-                  - 'JELOL10'
+            $ref: '#/components/schemas/Segmentation'
           examples:
             - 
               - profile_type: 'postpaid'
@@ -1608,7 +1639,7 @@ components:
           type: string
           format: date-time
 
-    UsageInfo:
+    PromotionUsageInfo:
       type: object
       additionalProperties: false
       required:
@@ -1631,40 +1662,38 @@ components:
           examples:
             - 850
 
-    PaginatedUsageResponse:
+    ActivationUsageInfo:
+      type: object
+      properties:
+        remaining_usages:
+          type: integer
+          description: "Remaining redemptions for this activation (e.g., 2/6)."
+          examples:
+            - 2
+        usage_limit:
+          type: integer
+          description: "The maximum slot from the promotion definition."
+          examples:
+            - 6
+
+    PaginatedActivationUsageResponse:
       type: object
       properties:
         total_count:
           type: integer
           description: "Total number of usages recorded for this activation."
           examples:
-            - 156
-        usage_limit:
-          type: integer
-          description: "The maximum allowed usages from the promotion definition."
-          examples:
-            - 1000
-        usage_info::
-          type: object
-          properties:
-            remaining_usages:
-              type: integer
-              description: "Remaining redemptions for this activation (e.g., 2/6)."
-              examples:
-                - 2
-            usage_limit:
-              type: integer
-              description: "The maximum slot from the promotion definition."
-              examples:
-                - 6
+            - 4
+        usage_info:
+          $ref: '#/components/schemas/ActivationUsageInfo'
         items:
           type: array
           items:
-            $ref: '#/components/schemas/PromotionUsageDetail'
+            $ref: '#/components/schemas/ActivationUsageDetail'
 
-    PromotionUsageDetail:
+    ActivationUsageDetail:
       type: object
-      escription: "A single usage record - one invite / one redemption attempt."
+      description: "A single usage record - one invite / one redemption attempt."
       required:
         - id
         - promotion_activation_id
@@ -1704,6 +1733,23 @@ components:
         user:
           $ref: '#/components/schemas/UserContext'
 
+
+    ValidationError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - CODE_NOT_FOUND
+            - LIMIT_REACHED
+            - NOT_ELIGIBLE
+            - EXPIRED
+            - COOLDOWN_ACTIVE
+            - UNKNOWN
+        message:
+          type: string
+          description: "Error message."
+
     ValidationResponse:
       type: object
       properties:
@@ -1714,21 +1760,11 @@ components:
           type: integer
           format: int64
           description: "Unique identifier of the promotion definition."
+        activation_id:
+          type: integer
+          format: int64
         error:
-          type: object
-          properties:
-            code:
-              type: string
-              enum:
-                - CODE_NOT_FOUND
-                - LIMIT_REACHED
-                - NOT_ELIGIBLE
-                - EXPIRED
-                - COOLDOWN_ACTIVE
-                - UNKNOWN
-            message:
-              type: string
-              description: "Error message."
+          $ref: '#/components/schemas/ValidationError'
         usage_info:
           type: object
           properties:
@@ -1771,3 +1807,8 @@ components:
             - "SERVER_ERROR"
         detail:
           $ref: '#/components/schemas/Detail'
+  securitySchemes:
+    x-api-key:
+      type: apiKey
+      name: x-api-key
+      in: header
