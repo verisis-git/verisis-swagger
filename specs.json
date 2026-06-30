@@ -161,7 +161,8 @@
           "key": "userapi",
           "display": "User API",
           "versions": [
-            { "v": "1.0.0", "path": "XTVGW/userapi/1.0.0.yaml" }
+            { "v": "1.1.0", "path": "XTVGW/userapi/1.1.0.yaml" },
+			{ "v": "1.0.0", "path": "XTVGW/userapi/1.0.0.yaml" }
           ]
         }
       ]
