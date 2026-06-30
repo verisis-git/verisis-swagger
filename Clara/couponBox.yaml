@@ -568,6 +568,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -619,6 +621,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -672,6 +676,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -823,6 +829,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
         '503':
@@ -1077,6 +1085,26 @@ components:
 
     NotFound:
       description: Not Found
+      headers:
+        msg-ctx-src:
+          $ref: '#/components/headers/Msg_ctx_src'
+        msg-ctx-src-module:
+          $ref: '#/components/headers/Msg_ctx_src_module'
+        msg-ctx-env:
+          $ref: '#/components/headers/Msg_ctx_env'
+        msg-ctx-id:
+          $ref: '#/components/headers/Msg_ctx_id'
+        msg-ctx-corr-id:
+          $ref: '#/components/headers/Msg_ctx_corr_id'
+        msg-ctx-build-number:
+          $ref: '#/components/headers/Msg_ctx_build_number'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Conflict (e.g. slot/code limit reached)
       headers:
         msg-ctx-src:
           $ref: '#/components/headers/Msg_ctx_src'
